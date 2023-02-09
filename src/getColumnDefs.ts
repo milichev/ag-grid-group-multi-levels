@@ -5,10 +5,11 @@ import {
   Level,
   levels as allLevels,
   VisibleLevels,
+  SelectableLevel,
   GridGroupDataItem,
 } from "./interfaces";
 
-const groupColDefs: Partial<Record<Level, ColDef<GridGroupDataItem>>> = {
+const groupColDefs: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
   product: {
     headerName: "Product Name",
     // field: 'product.name',
@@ -77,9 +78,7 @@ export const columnTypes: Record<
   },
 };
 
-const toQuantity = (val: string) => {
-  return /^\d+$/.test(val) && Number.parseInt(val);
-};
+const toQuantity = (val: string) => /^\d+$/.test(val) && Number.parseInt(val);
 
 export const getColumnDefs: typeof getColumnDefsArray = (...args) => {
   const cols = getColumnDefsArray(...args).filter(Boolean);
@@ -96,11 +95,12 @@ export const getColumnDefsArray = (
   const level = levels[levelIndex];
   const hasSizeGroups = !!product?.sizes?.some((s) => !!s.sizeGroup);
 
-  let groupCol: ColDef<GridGroupDataItem> = groupColDefs[level];
+  let groupCol: ColDef<GridGroupDataItem> =
+    groupColDefs[level as SelectableLevel];
   if (groupCol && (level !== "sizeGroup" || hasSizeGroups)) {
     groupCol = {
       ...groupCol,
-      minWidth: groupCol.minWidth + 60,
+      minWidth: groupCol.minWidth! + 60,
       cellRenderer: "agGroupCellRenderer",
       pinned: "left",
       lockPinned: true,
@@ -119,7 +119,7 @@ export const getColumnDefsArray = (
     !product || levelIndex < levels.length - 1
       ? []
       : product.sizes.reduce((acc, size) => {
-          let col: ColDef<GridGroupDataItem>;
+          let col: ColDef<GridGroupDataItem> | undefined;
 
           if (visibleLevels.sizeGroup && hasSizeGroups) {
             if (size.sizeGroup === product.sizes[0].sizeGroup) {
@@ -127,14 +127,17 @@ export const getColumnDefsArray = (
                 type: "quantityColumn",
                 headerName: size.name,
                 valueGetter: ({ data }) =>
-                  data.sizes[`${data.sizeGroup} - ${size.name}`].quantity,
+                  data?.sizes?.[`${data.sizeGroup} - ${size.name}`].quantity ??
+                  0,
                 valueSetter: ({ data, newValue }) => {
                   const val = toQuantity(newValue);
-                  if (val) {
-                    data.sizes[`${data.sizeGroup} - ${size.name}`].quantity =
-                      val;
+                  const sizeData =
+                    data!.sizes?.[`${data.sizeGroup} - ${size.name}`];
+                  if (val && sizeData) {
+                    sizeData.quantity = val;
                     return true;
                   }
+                  return false;
                 },
               };
             }
@@ -142,11 +145,12 @@ export const getColumnDefsArray = (
             col = {
               type: "quantityColumn",
               headerName: size.id,
-              valueGetter: ({ data }) => data.sizes[size.id].quantity,
+              valueGetter: ({ data }) => data!.sizes?.[size.id].quantity ?? 0,
               valueSetter: ({ data, newValue }) => {
                 const val = toQuantity(newValue);
-                if (val) {
-                  data.sizes[size.id].quantity = val;
+                const sizeData = data!.sizes?.[size.id];
+                if (val && sizeData) {
+                  sizeData.quantity = val;
                   return true;
                 }
                 return false;

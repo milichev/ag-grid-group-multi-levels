@@ -6,9 +6,10 @@ class PerfArray<T = any> extends Array<T> {}
 
 (
   ["filter", "groupBy", "sum", "sumBy", "map", "find"] as (keyof typeof _)[]
-).forEach((meth) => {
-  PerfArray.prototype[meth] = function (this: PerfArray, ...args) {
-    return toPerfArray(_[meth](this, ...args));
+).forEach((name) => {
+  const method = _[name] as AnyFunction;
+  PerfArray.prototype[name] = function (this: PerfArray, ...args: any) {
+    return toPerfArray(method(this, ...args));
   };
 });
 

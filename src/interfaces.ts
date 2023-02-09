@@ -25,6 +25,9 @@ export interface Shipment extends Entity {
   endDate: Date;
 }
 
+/**
+ * Represends a product size with quantity
+ */
 export interface GridSize extends Size {
   quantity: number;
 }
@@ -41,7 +44,10 @@ export type Level =
   | keyof Pick<GridDataItem, "shipment" | "product" | "warehouse" | "sizes">
   | keyof Pick<Size, "sizeGroup">;
 
-export type SelectableLevel = Exclude<Level, "sizes">;
+export type SelectableLevel = Extract<
+  Level,
+  "shipment" | "product" | "warehouse" | "sizeGroup"
+>;
 
 export interface NestLevelItem {
   level: Level;
@@ -57,11 +63,17 @@ export const levels: SelectableLevel[] = [
 
 export type VisibleLevels = Partial<Record<Level, true>>;
 
-export interface GridGroupDataItem extends Partial<GridDataItem> {
+export interface GridGroupItem extends Partial<GridDataItem> {
   id: string;
   level: Level;
   group: GridDataItem[];
   sizeGroup?: string;
   parent: GridGroupDataItem | null;
-  // [`${typeof SelectableLevel}Disp`]: string;
 }
+
+export type GroupedLevelProp = `${SelectableLevel}Prop`;
+type GroupedLevelPropValues = {
+  [prop in GroupedLevelProp]?: string;
+};
+
+export type GridGroupDataItem = GridGroupItem & GroupedLevelPropValues;

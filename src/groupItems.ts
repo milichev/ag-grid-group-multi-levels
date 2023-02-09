@@ -13,8 +13,10 @@ const getItemPropKey = (item: GridDataItem, level: Level): string => {
     case "warehouse":
     case "shipment":
       return item[level].id;
-    case "sizeGroup":
-      return item[level];
+    // case "sizeGroup":
+    //   return item[level];
+    default:
+      return "";
   }
 };
 
@@ -25,20 +27,24 @@ const getGroupDispValue = (item: GridDataItem, level: Level): string => {
       return item[level].name;
     case "shipment":
       return item.shipment.id;
-    case "sizeGroup":
-      return item[level];
+    // case "sizeGroup":
+    //   return item[level];
+    default:
+      return "";
   }
 };
 
-const getParentSizeGroup = (item: GridGroupDataItem) => {
+const getParentSizeGroup = (item: GridGroupDataItem | null) => {
   while (item) {
-    if (item.sizeGroup) return item.sizeGroup;
+    if (item.sizeGroup) {
+      return item.sizeGroup;
+    }
     item = item.parent;
   }
 };
 
 export const groupItems = (
-  gridData: GridDataItem[],
+  dataItems: GridDataItem[],
   levels: Level[],
   levelIndex: number,
   visibleLevels: VisibleLevels,
@@ -47,10 +53,11 @@ export const groupItems = (
   const step = measureStep({ name: "GROUP_ITEMS", async: false });
 
   const level = levels[levelIndex];
-  const levelIds: string[] = [];
   const idLevels: Level[] = [];
 
-  level !== "sizeGroup" && idLevels.push(level);
+  if (level !== "sizeGroup") {
+    idLevels.push(level);
+  }
   if (levelIndex === 0) {
     idLevels.push(...allLevels.filter((l) => l !== level && !visibleLevels[l]));
   }
@@ -58,7 +65,7 @@ export const groupItems = (
   const getId = (item: GridDataItem) =>
     idLevels.map((l) => getItemPropKey(item, l)).join(";");
   const hasProduct = levels.indexOf("product") <= levelIndex;
-  const product = hasProduct && gridData[0].product;
+  const product = hasProduct ? dataItems[0].product : undefined;
   const hasSizes = levelIndex >= levels.length - 1;
   const sizeGroupIdx = levels.indexOf("sizeGroup");
   const parentSizeGroup =
@@ -67,29 +74,28 @@ export const groupItems = (
       : undefined;
 
   const byIds = new Map<string, GridDataItem[]>();
-  if (level === "sizeGroup") {
+
+  if (product && level === "sizeGroup") {
     product.sizes.forEach((size) => {
-      if (!byIds.has(size.sizeGroup)) {
-        byIds.set(size.sizeGroup, gridData);
-        levelIds.push(size.sizeGroup);
+      if (size.sizeGroup && !byIds.has(size.sizeGroup)) {
+        byIds.set(size.sizeGroup, dataItems);
       }
     });
   } else {
-    gridData.forEach((item) => {
+    dataItems.forEach((item) => {
       const id = getId(item);
       let group = byIds.get(id);
       if (!group) {
         group = [];
         byIds.set(id, group);
-        levelIds.push(id);
       }
       group.push(item);
     });
   }
 
-  const items = levelIds.reduce((acc, id) => {
-    const group = byIds.get(id);
-    const groupItem: GridGroupDataItem = {
+  const gridItems: GridGroupDataItem[] = [];
+  byIds.forEach((group, id) => {
+    const gridItem: GridGroupDataItem = {
       id,
       level,
       group,
@@ -98,12 +104,11 @@ export const groupItems = (
       sizes: hasSizes ? group[0].sizes : undefined,
       sizeGroup: level === "sizeGroup" ? id : parentSizeGroup,
     };
-    idLevels.forEach((l) => (groupItem[l] = group[0][l]));
-    acc.push(groupItem);
-    return acc;
-  }, [] as GridGroupDataItem[]);
+    idLevels.forEach((l) => (gridItem[l] = group[0][l]));
+    gridItems.push(gridItem);
+  });
 
   step.finish();
 
-  return items;
+  return gridItems;
 };
