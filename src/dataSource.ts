@@ -1,3 +1,4 @@
+import { faker } from "@faker-js/faker";
 import {
   GridDataItem,
   Product,
@@ -6,65 +7,70 @@ import {
   Size,
   GridSize,
 } from "./interfaces";
-import Chance from "chance";
 
-const chance = new Chance();
+const basic = {
+  id: () => faker.datatype.hexadecimal({ case: "upper", length: 24 }),
+  productName: () => faker.commerce.productName(),
+  warehouseName: () => faker.address.city(),
+} as const;
 
-const getId = chance.hash.bind(chance, { length: 24 });
-const getIds = (count: number): string[] => chance.unique(getId, count);
-const getWords = (count: number): string[] =>
-  chance
-    .unique(
-      () => chance.word({ length: chance.integer({ min: 6, max: 12 }) }),
-      count
-    )
-    .map(chance.capitalize);
+const wrapUnique = <T extends Record<string, () => any>>(methods: T) =>
+  (Object.keys(methods) as [keyof T]).reduce((acc, key) => {
+    const method = methods[key];
+    acc[key] = () => faker.helpers.unique(method);
+    return acc;
+  }, {} as { [K in keyof T]: () => ReturnType<T[K]> });
 
-function* gen<T, K = T>(create: () => T, getKey?: (v: T) => K) {
-  const keys = new Set<K>();
-  while (true) {
-    let value: T;
-    let key: K;
-    do {
-      value = create();
-      key = getKey?.(value) ?? (value as any);
-    } while (keys.has(key));
-    keys.add(key);
-    yield value;
-  }
-}
+const uniqueBasic = wrapUnique(basic);
 
-const ids = gen<string>(getId);
-const images = gen(() => chance.avatar());
-const locations = gen(() => chance.province({ full: true }));
+const entity = {
+  product: ({ sizeGroupCount = 3 }): Product => {
+    const retail = faker.datatype.number({
+      precision: 0.01,
+      min: 4,
+      max: 1200,
+    });
+    const sizeGroups = faker.helpers.maybe(
+      () =>
+        faker.helpers.uniqueArray(
+          faker.random.word,
+          faker.datatype.number({ min: 2, max: sizeGroupCount })
+        ),
+      { probability: 0.3 }
+    ) ?? [""];
+    const sizeNames = faker.helpers.uniqueArray(
+      faker.company.catchPhraseDescriptor,
+      faker.datatype.number({ min: 2, max: 4 })
+    );
+    const sizes: Size[] = [];
+    sizeGroups.forEach((sizeGroup) => {
+      sizeNames.forEach((sizeName) => {
+        sizes.push({
+          id: sizeGroup ? `${sizeGroup} - ${sizeName}` : sizeName,
+          name: sizeName,
+          sizeGroup,
+        });
+      });
+    });
 
-function* genProducts() {
-  const names = gen(() => `${chance.animal()} ${chance.first()}`);
-  const colors = gen(() => chance.color());
-
-  let id: string | void;
-  let name: string | void;
-  let color: string | void;
-
-  while (
-    (id = ids.next().value) &&
-    (name = names.next().value) &&
-    (color = colors.next().value)
-  ) {
-    const product: Product = {
-      id,
-      name,
-      color,
-      retail: chance.floating({ fixed: 2, min: 4, max: 600 }),
-      wholesale: chance.floating({ fixed: 2, min: 3, max: 500 }),
-      sizes: [],
+    return {
+      id: uniqueBasic.id(),
+      name: uniqueBasic.productName(),
+      color: faker.color.human(),
+      retail,
+      wholesale:
+        retail *
+        faker.datatype.number({ precision: 0.001, min: 0.5, max: 0.95 }),
+      sizes,
     };
-    yield product;
-  }
-}
+  },
 
-const prods = genProducts();
-// console.log("prod", prods.next().value)
+  warehouse: (): Warehouse => ({
+    id: uniqueBasic.id(),
+    name: uniqueBasic.warehouseName(),
+    zip: faker.address.zipCode(),
+  }),
+};
 
 export const getGridData = ({
   productCount,
@@ -77,8 +83,14 @@ export const getGridData = ({
   shipmentCount: number;
   sizeGroupCount: number;
 }): GridDataItem[] => {
-  const products = getProducts(productCount, sizeGroupCount);
-  const warehouses = getWarehouses(warehouseCount);
+  const products = faker.helpers.uniqueArray<Product>(
+    entity.product.bind(entity, { sizeGroupCount }),
+    productCount
+  );
+  const warehouses = faker.helpers.uniqueArray(
+    entity.warehouse,
+    warehouseCount
+  );
   const shipments = getShipments(shipmentCount);
   const items: GridDataItem[] = [];
 
@@ -93,10 +105,10 @@ export const getGridData = ({
             acc[
               size.sizeGroup ? `${size.sizeGroup} - ${size.name}` : size.name
             ] = {
-              id: getId(),
+              id: size.id,
               name: size.name,
               sizeGroup: size.sizeGroup,
-              quantity: chance.integer({ min: 0, max: 1000 }),
+              quantity: faker.datatype.number({ min: 0, max: 1000 }),
             };
             return acc;
           }, {} as Record<string, GridSize>),
@@ -106,49 +118,6 @@ export const getGridData = ({
   });
 
   return items;
-};
-
-const getProducts = (count = 5, sizeGroupCount = 3) => {
-  const ids = getIds(count);
-  const names = getWords(count);
-
-  return ids.map((id, i): Product => {
-    const sizeGroups = chance.bool({ likelihood: 20 })
-      ? getWords(chance.integer({ min: 2, max: sizeGroupCount }))
-      : [""];
-    const sizeNames = getWords(chance.integer({ min: 2, max: 4 }));
-    const sizes: Size[] = [];
-    sizeGroups.forEach((sizeGroup) => {
-      sizeNames.forEach((sizeName) => {
-        sizes.push({
-          id: sizeGroup ? `${sizeGroup} - ${sizeName}` : sizeName,
-          name: sizeName,
-          sizeGroup,
-        });
-      });
-    });
-
-    return {
-      id,
-      name: names[i],
-      color: chance.color(),
-      retail: chance.floating({ fixed: 2, min: 4, max: 600 }),
-      wholesale: chance.floating({ fixed: 2, min: 3, max: 500 }),
-      sizes,
-    };
-  });
-};
-
-const getWarehouses = (count = 5) => {
-  const ids = getIds(count);
-  const names = getWords(count);
-  return ids.map(
-    (id, i): Warehouse => ({
-      id,
-      name: names[i],
-      zip: chance.zip(),
-    })
-  );
 };
 
 const addDays = (date: Date, amount: number) => {
