@@ -25,9 +25,7 @@ export interface Shipment extends Entity {
   endDate: Date;
 }
 
-export interface GridSize {
-  name: string;
-  sizeGroup?: string;
+export interface GridSize extends Size {
   quantity: number;
 }
 
@@ -54,7 +52,7 @@ export const levels: SelectableLevel[] = [
   "product",
   "warehouse",
   "shipment",
-  "sizeGroup"
+  "sizeGroup",
 ];
 
 export type VisibleLevels = Partial<Record<Level, true>>;

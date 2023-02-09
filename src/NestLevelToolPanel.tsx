@@ -1,9 +1,7 @@
-import React, { useCallback, useContext, useMemo, createContext } from "react";
+import React, { useCallback } from "react";
 import "./styles.css";
-import { Level, GridGroupDataItem, NestLevelItem } from "./interfaces";
 import { DebugBox } from "./DebugBox";
 import { useAppContext } from "./appContext";
-import { measureStep, wrap, nuPerf, context as perfContext } from "./perf";
 
 export const NestLevelToolPanel: React.FC = () => {
   const { levelItems, setLevelItems } = useAppContext();
@@ -30,14 +28,14 @@ export const NestLevelToolPanel: React.FC = () => {
           ...levelItems.slice(0, i - 1),
           levelItems[i],
           levelItems[i - 1],
-          ...levelItems.slice(i + 1)
+          ...levelItems.slice(i + 1),
         ]);
       } else if (i < levelItems.length - 1 && !isUp) {
         setLevelItems([
           ...levelItems.slice(0, i),
           levelItems[i + 1],
           levelItems[i],
-          ...levelItems.slice(i + 2)
+          ...levelItems.slice(i + 2),
         ]);
       }
     },

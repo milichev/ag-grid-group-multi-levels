@@ -14,7 +14,7 @@ export interface Athlete {
   year: number;
 }
 
-function* getId(reset: boolean = false) {
+function* getId(reset = false) {
   let id = 0;
   while (true) {
     if (reset) id = 0;

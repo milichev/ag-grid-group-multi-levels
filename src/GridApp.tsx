@@ -1,13 +1,4 @@
-"use strict";
-
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from "react";
-import { render } from "react-dom";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { AgGridReact, AgGridReactProps } from "ag-grid-react";
 import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
@@ -18,7 +9,7 @@ import {
   ICellRendererParams,
   GridApi,
   ColumnApi,
-  SideBarDef
+  SideBarDef,
 } from "ag-grid-community";
 
 import { LevelsContextProvider } from "./appContext";
@@ -29,31 +20,31 @@ import {
   levels as allLevels,
   VisibleLevels,
   GridGroupDataItem,
-  NestLevelItem
+  NestLevelItem,
 } from "./interfaces";
 import { getGridData } from "./dataSource";
 import { getColumnDefs, columnTypes } from "./getColumnDefs";
 import { groupItems } from "./groupItems";
-import { measureStep, wrap, nuPerf } from "./perf";
+import { wrap, nuPerf } from "./perf";
 
 const testDataParams: Parameters<typeof getGridData>[0] = {
   productCount: 20,
   warehouseCount: 5,
   shipmentCount: 5,
-  sizeGroupCount: 3
+  sizeGroupCount: 3,
 };
 
 const defaultLevels: Level[] = [
   "product",
   "shipment",
   // "warehouse",
-  "sizeGroup"
+  "sizeGroup",
 ];
 
 const origConsoleError = console.error.bind(console);
-console.error = (...args) => {
+console.error = (...args: any[]) => {
   const { stack } = new Error();
-  if (/outputMissingLicenseKey/.test(stack)) {
+  if (stack && /outputMissingLicenseKey/.test(stack)) {
     return;
   }
   origConsoleError(...args);
@@ -61,7 +52,7 @@ console.error = (...args) => {
 
 const styles = {
   container: { width: "100%", height: "100%" },
-  grid: { height: "100%", width: "100%" }
+  grid: { height: "100%", width: "100%" },
 };
 
 const sideBar: SideBarDef = {
@@ -74,7 +65,7 @@ const sideBar: SideBarDef = {
       toolPanel: "agColumnsToolPanel",
       minWidth: 225,
       maxWidth: 225,
-      width: 225
+      width: 225,
     },
     {
       id: "filters",
@@ -84,7 +75,7 @@ const sideBar: SideBarDef = {
       toolPanel: "agFiltersToolPanel",
       minWidth: 180,
       maxWidth: 400,
-      width: 250
+      width: 250,
     },
     {
       id: "nestingLevels",
@@ -94,10 +85,10 @@ const sideBar: SideBarDef = {
       minWidth: 180,
       maxWidth: 400,
       width: 250,
-      toolPanel: NestLevelToolPanel
-    }
+      toolPanel: NestLevelToolPanel,
+    },
   ],
-  defaultToolPanel: "nestingLevels"
+  defaultToolPanel: "nestingLevels",
 };
 
 const defaultColDef = {
@@ -108,17 +99,17 @@ const defaultColDef = {
   enablePivot: false,
   sortable: true,
   filter: true,
-  resizable: true
+  resizable: true,
 };
 const autoGroupColumnDef = {
-  minWidth: 200
+  minWidth: 200,
 };
 const commonGridProps: Partial<AgGridReactProps> = {
   defaultColDef,
   columnTypes,
   getRowNodeId: (data) => data.id,
   detailRowAutoHeight: true,
-  singleClickEdit: true
+  singleClickEdit: true,
 };
 
 const getDetailRendererParams = (
@@ -134,7 +125,9 @@ const getDetailRendererParams = (
     const parentItem = params.data as GridGroupDataItem;
 
     const product =
-      levels.indexOf("product") < levelIndex && parentItem.group[0].product;
+      levels.indexOf("product") < levelIndex
+        ? parentItem.group[0].product
+        : null;
     const hasSizeGroups = product?.sizes?.some((s) => !!s.sizeGroup);
     let localLevels = levels;
     if (product && !hasSizeGroups) {
@@ -164,16 +157,16 @@ const getDetailRendererParams = (
       parentItem
     );
 
-    const result = {
+    const result: Partial<IDetailCellRendererParams> = {
       detailGridOptions: {
         ...commonGridProps,
         columnDefs,
         masterDetail: !!detailCellRendererParams,
-        detailCellRendererParams
+        detailCellRendererParams,
       },
       getDetailRowData: (params) => {
         params.successCallback(rows);
-      }
+      },
     };
     // console.log("detailCellRendererParams", result);
     return result;
@@ -188,7 +181,7 @@ const getGridProps = (
   if (!level) {
     return {
       rowData: [],
-      columnDefs: []
+      columnDefs: [],
     };
   }
   const visibleLevels = levels.reduce((acc, level) => {
@@ -210,11 +203,11 @@ const getGridProps = (
     rowData,
     columnDefs,
     masterDetail: !!detailCellRendererParams,
-    detailCellRendererParams
+    detailCellRendererParams,
   };
 };
 
-const App: React.FC = () => {
+const GridApp: React.FC = () => {
   const gridApi = useRef<GridApi>();
   const columnApi = useRef<ColumnApi>();
   const [gridData] = useState(getGridData(testDataParams));
@@ -223,7 +216,7 @@ const App: React.FC = () => {
     allLevels.map(
       (level): NestLevelItem => ({
         level,
-        visible: defaultLevels.includes(level)
+        visible: defaultLevels.includes(level),
       })
     )
   );
@@ -238,16 +231,16 @@ const App: React.FC = () => {
     return result;
   }, [levelItems]);
 
-  const gridProps = useMemo(() => getGridProps(levels, gridData), [
-    gridData,
-    levelItems
-  ]);
+  const gridProps = useMemo(
+    () => getGridProps(levels, gridData),
+    [gridData, levels]
+  );
 
   // console.log("gridOptions", gridOptions);
 
   nuPerf.setContext({
     ...testDataParams,
-    rootItemCount: gridProps.rowData.length
+    rootItemCount: gridProps.rowData?.length ?? 0,
   });
 
   const onGridReady = useCallback((params: GridReadyEvent) => {
@@ -261,7 +254,7 @@ const App: React.FC = () => {
         <LevelsContextProvider
           value={{
             levelItems,
-            setLevelItems
+            setLevelItems,
           }}
         >
           <AgGridReact<GridGroupDataItem>
@@ -278,4 +271,4 @@ const App: React.FC = () => {
   );
 };
 
-export const AppPerf = wrap(App, "GridExample", false);
+export const GridAppPerf = wrap(GridApp, "GridApp", false);

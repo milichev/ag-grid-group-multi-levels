@@ -1,9 +1,11 @@
-import React, { useCallback, useContext, useMemo, createContext } from "react";
-import { Level, GridGroupDataItem, NestLevelItem } from "./interfaces";
+import { useContext, createContext } from "react";
+import { NestLevelItem } from "./interfaces";
+
+type SetLevelItems = (items: NestLevelItem[]) => void;
 
 const levelsContext = createContext({
   levelItems: [] as NestLevelItem[],
-  setLevelItems: (items: NestLevelItem[]) => undefined
+  setLevelItems: (() => undefined) as SetLevelItems,
 });
 
 export const LevelsContextProvider = levelsContext.Provider;

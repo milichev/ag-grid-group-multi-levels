@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import { measureStep, wrap, nuPerf, context as perfContext } from "./perf";
+import { nuPerf } from "./perf";
 
 export const DebugBox = () => {
-  const pre = useRef<HTMLPreElement>();
+  const pre = useRef<HTMLPreElement>(null);
 
   const onContextUpdate = useCallback((ctx) => {
     if (pre.current)
@@ -14,7 +14,7 @@ export const DebugBox = () => {
   useEffect(() => {
     nuPerf.addOnContext(onContextUpdate);
     return () => nuPerf.removeOnContext(onContextUpdate);
-  }, []);
+  }, [onContextUpdate]);
 
   return <pre ref={pre} />;
 };
