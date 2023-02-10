@@ -9,14 +9,14 @@ import {
   GridGroupDataItem,
 } from "./interfaces";
 
-const groupColDefs: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
+const formats = {
+  units: Intl.NumberFormat("en", { maximumFractionDigits: 0 }),
+  money: Intl.NumberFormat("en", { style: "currency", currency: "USD" }),
+};
+
+const groupCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
   product: {
-    headerName: "Product Name",
     // field: 'product.name',
-    filter: "agTextColumnFilter",
-    minWidth: 140,
-    initialWidth: 160,
-    sortable: true,
     valueGetter: (params: ValueGetterParams) => {
       const item = params.data as GridGroupDataItem;
       return `${item.product?.name}${
@@ -25,27 +25,43 @@ const groupColDefs: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
     },
   },
   warehouse: {
-    headerName: "Warehouse",
     field: "warehouse.name",
-    filter: "agTextColumnFilter",
-    sortable: true,
-    minWidth: 200,
   },
   shipment: {
-    headerName: "Shipment",
     field: "shipment.startDate",
-    filter: "agSetColumnFilter",
-    sortable: true,
-    minWidth: 220,
-    initialWidth: 220,
     filterParams: {
       suppressAndOrCondition: true,
     },
     valueFormatter: (params) => params.data?.shipment?.id ?? "",
   },
   sizeGroup: {
-    headerName: "Size Group",
     field: "sizeGroup",
+  },
+};
+
+const selectableCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
+  product: {
+    headerName: "Product Name",
+    filter: "agTextColumnFilter",
+    minWidth: 140,
+    initialWidth: 160,
+    sortable: true,
+  },
+  warehouse: {
+    headerName: "Warehouse",
+    filter: "agTextColumnFilter",
+    sortable: true,
+    minWidth: 150,
+  },
+  shipment: {
+    headerName: "Shipment",
+    filter: "agSetColumnFilter",
+    sortable: true,
+    minWidth: 220,
+    initialWidth: 220,
+  },
+  sizeGroup: {
+    headerName: "Size Group",
     filter: "agTextColumnFilter",
     sortable: true,
     minWidth: 200,
@@ -64,7 +80,7 @@ export const columnTypes: Record<
     minWidth: 150,
     initialWidth: 170,
     filter: "agNumberColumnFilter",
-    valueFormatter: (params) => "$" + params.value?.toFixed?.(2),
+    valueFormatter: (params) => formats.money.format(params.value),
   },
   quantityColumn: {
     minWidth: 100,
@@ -75,6 +91,7 @@ export const columnTypes: Record<
     editable: true,
     sortable: true,
     type: "numericColumn",
+    valueFormatter: (params) => formats.units.format(params.value),
   },
 };
 
@@ -95,25 +112,57 @@ export const getColumnDefsArray = (
   const level = levels[levelIndex];
   const hasSizeGroups = !!product?.sizes?.some((s) => !!s.sizeGroup);
 
-  let groupCol: ColDef<GridGroupDataItem> =
-    groupColDefs[level as SelectableLevel];
+  let groupCol: ColDef<GridGroupDataItem> = groupCols[level as SelectableLevel];
   if (groupCol && (level !== "sizeGroup" || hasSizeGroups)) {
     groupCol = {
+      colId: level,
       ...groupCol,
-      minWidth: groupCol.minWidth! + 60,
+      ...selectableCols[level],
       cellRenderer: "agGroupCellRenderer",
       pinned: "left",
       lockPinned: true,
       lockVisible: true,
     };
+    groupCol.minWidth += 60;
   }
 
   const nonGroup =
     levelIndex === 0
       ? allLevels
           .filter((l) => l !== level && l !== "sizeGroup" && !visibleLevels[l])
-          .map((l): ColDef => groupColDefs[l])
+          .map((l): ColDef => ({ ...groupCols[l], ...selectableCols[l] }))
       : [];
+
+  const levelTotals: ColDef<GridGroupDataItem>[] = [
+    {
+      headerName: "TTL Units",
+      field: "ttlUnits",
+      type: "numericColumn",
+      cellClass: "ttl-cell ag-right-aligned-cell",
+      minWidth: 100,
+      maxWidth: 150,
+      initialWidth: 100,
+      sortable: true,
+      // pinned: "right",
+      // lockPinned: true,
+      valueFormatter: (params) => formats.units.format(params.value),
+    },
+    {
+      headerName: "TTL Cost",
+      field: "ttlCost",
+      type: "numericColumn",
+      cellClass: "ttl-cell ag-right-aligned-cell",
+      minWidth: 100,
+      maxWidth: 150,
+      initialWidth: 100,
+      sortable: true,
+      // pinned: "right",
+      // lockPinned: true,
+      valueFormatter: (params) => formats.money.format(params.value),
+    },
+  ];
+
+  const other = [...nonGroup];
 
   const sizeCols =
     !product || levelIndex < levels.length - 1
@@ -168,7 +217,7 @@ export const getColumnDefsArray = (
     case "product":
       return [
         groupCol,
-        ...nonGroup,
+        ...other,
         {
           headerName: "Wholesale",
           field: "product.wholesale",
@@ -183,6 +232,7 @@ export const getColumnDefsArray = (
           sortable: true,
           type: "priceColumn",
         },
+        ...levelTotals,
         ...sizeCols,
       ];
     case "warehouse":
@@ -196,12 +246,13 @@ export const getColumnDefsArray = (
           initialWidth: 121,
           sortable: true,
         },
+        ...levelTotals,
         ...sizeCols,
       ];
     case "shipment":
-      return [groupCol, ...nonGroup, ...sizeCols];
+      return [groupCol, ...nonGroup, ...sizeCols, ...levelTotals];
     case "sizeGroup":
-      return [groupCol, ...sizeCols];
+      return [groupCol, ...sizeCols, ...levelTotals];
     default:
       return [...sizeCols];
   }

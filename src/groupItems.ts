@@ -4,6 +4,7 @@ import {
   levels as allLevels,
   VisibleLevels,
   GridGroupDataItem,
+  GridSize,
 } from "./interfaces";
 import { measureStep } from "./perf";
 
@@ -103,6 +104,7 @@ export const groupItems = (
       product: product || undefined,
       sizes: hasSizes ? group[0].sizes : undefined,
       sizeGroup: level === "sizeGroup" ? id : parentSizeGroup,
+      ...(hasSizes ? collectSizesTotals(group[0]) : collectGroupTotals(group)),
     };
     idLevels.forEach((l) => (gridItem[l] = group[0][l]));
     gridItems.push(gridItem);
@@ -112,3 +114,34 @@ export const groupItems = (
 
   return gridItems;
 };
+
+const collectGroupTotals = (group: GridDataItem[]) =>
+  group.reduce(
+    (acc, item) => {
+      addSizesTotals(item, acc);
+      return acc;
+    },
+    {
+      ttlUnits: 0,
+      ttlCost: 0,
+    } as Pick<GridGroupDataItem, "ttlUnits" | "ttlCost">
+  );
+
+const collectSizesTotals = (item: GridDataItem) => {
+  const acc: Pick<GridGroupDataItem, "ttlUnits" | "ttlCost"> = {
+    ttlUnits: 0,
+    ttlCost: 0,
+  };
+  addSizesTotals(item, acc);
+  return acc;
+};
+
+const addSizesTotals = (
+  item: GridDataItem,
+  acc: Pick<GridGroupDataItem, "ttlUnits" | "ttlCost">
+) =>
+  item.sizeIds.forEach((sizeId) => {
+    const size = item.sizes[sizeId];
+    acc.ttlUnits += size.quantity;
+    acc.ttlCost += item.product.wholesale * size.quantity;
+  });

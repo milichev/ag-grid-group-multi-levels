@@ -1,10 +1,15 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import "./styles.css";
 import { DebugBox } from "./DebugBox";
 import { useAppContext } from "./appContext";
+import { Level, NestLevelItem } from "./interfaces";
+
+const getLevelIndex = (levelItems: NestLevelItem[], level: Level) =>
+  levelItems.findIndex((item) => item.level === level);
 
 export const NestLevelToolPanel: React.FC = () => {
-  const { levelItems, setLevelItems } = useAppContext();
+  const { levelItems, setLevelItems, isBuildOrder, setIsBuildOrder } =
+    useAppContext();
 
   const handleVisibleChange = useCallback(
     (e) => {
@@ -22,7 +27,7 @@ export const NestLevelToolPanel: React.FC = () => {
     (e) => {
       const level = e.target.getAttribute("data-level");
       const isUp = e.target.getAttribute("data-dir") === "up";
-      const i = levelItems.findIndex((item) => item.level === level);
+      const i = getLevelIndex(levelItems, level);
       if (i > 0 && isUp) {
         setLevelItems([
           ...levelItems.slice(0, i - 1),
@@ -42,6 +47,22 @@ export const NestLevelToolPanel: React.FC = () => {
     [levelItems, setLevelItems]
   );
 
+  useEffect(() => {
+    if (!isBuildOrder) {
+      const baseIndex = Math.max(
+        getLevelIndex(levelItems, "product"),
+        getLevelIndex(levelItems, "warehouse")
+      );
+      const shipmentIndex = getLevelIndex(levelItems, "shipment");
+      if (baseIndex > shipmentIndex) {
+        const reordered = [...levelItems];
+        const [shipmentItem] = reordered.splice(shipmentIndex, 1);
+        reordered.splice(baseIndex, 0, shipmentItem);
+        setLevelItems(reordered);
+      }
+    }
+  }, [isBuildOrder, levelItems, setLevelItems]);
+
   return (
     <div className="nest-mode-tool-panel">
       <h3>Product Levels</h3>
@@ -53,10 +74,24 @@ export const NestLevelToolPanel: React.FC = () => {
           switch (level) {
             case "product":
               downEnabled =
-                downEnabled && levelItems[i + 1].level !== "sizeGroup";
+                downEnabled &&
+                levelItems[i + 1].level !== "sizeGroup" &&
+                (isBuildOrder || levelItems[i + 1].level !== "shipment");
+              break;
+            case "warehouse":
+              downEnabled =
+                downEnabled &&
+                (isBuildOrder || levelItems[i + 1].level !== "shipment");
               break;
             case "sizeGroup":
               upEnabled = upEnabled && levelItems[i - 1].level !== "product";
+              break;
+            case "shipment":
+              upEnabled =
+                upEnabled &&
+                (isBuildOrder ||
+                  (levelItems[i - 1].level !== "product" &&
+                    levelItems[i - 1].level !== "warehouse"));
               break;
           }
           return (
@@ -93,6 +128,20 @@ export const NestLevelToolPanel: React.FC = () => {
           );
         })}
       </ul>
+      <h3>Settings</h3>
+      <ul className="settings-list">
+        <li>
+          <label>
+            <input
+              type="checkbox"
+              checked={isBuildOrder}
+              onChange={(e) => setIsBuildOrder(e.target.checked)}
+            />
+            Build Order
+          </label>
+        </li>
+      </ul>
+      <h3>Debug</h3>
       <DebugBox />
     </div>
   );

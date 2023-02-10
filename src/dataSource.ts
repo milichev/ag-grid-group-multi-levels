@@ -77,11 +77,13 @@ export const getGridData = ({
   shipmentCount,
   sizeGroupCount,
   warehouseCount,
+  isBuildOrder,
 }: {
   productCount: number;
   warehouseCount: number;
   shipmentCount: number;
   sizeGroupCount: number;
+  isBuildOrder: boolean;
 }): GridDataItem[] => {
   const products = faker.helpers.uniqueArray<Product>(
     entity.product.bind(entity, { sizeGroupCount }),
@@ -91,27 +93,39 @@ export const getGridData = ({
     entity.warehouse,
     warehouseCount
   );
-  const shipments = getShipments(shipmentCount);
+  const buildOrderShipments = isBuildOrder ? getShipments(shipmentCount) : [];
   const items: GridDataItem[] = [];
 
   products.forEach((product) => {
     warehouses.forEach((warehouse) => {
+      const shipments = isBuildOrder
+        ? buildOrderShipments
+        : getShipments(
+            faker.datatype.number({ min: 1, max: shipmentCount }),
+            faker.helpers.arrayElement([2, 7, 30])
+          );
+
       shipments.forEach((shipment) => {
+        const sizeIds = [];
+        const sizes = product.sizes.reduce((acc, size) => {
+          const sizeId = size.sizeGroup
+            ? `${size.sizeGroup} - ${size.name}`
+            : size.name;
+          sizeIds.push(sizeId);
+          acc[sizeId] = {
+            id: size.id,
+            name: size.name,
+            sizeGroup: size.sizeGroup,
+            quantity: faker.datatype.number({ min: 0, max: 150 }),
+          };
+          return acc;
+        }, {} as Record<string, GridSize>);
         items.push({
           product,
           warehouse,
           shipment,
-          sizes: product.sizes.reduce((acc, size) => {
-            acc[
-              size.sizeGroup ? `${size.sizeGroup} - ${size.name}` : size.name
-            ] = {
-              id: size.id,
-              name: size.name,
-              sizeGroup: size.sizeGroup,
-              quantity: faker.datatype.number({ min: 0, max: 1000 }),
-            };
-            return acc;
-          }, {} as Record<string, GridSize>),
+          sizes,
+          sizeIds,
         });
       });
     });

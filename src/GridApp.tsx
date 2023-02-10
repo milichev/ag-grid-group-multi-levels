@@ -9,7 +9,9 @@ import {
   ICellRendererParams,
   GridApi,
   ColumnApi,
+  GetContextMenuItems,
   SideBarDef,
+  MenuItemDef,
 } from "ag-grid-community";
 
 import { LevelsContextProvider } from "./appContext";
@@ -27,12 +29,13 @@ import { getColumnDefs, columnTypes } from "./getColumnDefs";
 import { groupItems } from "./groupItems";
 import { wrap, nuPerf } from "./perf";
 
-const testDataParams: Parameters<typeof getGridData>[0] = {
-  productCount: 20,
-  warehouseCount: 5,
-  shipmentCount: 5,
-  sizeGroupCount: 3,
-};
+const testDataParams: Omit<Parameters<typeof getGridData>[0], "isBuildOrder"> =
+  {
+    productCount: 20,
+    warehouseCount: 5,
+    shipmentCount: 5,
+    sizeGroupCount: 3,
+  };
 
 const defaultLevels: Level[] = [
   "product",
@@ -110,13 +113,15 @@ const commonGridProps: Partial<AgGridReactProps> = {
   getRowNodeId: (data) => data.id,
   detailRowAutoHeight: true,
   singleClickEdit: true,
+  allowContextMenuWithControlKey: true,
 };
 
 const getDetailRendererParams = (
   gridData: GridDataItem[],
   levels: Level[],
   levelIndex: number,
-  visibleLevels: VisibleLevels
+  visibleLevels: VisibleLevels,
+  isBuildOrder: boolean
 ): AgGridReactProps["detailCellRendererParams"] => {
   const level = levels[levelIndex];
   if (!level) return undefined;
@@ -141,7 +146,8 @@ const getDetailRendererParams = (
       gridData,
       localLevels,
       levelIndex + 1,
-      visibleLevels
+      visibleLevels,
+      isBuildOrder
     );
     const columnDefs = getColumnDefs(
       localLevels,
@@ -163,6 +169,11 @@ const getDetailRendererParams = (
         columnDefs,
         masterDetail: !!detailCellRendererParams,
         detailCellRendererParams,
+        getContextMenuItems: getContextMenuHandler({
+          levels,
+          levelIndex,
+          isBuildOrder,
+        }),
       },
       getDetailRowData: (params) => {
         params.successCallback(rows);
@@ -175,8 +186,9 @@ const getDetailRendererParams = (
 
 const getGridProps = (
   levels: Level[],
-  gridData: GridDataItem[]
-): Partial<AgGridReactProps> => {
+  gridData: GridDataItem[],
+  isBuildOrder: boolean
+): Partial<AgGridReactProps<GridGroupDataItem>> => {
   const level = levels[0];
   if (!level) {
     return {
@@ -195,7 +207,8 @@ const getGridProps = (
     gridData,
     levels,
     1,
-    visibleLevels
+    visibleLevels,
+    isBuildOrder
   );
 
   return {
@@ -204,13 +217,69 @@ const getGridProps = (
     columnDefs,
     masterDetail: !!detailCellRendererParams,
     detailCellRendererParams,
+    getContextMenuItems: getContextMenuHandler({
+      levels,
+      levelIndex: 0,
+      isBuildOrder,
+    }),
   };
 };
+
+const getContextMenuHandler =
+  ({
+    levels,
+    levelIndex,
+    isBuildOrder,
+  }: {
+    levels: Level[];
+    levelIndex: number;
+    isBuildOrder: boolean;
+  }): GetContextMenuItems<GridGroupDataItem> =>
+  (params) => {
+    const menuItems: (string | MenuItemDef)[] = [];
+
+    switch (levels[levelIndex]) {
+      case "product":
+        menuItems.push({
+          name: "Remove Product",
+        });
+        break;
+      case "shipment":
+        if (!isBuildOrder) {
+          menuItems.push({
+            name: "Remove Shipment",
+          });
+        }
+        break;
+    }
+
+    switch (levels[levelIndex + 1]) {
+      case "shipment":
+        if (!isBuildOrder) {
+          menuItems.push({
+            name: "Add Shipment",
+            subMenu: [
+              {
+                name: "Delivery Window 1",
+              },
+              {
+                name: "Delivery Window 2",
+              },
+              {
+                name: "Pick Dates...",
+              },
+            ],
+          });
+        }
+        break;
+    }
+
+    return menuItems;
+  };
 
 const GridApp: React.FC = () => {
   const gridApi = useRef<GridApi>();
   const columnApi = useRef<ColumnApi>();
-  const [gridData] = useState(getGridData(testDataParams));
 
   const [levelItems, setLevelItems] = useState(
     allLevels.map(
@@ -220,6 +289,7 @@ const GridApp: React.FC = () => {
       })
     )
   );
+  const [isBuildOrder, setIsBuildOrder] = useState(true);
 
   const levels = useMemo(() => {
     const result = levelItems
@@ -231,15 +301,23 @@ const GridApp: React.FC = () => {
     return result;
   }, [levelItems]);
 
+  const [settings, gridData] = useMemo(() => {
+    const settings = {
+      ...testDataParams,
+      isBuildOrder,
+    };
+    return [settings, getGridData(settings)];
+  }, [isBuildOrder]);
+
   const gridProps = useMemo(
-    () => getGridProps(levels, gridData),
-    [gridData, levels]
+    () => getGridProps(levels, gridData, isBuildOrder),
+    [gridData, levels, isBuildOrder]
   );
 
-  // console.log("gridOptions", gridOptions);
+  console.log("gridProps", gridProps);
 
   nuPerf.setContext({
-    ...testDataParams,
+    ...settings,
     rootItemCount: gridProps.rowData?.length ?? 0,
   });
 
@@ -255,6 +333,8 @@ const GridApp: React.FC = () => {
           value={{
             levelItems,
             setLevelItems,
+            isBuildOrder,
+            setIsBuildOrder,
           }}
         >
           <AgGridReact<GridGroupDataItem>

@@ -38,6 +38,7 @@ export interface GridDataItem {
   shipment: Shipment;
   /** Here the quantities are placed */
   sizes: Record<string, GridSize>;
+  sizeIds: string[];
 }
 
 export type Level =
@@ -69,6 +70,8 @@ export interface GridGroupItem extends Partial<GridDataItem> {
   group: GridDataItem[];
   sizeGroup?: string;
   parent: GridGroupDataItem | null;
+  ttlUnits?: number;
+  ttlCost?: number;
 }
 
 export type GroupedLevelProp = `${SelectableLevel}Prop`;
