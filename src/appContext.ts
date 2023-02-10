@@ -1,8 +1,8 @@
 import { useContext, createContext } from "react";
-import { NestLevelItem } from "./interfaces";
+import { Level, LevelItem } from "./interfaces";
 
 interface ContextValues {
-  levelItems: NestLevelItem[];
+  levelItems: LevelItem[];
   isBuildOrder: boolean;
 }
 
@@ -12,13 +12,19 @@ type ContextValueSetters = {
   ) => void;
 };
 
-type Context = ContextValues & ContextValueSetters;
+export type AppContext = ContextValues & ContextValueSetters;
 
-const levelsContext = createContext({
+const appContext = createContext({
   levelItems: [],
   isBuildOrder: true,
-} as Context);
+} as AppContext);
 
-export const LevelsContextProvider = levelsContext.Provider;
+export const AppContextProvider = appContext.Provider;
 
-export const useAppContext = () => useContext(levelsContext);
+export const useAppContext = () => useContext(appContext);
+
+export interface GridContext {
+  levels: Level[];
+  levelIndex: number;
+  appContext: AppContext;
+}

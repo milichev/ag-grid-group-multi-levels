@@ -50,7 +50,7 @@ export type SelectableLevel = Extract<
   "shipment" | "product" | "warehouse" | "sizeGroup"
 >;
 
-export interface NestLevelItem {
+export interface LevelItem {
   level: Level;
   visible: boolean;
 }

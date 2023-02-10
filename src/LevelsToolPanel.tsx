@@ -2,12 +2,9 @@ import React, { useCallback, useEffect } from "react";
 import "./styles.css";
 import { DebugBox } from "./DebugBox";
 import { useAppContext } from "./appContext";
-import { Level, NestLevelItem } from "./interfaces";
+import { fixupLevelItems, getLevelIndex, getLevelMeta, toggleLevelItem } from "./levels";
 
-const getLevelIndex = (levelItems: NestLevelItem[], level: Level) =>
-  levelItems.findIndex((item) => item.level === level);
-
-export const NestLevelToolPanel: React.FC = () => {
+export const LevelsToolPanel: React.FC = () => {
   const { levelItems, setLevelItems, isBuildOrder, setIsBuildOrder } =
     useAppContext();
 
@@ -15,10 +12,7 @@ export const NestLevelToolPanel: React.FC = () => {
     (e) => {
       const level = e.target.getAttribute("data-level");
       const visible = e.target.checked;
-      const items = levelItems.map((item) =>
-        item.level === level ? { ...item, visible } : item
-      );
-      setLevelItems(items);
+      toggleLevelItem(level, visible, {levelItems, setLevelItems})
     },
     [levelItems, setLevelItems]
   );
@@ -48,52 +42,20 @@ export const NestLevelToolPanel: React.FC = () => {
   );
 
   useEffect(() => {
-    if (!isBuildOrder) {
-      const baseIndex = Math.max(
-        getLevelIndex(levelItems, "product"),
-        getLevelIndex(levelItems, "warehouse")
-      );
-      const shipmentIndex = getLevelIndex(levelItems, "shipment");
-      if (baseIndex > shipmentIndex) {
-        const reordered = [...levelItems];
-        const [shipmentItem] = reordered.splice(shipmentIndex, 1);
-        reordered.splice(baseIndex, 0, shipmentItem);
-        setLevelItems(reordered);
-      }
-    }
+    fixupLevelItems({ isBuildOrder, levelItems, setLevelItems });
   }, [isBuildOrder, levelItems, setLevelItems]);
 
   return (
     <div className="nest-mode-tool-panel">
-      <h3>Product Levels</h3>
+      <h3>Levels</h3>
       <ul className="mode-list">
         {levelItems.map(({ level, visible }, i) => {
-          const enabled = level !== "product";
-          let upEnabled = i > 0;
-          let downEnabled = i < levelItems.length - 1;
-          switch (level) {
-            case "product":
-              downEnabled =
-                downEnabled &&
-                levelItems[i + 1].level !== "sizeGroup" &&
-                (isBuildOrder || levelItems[i + 1].level !== "shipment");
-              break;
-            case "warehouse":
-              downEnabled =
-                downEnabled &&
-                (isBuildOrder || levelItems[i + 1].level !== "shipment");
-              break;
-            case "sizeGroup":
-              upEnabled = upEnabled && levelItems[i - 1].level !== "product";
-              break;
-            case "shipment":
-              upEnabled =
-                upEnabled &&
-                (isBuildOrder ||
-                  (levelItems[i - 1].level !== "product" &&
-                    levelItems[i - 1].level !== "warehouse"));
-              break;
-          }
+          const { enabled, upEnabled, downEnabled } = getLevelMeta(
+            levelItems,
+            i,
+            { isBuildOrder }
+          );
+
           return (
             <li key={level}>
               <label>

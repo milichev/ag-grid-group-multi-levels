@@ -1,5 +1,6 @@
 import { ColDef, ValueGetterParams } from "ag-grid-community";
 
+import type { AppContext } from "./appContext";
 import {
   Product,
   Level,
@@ -103,12 +104,20 @@ export const getColumnDefs: typeof getColumnDefsArray = (...args) => {
   return cols;
 };
 
-export const getColumnDefsArray = (
-  levels: Level[],
-  levelIndex: number,
-  visibleLevels: VisibleLevels,
-  product: Product | null
-): ColDef<GridGroupDataItem>[] => {
+type Params = {
+  levels: Level[];
+  levelIndex: number;
+  visibleLevels: VisibleLevels;
+  product: Product | null;
+  appContext: AppContext;
+};
+
+export const getColumnDefsArray = ({
+  levels,
+  levelIndex,
+  visibleLevels,
+  product,
+}: Params): ColDef<GridGroupDataItem>[] => {
   const level = levels[levelIndex];
   const hasSizeGroups = !!product?.sizes?.some((s) => !!s.sizeGroup);
 
@@ -122,6 +131,7 @@ export const getColumnDefsArray = (
       pinned: "left",
       lockPinned: true,
       lockVisible: true,
+      suppressSizeToFit: true,
     };
     groupCol.minWidth += 60;
   }
@@ -130,7 +140,13 @@ export const getColumnDefsArray = (
     levelIndex === 0
       ? allLevels
           .filter((l) => l !== level && l !== "sizeGroup" && !visibleLevels[l])
-          .map((l): ColDef => ({ ...groupCols[l], ...selectableCols[l] }))
+          .map(
+            (l): ColDef => ({
+              colId: l,
+              ...groupCols[l],
+              ...selectableCols[l],
+            })
+          )
       : [];
 
   const levelTotals: ColDef<GridGroupDataItem>[] = [
@@ -254,6 +270,6 @@ export const getColumnDefsArray = (
     case "sizeGroup":
       return [groupCol, ...sizeCols, ...levelTotals];
     default:
-      return [...sizeCols];
+      return [...sizeCols, ...levelTotals];
   }
 };
