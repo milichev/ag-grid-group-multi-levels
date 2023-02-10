@@ -13,10 +13,14 @@ export interface Product extends Entity {
   wholesale: number;
   color: string;
   sizes: Size[];
+  image: string;
+  department: string;
 }
 
 export interface Warehouse extends Entity {
   name: string;
+  code: string;
+  country: string;
   zip: string;
 }
 

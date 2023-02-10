@@ -265,12 +265,20 @@ const getContextMenuItems: AgGridReactProps<GridGroupDataItem>["getContextMenuIt
         break;
       case "shipment":
         if (!isBuildOrder) {
-          menuItems.push({
-            name: "Remove Shipment",
-            action: () => {
-              alert(`Here we'll delete the shipment ${gridItem.shipment.id}`);
+          menuItems.push(
+            {
+              name: "Change Dates...",
+              action: () => {
+                alert(`Here we'll display a dialog with calendar`);
+              },
             },
-          });
+            {
+              name: "Remove Shipment",
+              action: () => {
+                alert(`Here we'll delete the shipment ${gridItem.shipment.id}`);
+              },
+            }
+          );
         } else {
           menuItems.push({
             name: "Cannot remove shipments in Build Order",
@@ -280,7 +288,8 @@ const getContextMenuItems: AgGridReactProps<GridGroupDataItem>["getContextMenuIt
         break;
     }
 
-    switch (levels[levelIndex + 1]) {
+    const childLevel = levels[levelIndex + 1];
+    switch (childLevel) {
       case "shipment":
         if (!isBuildOrder) {
           menuItems.push({
@@ -294,6 +303,21 @@ const getContextMenuItems: AgGridReactProps<GridGroupDataItem>["getContextMenuIt
               },
               {
                 name: "Pick Dates...",
+              },
+            ],
+          });
+        }
+        break;
+      case "warehouse":
+        if (!isBuildOrder) {
+          menuItems.push({
+            name: "Add a Warehouse",
+            subMenu: [
+              {
+                name: "Unlisted Warehouse 1",
+              },
+              {
+                name: "Unlisted Warehouse 1",
               },
             ],
           });

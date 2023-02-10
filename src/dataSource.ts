@@ -12,6 +12,7 @@ const basic = {
   id: () => faker.datatype.hexadecimal({ case: "upper", length: 24 }),
   productName: () => faker.commerce.productName(),
   warehouseName: () => faker.address.city(),
+  warehouseCode: () => faker.address.stateAbbr(),
 } as const;
 
 const wrapUnique = <T extends Record<string, () => any>>(methods: T) =>
@@ -30,6 +31,7 @@ const entity = {
       min: 4,
       max: 1200,
     });
+
     const sizeGroups = faker.helpers.maybe(
       () =>
         faker.helpers.uniqueArray(
@@ -38,11 +40,14 @@ const entity = {
         ),
       { probability: 0.3 }
     ) ?? [""];
+
     const sizeNames = faker.helpers.uniqueArray(
       faker.company.catchPhraseDescriptor,
       faker.datatype.number({ min: 2, max: 4 })
     );
+
     const sizes: Size[] = [];
+
     sizeGroups.forEach((sizeGroup) => {
       sizeNames.forEach((sizeName) => {
         sizes.push({
@@ -55,8 +60,10 @@ const entity = {
 
     return {
       id: uniqueBasic.id(),
+      image: faker.image.fashion(),
       name: uniqueBasic.productName(),
       color: faker.color.human(),
+      department: faker.commerce.department(),
       retail,
       wholesale:
         retail *
@@ -67,8 +74,10 @@ const entity = {
 
   warehouse: (): Warehouse => ({
     id: uniqueBasic.id(),
+    code: uniqueBasic.warehouseCode(),
     name: uniqueBasic.warehouseName(),
     zip: faker.address.zipCode(),
+    country: faker.address.country(),
   }),
 };
 

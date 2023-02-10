@@ -235,7 +235,13 @@ export const getColumnDefsArray = ({
         groupCol,
         ...other,
         {
-          headerName: "Wholesale",
+          headerName: "Department",
+          field: "product.department",
+          minWidth: 100,
+          sortable: true,
+        },
+        {
+          headerName: "Cost",
           field: "product.wholesale",
           minWidth: 100,
           sortable: true,
@@ -257,6 +263,20 @@ export const getColumnDefsArray = ({
         ...nonGroup,
         {
           headerName: "Code",
+          field: "warehouse.code",
+          minWidth: 100,
+          initialWidth: 100,
+          sortable: true,
+        },
+        {
+          headerName: "Country",
+          field: "warehouse.country",
+          minWidth: 121,
+          initialWidth: 121,
+          sortable: true,
+        },
+        {
+          headerName: "Postal Code",
           field: "warehouse.zip",
           minWidth: 121,
           initialWidth: 121,
