@@ -5,17 +5,17 @@ import {
 } from "ag-grid-community";
 import { AgGridReactProps } from "ag-grid-react";
 
-import type { AppContext, GridContext } from "./appContext";
+import type { AppContext, GridContext } from "../hooks/useAppContext";
 import {
   GridDataItem,
   Level,
   VisibleLevels,
   GridGroupDataItem,
-} from "./interfaces";
-import { getGridData } from "./dataSource";
+} from "../interfaces";
+import { getGridData } from "../helpers/dataSource";
 import { getColumnDefs, columnTypes } from "./getColumnDefs";
-import { groupItems } from "./groupItems";
-import { getLevelIndex, toggleLevelItem } from "./levels";
+import { groupItems } from "../helpers/groupItems";
+import { getLevelIndex, toggleLevelItem } from "../helpers/levels";
 
 export const testDataParams: Omit<
   Parameters<typeof getGridData>[0],
@@ -56,6 +56,8 @@ const commonGridProps: Partial<AgGridReactProps> = {
   detailRowAutoHeight: true,
   singleClickEdit: true,
   allowContextMenuWithControlKey: true,
+  suppressAggFuncInHeader: true,
+  enableCellChangeFlash: true,
   getRowNodeId: (data) => data.id,
 };
 

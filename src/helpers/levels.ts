@@ -1,5 +1,5 @@
-import { Level, LevelItem } from "./interfaces";
-import { AppContext } from "./appContext";
+import { Level, LevelItem } from "../interfaces";
+import { AppContext } from "../hooks/useAppContext";
 
 export const getLevelIndex = (levelItems: LevelItem[], level: Level) =>
   levelItems.findIndex((item) => item.level === level);

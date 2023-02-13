@@ -4,8 +4,8 @@ import {
   levels as allLevels,
   VisibleLevels,
   GridGroupDataItem,
-  GridSize,
-} from "./interfaces";
+  SizeQuantity,
+} from "../interfaces";
 import { measureStep } from "./perf";
 
 const getItemPropKey = (item: GridDataItem, level: Level): string => {
@@ -140,7 +140,7 @@ const addSizesTotals = (
   item: GridDataItem,
   acc: Pick<GridGroupDataItem, "ttlUnits" | "ttlCost">
 ) =>
-  item.sizeIds.forEach((sizeId) => {
+  item.sizeKeys.forEach((sizeId) => {
     const size = item.sizes[sizeId];
     acc.ttlUnits += size.quantity;
     acc.ttlCost += item.product.wholesale * size.quantity;

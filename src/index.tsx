@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import { GridAppPerf as App } from "./GridApp";
+import { GridAppPerf as App } from "./components/GridApp";
 import "./styles.scss";
 
 const origConsoleError = console.error.bind(console);

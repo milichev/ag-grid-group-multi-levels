@@ -1,8 +1,12 @@
 import React, { useCallback, useEffect } from "react";
-import "./styles.css";
 import { DebugBox } from "./DebugBox";
-import { useAppContext } from "./appContext";
-import { fixupLevelItems, getLevelIndex, getLevelMeta, toggleLevelItem } from "./levels";
+import { useAppContext } from "../hooks/useAppContext";
+import {
+  fixupLevelItems,
+  getLevelIndex,
+  getLevelMeta,
+  toggleLevelItem,
+} from "../helpers/levels";
 
 export const LevelsToolPanel: React.FC = () => {
   const { levelItems, setLevelItems, isBuildOrder, setIsBuildOrder } =
@@ -12,7 +16,7 @@ export const LevelsToolPanel: React.FC = () => {
     (e) => {
       const level = e.target.getAttribute("data-level");
       const visible = e.target.checked;
-      toggleLevelItem(level, visible, {levelItems, setLevelItems})
+      toggleLevelItem(level, visible, { levelItems, setLevelItems });
     },
     [levelItems, setLevelItems]
   );

@@ -1,5 +1,5 @@
 import { useContext, createContext } from "react";
-import { Level, LevelItem } from "./interfaces";
+import { Level, LevelItem } from "../interfaces";
 
 interface ContextValues {
   levelItems: LevelItem[];

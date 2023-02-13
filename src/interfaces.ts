@@ -29,10 +29,7 @@ export interface Shipment extends Entity {
   endDate: Date;
 }
 
-/**
- * Represends a product size with quantity
- */
-export interface GridSize extends Size {
+export interface SizeQuantity extends Size {
   quantity: number;
 }
 
@@ -40,9 +37,9 @@ export interface GridDataItem {
   product: Product;
   warehouse: Warehouse;
   shipment: Shipment;
-  /** Here the quantities are placed */
-  sizes: Record<string, GridSize>;
-  sizeIds: string[];
+  /** Here the quantities by sizes are placed */
+  sizes: Record<string, SizeQuantity>;
+  sizeKeys: string[];
 }
 
 export type Level =

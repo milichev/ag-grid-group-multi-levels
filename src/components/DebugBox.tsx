@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import { nuPerf } from "./perf";
+import { nuPerf } from "../helpers/perf";
 
 export const DebugBox = () => {
   const pre = useRef<HTMLPreElement>(null);

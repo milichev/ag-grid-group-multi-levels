@@ -10,15 +10,15 @@ import {
   SideBarDef,
 } from "ag-grid-community";
 
-import { AppContextProvider } from "./appContext";
+import { AppContextProvider } from "../hooks/useAppContext";
 import {
   levels as allLevels,
   GridGroupDataItem,
   LevelItem,
-} from "./interfaces";
-import { getGridData } from "./dataSource";
-import { wrap, nuPerf } from "./perf";
-import { defaultLevels, testDataParams, getGridProps } from "./gridProps";
+} from "../interfaces";
+import { getGridData } from "../helpers/dataSource";
+import { wrap, nuPerf } from "../helpers/perf";
+import { defaultLevels, testDataParams, getGridProps } from "./getGridProps";
 import { LevelsToolPanel } from "./LevelsToolPanel";
 
 const styles = {

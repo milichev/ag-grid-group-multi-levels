@@ -1,20 +1,23 @@
-import { ColDef, ValueGetterParams } from "ag-grid-community";
+import {
+  ColDef,
+  ValueGetterParams,
+  ValueSetterParams,
+} from "ag-grid-community";
 
-import type { AppContext } from "./appContext";
+import type { AppContext } from "../hooks/useAppContext";
 import {
   Product,
   Level,
   levels as allLevels,
   VisibleLevels,
+  Size,
   SelectableLevel,
   GridGroupDataItem,
-} from "./interfaces";
+  SizeQuantity,
+} from "../interfaces";
+import { formats, getSizeKey } from "../helpers/format";
 
-const formats = {
-  units: Intl.NumberFormat("en", { maximumFractionDigits: 0 }),
-  money: Intl.NumberFormat("en", { style: "currency", currency: "USD" }),
-};
-
+/** Describe columns, which can be grouped, as not grouped ColDefs */
 const groupCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
   product: {
     // field: 'product.name',
@@ -40,6 +43,7 @@ const groupCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
   },
 };
 
+/** Describe columns, which can be grouped, for both grouped and not grouped states */
 const selectableCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
   product: {
     headerName: "Product Name",
@@ -71,6 +75,7 @@ const selectableCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
 
 type CustomColumnTypes = "priceColumn" | "quantityColumn";
 
+/** Describe reusabe column props */
 export const columnTypes: Record<
   CustomColumnTypes,
   ColDef<GridGroupDataItem>
@@ -96,7 +101,99 @@ export const columnTypes: Record<
   },
 };
 
-const toQuantity = (val: string) => /^\d+$/.test(val) && Number.parseInt(val);
+const levelTotals: ColDef<GridGroupDataItem>[] = [
+  {
+    headerName: "TTL Units",
+    field: "ttlUnits",
+    type: "numericColumn",
+    // need to repeat internal class ag-right-aligned-cell bc it is overwritten by cellClass
+    cellClass: "ttl-cell ag-right-aligned-cell",
+    minWidth: 100,
+    maxWidth: 150,
+    initialWidth: 100,
+    sortable: true,
+    // pinned: "right",
+    // lockPinned: true,
+    valueFormatter: (params) => formats.units.format(params.value),
+  },
+  {
+    headerName: "TTL Cost",
+    field: "ttlCost",
+    type: "numericColumn",
+    cellClass: "ttl-cell ag-right-aligned-cell",
+    minWidth: 100,
+    maxWidth: 150,
+    initialWidth: 100,
+    sortable: true,
+    // pinned: "right",
+    // lockPinned: true,
+    valueFormatter: (params) => formats.money.format(params.value),
+  },
+];
+
+const toQuantity = (val: string | number): number | undefined =>
+  typeof val === "string" && /^\d+$/.test(val)
+    ? Number.parseInt(val)
+    : typeof val === "number" && !Number.isNaN(val)
+    ? val
+    : undefined;
+
+type QuantitySetParams = CastProp<
+  ValueSetterParams<GridGroupDataItem>,
+  "newValue",
+  SizeQuantity
+>;
+const getQuantityColumn = ({
+  size,
+  product,
+  visibleLevels,
+  hasSizeGroups,
+}: {
+  size: Size;
+  visibleLevels: VisibleLevels;
+  product: Product;
+  hasSizeGroups: boolean;
+}): ColDef<GridGroupDataItem> | undefined => {
+  if (!visibleLevels.sizeGroup || !hasSizeGroups) {
+    return {
+      type: "quantityColumn",
+      headerName: size.id,
+      valueGetter: ({ data }): SizeQuantity => data!.sizes?.[size.id],
+      valueSetter: ({ data, newValue }: QuantitySetParams) => {
+        const quantity = toQuantity(newValue.quantity);
+        const sizeData = data!.sizes?.[size.id];
+        if (typeof quantity === "number" && sizeData) {
+          data.sizes[size.id] = {
+            ...sizeData,
+            quantity,
+          };
+          return true;
+        }
+        return false;
+      },
+    };
+  } else if (size.sizeGroup === product.sizes[0].sizeGroup) {
+    return {
+      type: "quantityColumn",
+      headerName: size.name,
+      valueGetter: ({ data }): SizeQuantity =>
+        data?.sizes?.[`${data.sizeGroup} - ${size.name}`],
+      valueSetter: ({ data, newValue }: QuantitySetParams) => {
+        const quantity = toQuantity(newValue.quantity);
+        const sizeKey = `${data.sizeGroup} - ${size.name}`;
+        const sizeData = data!.sizes?.[sizeKey];
+        if (typeof quantity === "number" && sizeData) {
+          data.sizes[sizeKey] = {
+            ...sizeData,
+            quantity,
+          };
+          return true;
+        }
+        return false;
+      },
+    };
+  }
+};
 
 export const getColumnDefs: typeof getColumnDefsArray = (...args) => {
   const cols = getColumnDefsArray(...args).filter(Boolean);
@@ -104,23 +201,22 @@ export const getColumnDefs: typeof getColumnDefsArray = (...args) => {
   return cols;
 };
 
-type Params = {
-  levels: Level[];
-  levelIndex: number;
-  visibleLevels: VisibleLevels;
-  product: Product | null;
-  appContext: AppContext;
-};
-
 export const getColumnDefsArray = ({
   levels,
   levelIndex,
   visibleLevels,
   product,
-}: Params): ColDef<GridGroupDataItem>[] => {
+}: {
+  levels: Level[];
+  levelIndex: number;
+  visibleLevels: VisibleLevels;
+  product: Product | null;
+  appContext: AppContext;
+}): ColDef<GridGroupDataItem>[] => {
   const level = levels[levelIndex];
   const hasSizeGroups = !!product?.sizes?.some((s) => !!s.sizeGroup);
 
+  /** Leftmost pinned column the grid is grouped by */
   let groupCol: ColDef<GridGroupDataItem> = groupCols[level as SelectableLevel];
   if (groupCol && (level !== "sizeGroup" || hasSizeGroups)) {
     groupCol = {
@@ -133,9 +229,10 @@ export const getColumnDefsArray = ({
       lockVisible: true,
       suppressSizeToFit: true,
     };
-    groupCol.minWidth += 60;
+    groupCol.minWidth && (groupCol.minWidth += 60);
   }
 
+  /** If it's a top level, an array of the groupable columns that are not added to grouping */
   const nonGroup =
     levelIndex === 0
       ? allLevels
@@ -149,91 +246,25 @@ export const getColumnDefsArray = ({
           )
       : [];
 
-  const levelTotals: ColDef<GridGroupDataItem>[] = [
-    {
-      headerName: "TTL Units",
-      field: "ttlUnits",
-      type: "numericColumn",
-      cellClass: "ttl-cell ag-right-aligned-cell",
-      minWidth: 100,
-      maxWidth: 150,
-      initialWidth: 100,
-      sortable: true,
-      // pinned: "right",
-      // lockPinned: true,
-      valueFormatter: (params) => formats.units.format(params.value),
-    },
-    {
-      headerName: "TTL Cost",
-      field: "ttlCost",
-      type: "numericColumn",
-      cellClass: "ttl-cell ag-right-aligned-cell",
-      minWidth: 100,
-      maxWidth: 150,
-      initialWidth: 100,
-      sortable: true,
-      // pinned: "right",
-      // lockPinned: true,
-      valueFormatter: (params) => formats.money.format(params.value),
-    },
-  ];
-
-  const other = [...nonGroup];
-
+  /** Quantity columns are visible only at the innermost level when a product is available */
   const sizeCols =
-    !product || levelIndex < levels.length - 1
-      ? []
-      : product.sizes.reduce((acc, size) => {
-          let col: ColDef<GridGroupDataItem> | undefined;
-
-          if (visibleLevels.sizeGroup && hasSizeGroups) {
-            if (size.sizeGroup === product.sizes[0].sizeGroup) {
-              col = {
-                type: "quantityColumn",
-                headerName: size.name,
-                valueGetter: ({ data }) =>
-                  data?.sizes?.[`${data.sizeGroup} - ${size.name}`].quantity ??
-                  0,
-                valueSetter: ({ data, newValue }) => {
-                  const val = toQuantity(newValue);
-                  const sizeData =
-                    data!.sizes?.[`${data.sizeGroup} - ${size.name}`];
-                  if (val && sizeData) {
-                    sizeData.quantity = val;
-                    return true;
-                  }
-                  return false;
-                },
-              };
-            }
-          } else {
-            col = {
-              type: "quantityColumn",
-              headerName: size.id,
-              valueGetter: ({ data }) => data!.sizes?.[size.id].quantity ?? 0,
-              valueSetter: ({ data, newValue }) => {
-                const val = toQuantity(newValue);
-                const sizeData = data!.sizes?.[size.id];
-                if (val && sizeData) {
-                  sizeData.quantity = val;
-                  return true;
-                }
-                return false;
-              },
-            };
-          }
-
-          if (col) {
-            acc.push(col);
-          }
-          return acc;
-        }, [] as ColDef<GridGroupDataItem>[]);
+    ((levelIndex < levels.length - 1 &&
+      product?.sizes
+        .map((size) =>
+          getQuantityColumn({
+            size,
+            product,
+            hasSizeGroups,
+            visibleLevels,
+          })
+        )
+        .filter((col) => !!col)) as ColDef<GridGroupDataItem>[]) || [];
 
   switch (level) {
     case "product":
       return [
         groupCol,
-        ...other,
+        ...nonGroup,
         {
           headerName: "Department",
           field: "product.department",

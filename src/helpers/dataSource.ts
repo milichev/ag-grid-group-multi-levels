@@ -5,8 +5,9 @@ import {
   Shipment,
   Warehouse,
   Size,
-  GridSize,
-} from "./interfaces";
+  SizeQuantity,
+} from "../interfaces";
+import { getSizeKey } from "./format";
 
 const basic = {
   id: () => faker.datatype.hexadecimal({ case: "upper", length: 24 }),
@@ -94,17 +95,23 @@ export const getGridData = ({
   sizeGroupCount: number;
   isBuildOrder: boolean;
 }): GridDataItem[] => {
+  // get working products
   const products = faker.helpers.uniqueArray<Product>(
     entity.product.bind(entity, { sizeGroupCount }),
     productCount
   );
+  // get all warehouses
   const warehouses = faker.helpers.uniqueArray(
     entity.warehouse,
     warehouseCount
   );
+  // depending on the current Build Order availability, get the static shipments,
+  // otehrwise, shipments are created per product-warehouse pair
   const buildOrderShipments = isBuildOrder ? getShipments(shipmentCount) : [];
-  const items: GridDataItem[] = [];
 
+  // having all the data used in the order,
+  // create the order representation as a set of combinations of all products, warehouses, and shipments.
+  const items: GridDataItem[] = [];
   products.forEach((product) => {
     warehouses.forEach((warehouse) => {
       const shipments = isBuildOrder
@@ -115,26 +122,25 @@ export const getGridData = ({
           );
 
       shipments.forEach((shipment) => {
-        const sizeIds = [];
+        const sizeKeys = [];
         const sizes = product.sizes.reduce((acc, size) => {
-          const sizeId = size.sizeGroup
-            ? `${size.sizeGroup} - ${size.name}`
-            : size.name;
-          sizeIds.push(sizeId);
-          acc[sizeId] = {
+          const sizeKey = getSizeKey(size.name, size.sizeGroup);
+          sizeKeys.push(sizeKey);
+          acc[sizeKey] = {
             id: size.id,
             name: size.name,
             sizeGroup: size.sizeGroup,
             quantity: faker.datatype.number({ min: 0, max: 150 }),
           };
           return acc;
-        }, {} as Record<string, GridSize>);
+        }, {} as Record<string, SizeQuantity>);
+
         items.push({
           product,
           warehouse,
           shipment,
           sizes,
-          sizeIds,
+          sizeKeys,
         });
       });
     });
