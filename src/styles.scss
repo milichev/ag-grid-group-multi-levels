@@ -42,12 +42,23 @@ body {
 
 .ag-cell.ttl-cell {
   background-color: #efefef;
+
+  .ag-row.ag-row-selected > & {
+    background-color: #2196f338;
+  }
+
+  .ag-row.ag-row-hover > & {
+    background-color: rgba(33, 150, 243, 0.13);
+  }
 }
 
+
 .ag-row .ag-body-viewport .ag-cell-wrapper.ag-row-group {
+  // resets the left indent of nested group levels
   padding-left: 0;
 }
 .ag-row .ag-body-viewport .ag-row-group-leaf-indent {
+  // resets the left indent of the nested leaf level
   margin-left: 0;
 }
 .ag-row .ag-layout-auto-height {
@@ -58,6 +69,8 @@ body {
 }
 .nest-mode-tool-panel {
   padding: 1rem;
+  
+  h4 { margin-bottom: 0.5em; }
 
   .settings-list,
   .mode-list {
@@ -77,14 +90,59 @@ body {
       }
     }
   }
+  
+  .settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+
+    li {
+      flex-direction: column;
+
+      section {
+        margin: 0.25em 0 1em 1.5em;
+        padding: 0.5em;
+        border: solid 1px #eee;
+        border-radius: 0.5em;
+        pointer-events: none;
+        color: #a9a9a9;
+        
+        &:empty {
+          display: none;
+        }
+      }
+
+      &:has(>label>input:checked) {
+        section {
+          border: solid 1px #bbb;
+          color: #000;
+          pointer-events: all;
+        }
+      }
+    }
+  }
 
   .dir-buttons {
+    display: flex;
+    flex-direction: column;
+
     button {
-      padding: 0 0.125rem;
-      margin-left: 0.125rem;
       border: 0;
       background: none;
       color: #666;
+      padding: 0;
+      font-size: 0.8em;
+      
+      &:hover {
+        color: #000;
+      }
+      
+      &[data-dir="up"] {
+        margin-bottom: -0.175em;
+      }
+      &[data-dir="down"] {
+        margin-top: -0.175em;
+      }
 
       &:hover:not([disabled]) {
         cursor: pointer;
@@ -93,6 +151,58 @@ body {
 
       &[disabled] {
         color: #bbb;
+      }
+    }
+  }
+}
+
+.quantity-editor {
+  display: flex;
+  height: 100%;
+  
+  input {
+    width: 100%;
+    padding: 0;
+    border: none;
+    outline: none;
+    margin: 0.5em;
+    background-color: transparent;
+  }
+}
+
+.debug-list {
+  list-style-type: none;
+  padding: 0;
+  font-family: monospace;
+
+  li {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    
+    .label {
+      flex-grow: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    &.perf {
+      color: #999;
+      
+      &.fast .value {
+        background-color: #beff8b;
+      }
+      &.so-so .value {
+        color: #000;
+        background-color: #ffc875;
+      }
+      &.slow .value {
+        color: #fff;
+        background-color: #ff9684;
+      }
+      &.dead .value {
+        color: #fff;
+        background-color: #b00f0f;
       }
     }
   }

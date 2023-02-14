@@ -3,10 +3,10 @@
   "compilerOptions": {
     "strict": false,
     "esModuleInterop": true,
-    "lib": ["dom", "es2015"],
+    "lib": ["dom", "ES7"],
     "jsx": "react-jsx",
     "resolveJsonModule": true,
-    "target": "es5",
+    "target": "es6",
     "allowJs": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,

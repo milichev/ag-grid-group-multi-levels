@@ -15,6 +15,7 @@ export interface Product extends Entity {
   sizes: Size[];
   image: string;
   department: string;
+  gender: string;
 }
 
 export interface Warehouse extends Entity {
@@ -27,6 +28,7 @@ export interface Warehouse extends Entity {
 export interface Shipment extends Entity {
   startDate: Date;
   endDate: Date;
+  isBuildOrder?: boolean;
 }
 
 export interface SizeQuantity extends Size {
@@ -34,12 +36,13 @@ export interface SizeQuantity extends Size {
 }
 
 export interface GridDataItem {
+  id: string;
   product: Product;
   warehouse: Warehouse;
   shipment: Shipment;
   /** Here the quantities by sizes are placed */
   sizes: Record<string, SizeQuantity>;
-  sizeKeys: string[];
+  sizeIds: string[];
 }
 
 export type Level =
@@ -53,15 +56,23 @@ export type SelectableLevel = Extract<
 
 export interface LevelItem {
   level: Level;
+  /** The sizing grid has the level enabled; otherwise the respective item attribute, such as warehouse or shipment, is represented as a column */
   visible: boolean;
 }
 
-export const levels: SelectableLevel[] = [
-  "product",
-  "warehouse",
-  "shipment",
-  "sizeGroup",
-];
+/**
+ * In the sizing grid representation, specifies how shipments are assigned to product items.
+ */
+export enum ShipmentsMode {
+  /**
+   * All items have the same shipments from the Build Order field, AND their individual shipments, if any.
+   */
+  BuildOrder = "BUILD_ORDER",
+  /**
+   * Each item has its own shipments.
+   */
+  LineItems = "LINE_ITEMS",
+}
 
 export type VisibleLevels = Partial<Record<Level, true>>;
 

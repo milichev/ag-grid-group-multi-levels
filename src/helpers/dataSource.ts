@@ -1,16 +1,19 @@
 import { faker } from "@faker-js/faker";
 import {
   GridDataItem,
+  ShipmentsMode,
   Product,
   Shipment,
-  Warehouse,
   Size,
   SizeQuantity,
+  Warehouse,
 } from "../interfaces";
-import { getSizeKey } from "./format";
+import { AppContext } from "../hooks/useAppContext";
+import { wrap } from "./perf";
+import { getDataItemId, getSizeKey } from "./resolvers";
 
 const basic = {
-  id: () => faker.datatype.hexadecimal({ case: "upper", length: 24 }),
+  id: () => faker.datatype.hexadecimal({ case: "upper", length: 24 }).slice(2),
   productName: () => faker.commerce.productName(),
   warehouseName: () => faker.address.city(),
   warehouseCode: () => faker.address.stateAbbr(),
@@ -26,7 +29,13 @@ const wrapUnique = <T extends Record<string, () => any>>(methods: T) =>
 const uniqueBasic = wrapUnique(basic);
 
 const entity = {
-  product: ({ sizeGroupCount = 3 }): Product => {
+  product: ({
+    sizeGroupCount = 3,
+    departments = [],
+  }: {
+    sizeGroupCount?: number;
+    departments?: string[] | null;
+  }): Product => {
     const retail = faker.datatype.number({
       precision: 0.01,
       min: 4,
@@ -64,7 +73,10 @@ const entity = {
       image: faker.image.fashion(),
       name: uniqueBasic.productName(),
       color: faker.color.human(),
-      department: faker.commerce.department(),
+      department: departments
+        ? faker.helpers.arrayElement(departments)
+        : faker.commerce.department(),
+      gender: faker.helpers.arrayElement(["male", "female", "other"]),
       retail,
       wholesale:
         retail *
@@ -75,7 +87,7 @@ const entity = {
 
   warehouse: (): Warehouse => ({
     id: uniqueBasic.id(),
-    code: uniqueBasic.warehouseCode(),
+    code: faker.helpers.arrayElement(["NJ", "AZ"]), //uniqueBasic.warehouseCode(),
     name: uniqueBasic.warehouseName(),
     zip: faker.address.zipCode(),
     country: faker.address.country(),
@@ -83,70 +95,95 @@ const entity = {
 };
 
 export const getGridData = ({
-  productCount,
-  shipmentCount,
-  sizeGroupCount,
-  warehouseCount,
-  isBuildOrder,
+  counts,
+  buildOrderShipments,
+  shipmentsMode,
 }: {
-  productCount: number;
-  warehouseCount: number;
-  shipmentCount: number;
-  sizeGroupCount: number;
-  isBuildOrder: boolean;
-}): GridDataItem[] => {
+  counts: {
+    products: number;
+    warehouses: number;
+    sizeGroups: number;
+  };
+  buildOrderShipments: Shipment[];
+} & Pick<AppContext, "shipmentsMode">): GridDataItem[] => {
+  const departments = faker.helpers.uniqueArray(
+    faker.commerce.department,
+    counts.products / 5
+  );
   // get working products
   const products = faker.helpers.uniqueArray<Product>(
-    entity.product.bind(entity, { sizeGroupCount }),
-    productCount
+    entity.product.bind(entity, {
+      sizeGroupCount: counts.sizeGroups,
+      departments,
+    }),
+    counts.products
   );
   // get all warehouses
   const warehouses = faker.helpers.uniqueArray(
     entity.warehouse,
-    warehouseCount
+    counts.warehouses
   );
-  // depending on the current Build Order availability, get the static shipments,
-  // otehrwise, shipments are created per product-warehouse pair
-  const buildOrderShipments = isBuildOrder ? getShipments(shipmentCount) : [];
 
   // having all the data used in the order,
   // create the order representation as a set of combinations of all products, warehouses, and shipments.
   const items: GridDataItem[] = [];
   products.forEach((product) => {
     warehouses.forEach((warehouse) => {
-      const shipments = isBuildOrder
-        ? buildOrderShipments
-        : getShipments(
-            faker.datatype.number({ min: 1, max: shipmentCount }),
-            faker.helpers.arrayElement([2, 7, 30])
-          );
+      const shipments =
+        shipmentsMode === ShipmentsMode.BuildOrder
+          ? faker.helpers.arrayElements(
+              buildOrderShipments,
+              faker.datatype.number({ min: 1 })
+            )
+          : getShipments(
+              faker.datatype.number({
+                min: 1,
+                max: buildOrderShipments.length,
+              }),
+              {
+                defaultDeliveryWindow: faker.helpers.arrayElement([
+                  2, 7, 10, 14, 30,
+                ]),
+              }
+            );
 
       shipments.forEach((shipment) => {
-        const sizeKeys = [];
-        const sizes = product.sizes.reduce((acc, size) => {
-          const sizeKey = getSizeKey(size.name, size.sizeGroup);
-          sizeKeys.push(sizeKey);
-          acc[sizeKey] = {
-            id: size.id,
-            name: size.name,
-            sizeGroup: size.sizeGroup,
-            quantity: faker.datatype.number({ min: 0, max: 150 }),
-          };
-          return acc;
-        }, {} as Record<string, SizeQuantity>);
-
         items.push({
+          id: getDataItemId(product, warehouse, shipment),
           product,
           warehouse,
           shipment,
-          sizes,
-          sizeKeys,
+          ...getSizeQuantities(product.sizes, true),
         });
       });
     });
   });
 
   return items;
+};
+
+export const getGridDataPerf = wrap(getGridData, "getGridData", false);
+
+export const getSizeQuantities = (
+  sizes: Size[],
+  isRandQuantity = false
+): Pick<GridDataItem, "sizes" | "sizeIds"> => {
+  const sizeIds = [];
+  const sizeQuantities = sizes.reduce((acc, size) => {
+    const sizeId = getSizeKey(size.name, size.sizeGroup);
+    sizeIds.push(sizeId);
+    acc[sizeId] = {
+      id: size.id,
+      name: size.name,
+      sizeGroup: size.sizeGroup,
+      quantity: isRandQuantity
+        ? faker.datatype.number({ min: 0, max: 150 })
+        : 0,
+    };
+    return acc;
+  }, {} as Record<string, SizeQuantity>);
+
+  return { sizeIds, sizes: sizeQuantities };
 };
 
 const addDays = (date: Date, amount: number) => {
@@ -159,7 +196,10 @@ const addDays = (date: Date, amount: number) => {
 
 const toISODateString = (date: Date) => date.toISOString().slice(0, 10);
 
-const getShipments = (count: number, defaultDeliveryWindow = 7) => {
+export const getShipments = (
+  count: number,
+  { defaultDeliveryWindow = 7, isBuildOrder = false } = {}
+) => {
   const shipments: Shipment[] = [];
   [...Array(count)].forEach((_u, i) => {
     const startDate =
@@ -169,6 +209,7 @@ const getShipments = (count: number, defaultDeliveryWindow = 7) => {
       id: `${toISODateString(startDate)} - ${toISODateString(endDate)}`,
       startDate,
       endDate,
+      isBuildOrder,
     });
   });
   return shipments;

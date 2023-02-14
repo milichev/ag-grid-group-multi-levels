@@ -1,9 +1,10 @@
-import { useContext, createContext } from "react";
-import { Level, LevelItem } from "../interfaces";
+import { createContext, useContext } from "react";
+import { ShipmentsMode, Level, LevelItem, Shipment } from "../interfaces";
 
 interface ContextValues {
   levelItems: LevelItem[];
-  isBuildOrder: boolean;
+  shipmentsMode: ShipmentsMode;
+  isAllDeliveries: boolean;
 }
 
 type ContextValueSetters = {
@@ -14,9 +15,9 @@ type ContextValueSetters = {
 
 export type AppContext = ContextValues & ContextValueSetters;
 
-const appContext = createContext({
+const appContext = createContext<AppContext>({
   levelItems: [],
-  isBuildOrder: true,
+  shipmentsMode: ShipmentsMode.BuildOrder,
 } as AppContext);
 
 export const AppContextProvider = appContext.Provider;

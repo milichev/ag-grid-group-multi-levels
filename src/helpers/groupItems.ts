@@ -1,12 +1,11 @@
 import {
   GridDataItem,
   Level,
-  levels as allLevels,
   VisibleLevels,
   GridGroupDataItem,
-  SizeQuantity,
 } from "../interfaces";
 import { measureStep } from "./perf";
+import { levels as allLevels } from "../constants";
 
 const getItemPropKey = (item: GridDataItem, level: Level): string => {
   switch (level) {
@@ -51,7 +50,7 @@ export const groupItems = (
   visibleLevels: VisibleLevels,
   parent: GridGroupDataItem | null
 ): GridGroupDataItem[] => {
-  const step = measureStep({ name: "GROUP_ITEMS", async: false });
+  const step = measureStep({ name: "groupItems", async: false });
 
   const level = levels[levelIndex];
   const idLevels: Level[] = [];
@@ -64,7 +63,7 @@ export const groupItems = (
   }
 
   const getId = (item: GridDataItem) =>
-    idLevels.map((l) => getItemPropKey(item, l)).join(";");
+    idLevels.map((l) => `${l}:${getItemPropKey(item, l)}`, []).join(";");
   const hasProduct = levels.indexOf("product") <= levelIndex;
   const product = hasProduct ? dataItems[0].product : undefined;
   const hasSizes = levelIndex >= levels.length - 1;
@@ -73,6 +72,10 @@ export const groupItems = (
     parent && sizeGroupIdx >= 0 && sizeGroupIdx < levelIndex
       ? getParentSizeGroup(parent)
       : undefined;
+
+  if (level === "shipment") {
+    dataItems.sort((a, b) => +a.shipment.startDate - +b.shipment.endDate);
+  }
 
   const byIds = new Map<string, GridDataItem[]>();
 
@@ -140,7 +143,7 @@ const addSizesTotals = (
   item: GridDataItem,
   acc: Pick<GridGroupDataItem, "ttlUnits" | "ttlCost">
 ) =>
-  item.sizeKeys.forEach((sizeId) => {
+  item.sizeIds.forEach((sizeId) => {
     const size = item.sizes[sizeId];
     acc.ttlUnits += size.quantity;
     acc.ttlCost += item.product.wholesale * size.quantity;

@@ -1,15 +1,18 @@
-import { Level, LevelItem } from "../interfaces";
+import { ShipmentsMode, Level, LevelItem } from "../interfaces";
 import { AppContext } from "../hooks/useAppContext";
 
 export const getLevelIndex = (levelItems: LevelItem[], level: Level) =>
   levelItems.findIndex((item) => item.level === level);
 
+/**
+ * When `levelItems` is LineItems, the shipment level cannot be higher than product or warehouse.
+ */
 export const fixupLevelItems = ({
-  isBuildOrder,
+  shipmentsMode,
   levelItems,
   setLevelItems,
-}: Pick<AppContext, "isBuildOrder" | "levelItems" | "setLevelItems">) => {
-  if (!isBuildOrder) {
+}: Pick<AppContext, "shipmentsMode" | "levelItems" | "setLevelItems">) => {
+  if (shipmentsMode === ShipmentsMode.LineItems) {
     const baseIndex = Math.max(
       getLevelIndex(levelItems, "product"),
       getLevelIndex(levelItems, "warehouse")
@@ -27,7 +30,7 @@ export const fixupLevelItems = ({
 export const getLevelMeta = (
   levelItems: LevelItem[],
   level: number | Level,
-  { isBuildOrder }: Pick<AppContext, "isBuildOrder">
+  { shipmentsMode }: Pick<AppContext, "shipmentsMode">
 ) => {
   const i =
     typeof level === "number" ? level : getLevelIndex(levelItems, level);
@@ -43,11 +46,14 @@ export const getLevelMeta = (
       downEnabled =
         downEnabled &&
         levelItems[i + 1].level !== "sizeGroup" &&
-        (isBuildOrder || levelItems[i + 1].level !== "shipment");
+        (shipmentsMode === ShipmentsMode.BuildOrder ||
+          levelItems[i + 1].level !== "shipment");
       break;
     case "warehouse":
       downEnabled =
-        downEnabled && (isBuildOrder || levelItems[i + 1].level !== "shipment");
+        downEnabled &&
+        (shipmentsMode === ShipmentsMode.BuildOrder ||
+          levelItems[i + 1].level !== "shipment");
       break;
     case "sizeGroup":
       upEnabled = upEnabled && levelItems[i - 1].level !== "product";
@@ -55,7 +61,7 @@ export const getLevelMeta = (
     case "shipment":
       upEnabled =
         upEnabled &&
-        (isBuildOrder ||
+        (shipmentsMode === ShipmentsMode.BuildOrder ||
           (levelItems[i - 1].level !== "product" &&
             levelItems[i - 1].level !== "warehouse"));
       break;

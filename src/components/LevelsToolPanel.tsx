@@ -7,10 +7,17 @@ import {
   getLevelMeta,
   toggleLevelItem,
 } from "../helpers/levels";
+import { ShipmentsMode } from "../interfaces";
 
 export const LevelsToolPanel: React.FC = () => {
-  const { levelItems, setLevelItems, isBuildOrder, setIsBuildOrder } =
-    useAppContext();
+  const {
+    levelItems,
+    setLevelItems,
+    shipmentsMode,
+    setShipmentsMode,
+    isAllDeliveries,
+    setIsAllDeliveries,
+  } = useAppContext();
 
   const handleVisibleChange = useCallback(
     (e) => {
@@ -46,8 +53,12 @@ export const LevelsToolPanel: React.FC = () => {
   );
 
   useEffect(() => {
-    fixupLevelItems({ isBuildOrder, levelItems, setLevelItems });
-  }, [isBuildOrder, levelItems, setLevelItems]);
+    fixupLevelItems({
+      shipmentsMode: shipmentsMode,
+      levelItems,
+      setLevelItems,
+    });
+  }, [shipmentsMode, levelItems, setLevelItems]);
 
   return (
     <div className="nest-mode-tool-panel">
@@ -57,7 +68,7 @@ export const LevelsToolPanel: React.FC = () => {
           const { enabled, upEnabled, downEnabled } = getLevelMeta(
             levelItems,
             i,
-            { isBuildOrder }
+            { shipmentsMode: shipmentsMode }
           );
 
           return (
@@ -79,7 +90,7 @@ export const LevelsToolPanel: React.FC = () => {
                   disabled={!upEnabled}
                   onClick={handlePosClick}
                 >
-                  ⬆︎
+                  ▲
                 </button>
                 <button
                   data-level={level}
@@ -87,26 +98,60 @@ export const LevelsToolPanel: React.FC = () => {
                   disabled={!downEnabled}
                   onClick={handlePosClick}
                 >
-                  ⬇︎
+                  ▼
                 </button>
               </div>
             </li>
           );
         })}
       </ul>
+
       <h3>Settings</h3>
+      <h4>Grid Mode</h4>
       <ul className="settings-list">
         <li>
           <label>
             <input
-              type="checkbox"
-              checked={isBuildOrder}
-              onChange={(e) => setIsBuildOrder(e.target.checked)}
+              type="radio"
+              checked={shipmentsMode === ShipmentsMode.BuildOrder}
+              onChange={(e) =>
+                e.target.checked && setShipmentsMode(ShipmentsMode.BuildOrder)
+              }
             />
             Build Order
           </label>
+          <section
+            className=""
+            aria-disabled={shipmentsMode !== ShipmentsMode.BuildOrder}
+          ></section>
+        </li>
+        <li>
+          <label>
+            <input
+              type="radio"
+              checked={shipmentsMode === ShipmentsMode.LineItems}
+              onChange={(e) =>
+                e.target.checked && setShipmentsMode(ShipmentsMode.LineItems)
+              }
+            />
+            Line Items
+          </label>
+          <section aria-disabled={shipmentsMode !== ShipmentsMode.LineItems}>
+            <div>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={isAllDeliveries}
+                  disabled={shipmentsMode !== ShipmentsMode.LineItems}
+                  onChange={(e) => setIsAllDeliveries(e.target.checked)}
+                />
+                All Deliveries
+              </label>
+            </div>
+          </section>
         </li>
       </ul>
+
       <h3>Debug</h3>
       <DebugBox />
     </div>

@@ -1,4 +1,6 @@
 import _ from "lodash";
+import { afterFrame } from "./afterFrame";
+
 const outPrefix = "[nu.perf]";
 const global: any = window;
 
@@ -45,6 +47,8 @@ function extObject(obj) {
 
 export let context = {};
 
+export const CONTEXT_PREFIX = "perf:";
+
 const createNuPerf = () => {
   let entries: PerformanceEntry[] = new PerfArray();
 
@@ -78,10 +82,14 @@ const createNuPerf = () => {
 
   type OnContext = <C>(ctx: C) => void;
   const contextHandlers = new Set<OnContext>();
-  const onContext = _.debounce(
-    () => contextHandlers.forEach((h) => h(context)),
-    5
-  );
+
+  let onContextIdle = 0;
+  const onContext = _.debounce(() => {
+    cancelIdleCallback(onContextIdle);
+    onContextIdle = window.requestIdleCallback(() => {
+      contextHandlers.forEach((h) => h(context));
+    });
+  }, 5);
 
   const setContext = <C extends Record<string, unknown>>(
     ctx: C,
@@ -103,6 +111,16 @@ const createNuPerf = () => {
     },
     removeOnContext(handler: OnContext) {
       contextHandlers.delete(handler);
+    },
+    clearContext(pattern: string | RegExp) {
+      Object.keys(context).forEach((key) => {
+        if (
+          (typeof pattern === "string" && key.includes(pattern)) ||
+          !!key.match(pattern)
+        ) {
+          delete context[key];
+        }
+      });
     },
   };
 };
@@ -129,7 +147,7 @@ const createStep = (
         steps.delete(name);
         const elapsed = (endMs - startMs).toFixed(3);
         console.log(`${outPrefix} END ${name} (${elapsed})`);
-        nuPerf.setContext({ [`perf:${name}`]: elapsed }, true);
+        nuPerf.setContext({ [`${CONTEXT_PREFIX}${name}`]: elapsed }, true);
       };
 
       if (async) {
@@ -199,9 +217,6 @@ export const wrap = <F extends (...args: any[]) => any>(
 
     return result;
   } as F;
-
-export const afterFrame = <F extends (...ars: any[]) => any>(cb: F) =>
-  requestAnimationFrame(() => setTimeout(cb));
 
 export const nuPerf = /*(top as any).__nu_perf ??*/ createNuPerf();
 global.__nu_perf = nuPerf;

@@ -1,71 +1,30 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
-import { AgGridReact } from "ag-grid-react";
+import React, { useMemo, useState } from "react";
 import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import {
-  GridReadyEvent,
-  GridApi,
-  ColumnApi,
-  SideBarDef,
-} from "ag-grid-community";
 
-import { AppContextProvider } from "../hooks/useAppContext";
+import { AppContext, AppContextProvider } from "../hooks/useAppContext";
+import { ShipmentsMode, LevelItem } from "../interfaces";
 import {
+  getGridDataPerf as getGridData,
+  getShipments,
+} from "../helpers/dataSource";
+import { nuPerf, wrap } from "../helpers/perf";
+import { Grid } from "./size-grid";
+import {
+  defaultLevels,
   levels as allLevels,
-  GridGroupDataItem,
-  LevelItem,
-} from "../interfaces";
-import { getGridData } from "../helpers/dataSource";
-import { wrap, nuPerf } from "../helpers/perf";
-import { defaultLevels, testDataParams, getGridProps } from "./getGridProps";
-import { LevelsToolPanel } from "./LevelsToolPanel";
+  defaultCounts,
+  defaultShipmentsMode,
+  defaultIsAllDeliveries,
+} from "../constants";
 
 const styles = {
   container: { width: "100%", height: "100%" },
   grid: { height: "100%", width: "100%" },
 };
 
-const sideBar: SideBarDef = {
-  toolPanels: [
-    {
-      id: "columns",
-      labelDefault: "Columns",
-      labelKey: "columns",
-      iconKey: "columns",
-      toolPanel: "agColumnsToolPanel",
-      minWidth: 225,
-      maxWidth: 225,
-      width: 225,
-    },
-    {
-      id: "filters",
-      labelDefault: "Filters",
-      labelKey: "filters",
-      iconKey: "filter",
-      toolPanel: "agFiltersToolPanel",
-      minWidth: 180,
-      maxWidth: 400,
-      width: 250,
-    },
-    {
-      id: "nestingLevels",
-      labelDefault: "Nesting Levels",
-      labelKey: "nestingLevels",
-      iconKey: "linked",
-      minWidth: 180,
-      maxWidth: 400,
-      width: 250,
-      toolPanel: LevelsToolPanel,
-    },
-  ],
-  defaultToolPanel: "nestingLevels",
-};
-
 const GridApp: React.FC = () => {
-  const gridApi = useRef<GridApi>();
-  const columnApi = useRef<ColumnApi>();
-
   const [levelItems, setLevelItems] = useState(
     allLevels.map(
       (level): LevelItem => ({
@@ -74,16 +33,22 @@ const GridApp: React.FC = () => {
       })
     )
   );
-  const [isBuildOrder, setIsBuildOrder] = useState(true);
+  const [shipmentsMode, setShipmentsMode] = useState(defaultShipmentsMode);
+  const [isAllDeliveries, setIsAllDeliveries] = useState(
+    defaultIsAllDeliveries
+  );
 
-  const appContext = useMemo(
+  const appContext = useMemo<AppContext>(
     () => ({
       levelItems,
       setLevelItems,
-      isBuildOrder,
-      setIsBuildOrder,
+      shipmentsMode,
+      setShipmentsMode,
+      isAllDeliveries:
+        isAllDeliveries || shipmentsMode === ShipmentsMode.BuildOrder,
+      setIsAllDeliveries,
     }),
-    [levelItems, isBuildOrder]
+    [levelItems, shipmentsMode, isAllDeliveries]
   );
 
   const levels = useMemo(() => {
@@ -96,39 +61,34 @@ const GridApp: React.FC = () => {
     return result;
   }, [levelItems]);
 
-  const [settings, gridData] = useMemo(() => {
-    const settings = {
-      ...testDataParams,
-      isBuildOrder,
-    };
-    return [settings, getGridData(settings)];
-  }, [isBuildOrder]);
-
-  const gridProps = useMemo(
-    () => getGridProps(levels, gridData, appContext),
-    [gridData, levels, appContext]
+  const buildOrderShipments = useMemo(
+    () => getShipments(defaultCounts.buildOrderShipments),
+    []
   );
 
-  console.log("gridProps", gridProps);
+  // get fake grid order data
+  const gridData = useMemo(() => {
+    return getGridData({
+      counts: defaultCounts,
+      buildOrderShipments,
+      shipmentsMode: shipmentsMode,
+    });
+  }, [buildOrderShipments, shipmentsMode]);
 
   nuPerf.setContext({
-    ...settings,
-    rootItemCount: gridProps.rowData?.length ?? 0,
+    ...defaultCounts,
+    gridMode: shipmentsMode,
+    isAllDeliveries,
   });
-
-  const onGridReady = useCallback((params: GridReadyEvent) => {
-    gridApi.current = params.api;
-    columnApi.current = params.columnApi;
-  }, []);
 
   return (
     <div style={styles.container}>
       <div style={styles.grid} className="ag-theme-alpine">
         <AppContextProvider value={appContext}>
-          <AgGridReact<GridGroupDataItem>
-            {...gridProps}
-            sideBar={sideBar}
-            onGridReady={onGridReady}
+          <Grid
+            items={gridData}
+            levels={levels}
+            buildOrderShipments={buildOrderShipments}
           />
         </AppContextProvider>
       </div>
