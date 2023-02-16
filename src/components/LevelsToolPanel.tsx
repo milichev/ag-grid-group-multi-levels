@@ -73,7 +73,7 @@ export const LevelsToolPanel: React.FC = () => {
 
           return (
             <li key={level}>
-              <label>
+              <label className="setting-label">
                 <input
                   type="checkbox"
                   checked={visible}
@@ -107,10 +107,10 @@ export const LevelsToolPanel: React.FC = () => {
       </ul>
 
       <h3>Settings</h3>
-      <h4>Grid Mode</h4>
+      <h4>Shipments Mode</h4>
       <ul className="settings-list">
         <li>
-          <label>
+          <label className="setting-label">
             <input
               type="radio"
               checked={shipmentsMode === ShipmentsMode.BuildOrder}
@@ -119,6 +119,10 @@ export const LevelsToolPanel: React.FC = () => {
               }
             />
             Build Order
+            <div className="description">
+              All items have the same shipments from the Build Order field, AND
+              their individual shipments, if any.
+            </div>
           </label>
           <section
             className=""
@@ -126,7 +130,7 @@ export const LevelsToolPanel: React.FC = () => {
           ></section>
         </li>
         <li>
-          <label>
+          <label className="setting-label">
             <input
               type="radio"
               checked={shipmentsMode === ShipmentsMode.LineItems}
@@ -135,6 +139,7 @@ export const LevelsToolPanel: React.FC = () => {
               }
             />
             Line Items
+            <div className="description">Each item has its own shipments.</div>
           </label>
           <section aria-disabled={shipmentsMode !== ShipmentsMode.LineItems}>
             <div>

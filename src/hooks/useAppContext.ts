@@ -1,5 +1,11 @@
 import { createContext, useContext } from "react";
-import { ShipmentsMode, Level, LevelItem, Shipment } from "../interfaces";
+import {
+  GridGroupDataItem,
+  Level,
+  LevelItem,
+  ShipmentsMode,
+} from "../interfaces";
+import { ColumnApi, GridApi } from "ag-grid-community";
 
 interface ContextValues {
   levelItems: LevelItem[];
@@ -28,4 +34,10 @@ export interface GridContext {
   levels: Level[];
   levelIndex: number;
   appContext: AppContext;
+  master: null | {
+    id: string;
+    api: GridApi<GridGroupDataItem>;
+    columnApi: ColumnApi;
+    context: GridContext;
+  };
 }

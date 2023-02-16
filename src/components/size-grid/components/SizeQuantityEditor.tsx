@@ -2,6 +2,7 @@ import React, {
   ChangeEventHandler,
   forwardRef,
   KeyboardEventHandler,
+  Ref,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -13,42 +14,44 @@ import { GridGroupDataItem, SizeQuantity } from "../../../interfaces";
 import { ICellEditor } from "ag-grid-community/dist/lib/interfaces/iCellEditor";
 import { afterFrame } from "../../../helpers/afterFrame";
 
-const KEY_BACKSPACE = "Backspace";
-const KEY_DELETE = "Delete";
-const KEY_ENTER = "Enter";
-const KEY_TAB = "Tab";
-
-const isLeftOrRight = (event: any) => {
-  return ["ArrowLeft", "ArrowRight"].indexOf(event.key) > -1;
+const KEY = {
+  BACKSPACE: "Backspace",
+  DELETE: "Delete",
+  ENTER: "Enter",
+  TAB: "Tab",
+  ARROW_UP: "ArrowUp",
+  ARROW_DOWN: "ArrowDown",
+  ARROW_LEFT: "ArrowLeft",
+  ARROW_RIGHT: "ArrowRight",
 };
 
-const isUpOrDown = (event: any) => {
-  return ["ArrowUp", "ArrowDown"].indexOf(event.key) > -1;
-};
+const isLeftOrRight = (key: string) =>
+  [KEY.ARROW_LEFT, KEY.ARROW_RIGHT].indexOf(key) > -1;
 
-const isCharNumeric = (charStr: string) => {
-  return !!/\d/.test(charStr);
-};
+const isUpOrDown = (key: string) =>
+  [KEY.ARROW_UP, KEY.ARROW_DOWN].indexOf(key) > -1;
 
-const isKeyPressedNumeric = (event: any) => {
-  const charStr = event.key;
-  return isCharNumeric(charStr);
-};
+const isCharNumeric = (charStr: string) => !!/\d/.test(charStr);
 
-const deleteOrBackspace = (event: any) => {
-  return [KEY_DELETE, KEY_BACKSPACE].indexOf(event.key) > -1;
-};
+const isKeyPressedNumeric = (key: string) => isCharNumeric(key);
 
-const finishedEditingPressed = (event: any) => {
-  const key = event.key;
-  return key === KEY_ENTER || key === KEY_TAB;
-};
+const deleteOrBackspace = (key: string) =>
+  [KEY.DELETE, KEY.BACKSPACE].indexOf(key) > -1;
+
+const finishedEditingPressed = (key: string) =>
+  key === KEY.ENTER || key === KEY.TAB;
 
 export const SizeQuantityEditor = forwardRef(function SizeQuantityEditor(
   props: CastProp<ICellEditorParams<GridGroupDataItem>, "value", SizeQuantity>,
-  ref
+  ref: Ref<Partial<ICellEditor>>
 ) {
-  const [quantity, setQuantity] = useState(props.value.quantity);
+  const [quantity, setQuantity] = useState(
+    deleteOrBackspace(props.eventKey)
+      ? null
+      : isCharNumeric(props.charPress)
+      ? +props.charPress
+      : props.value.quantity
+  );
   const refInput = useRef<HTMLInputElement>(null);
 
   const handleChange = useCallback<ChangeEventHandler<HTMLInputElement>>(
@@ -62,16 +65,17 @@ export const SizeQuantityEditor = forwardRef(function SizeQuantityEditor(
   );
 
   const handleKeyDown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
-    (event: any) => {
-      if (isLeftOrRight(event) || deleteOrBackspace(event)) {
+    (event) => {
+      const { key } = event;
+      if (isLeftOrRight(key) || deleteOrBackspace(key)) {
         event.stopPropagation();
         return;
       }
 
       if (
-        !finishedEditingPressed(event) &&
-        !isUpOrDown(event) &&
-        !isKeyPressedNumeric(event)
+        !finishedEditingPressed(key) &&
+        !isUpOrDown(key) &&
+        !isKeyPressedNumeric(key)
       ) {
         if (event.preventDefault) event.preventDefault();
       }
@@ -80,37 +84,35 @@ export const SizeQuantityEditor = forwardRef(function SizeQuantityEditor(
   );
 
   useEffect(() => {
-    // get ref from React component
     afterFrame(() => {
       refInput.current?.focus();
-      refInput.current?.select();
+      if (!isCharNumeric(props.charPress)) {
+        refInput.current?.select();
+      }
     });
-  }, []);
+  }, [props.charPress]);
 
   const cancelBeforeStart =
     props.charPress && "1234567890".indexOf(props.charPress) < 0;
 
-  useImperativeHandle(ref, () => {
-    const handle: Partial<ICellEditor> = {
-      getValue() {
-        const cellValue: SizeQuantity = {
-          ...props.value,
-          quantity,
-        };
-        return cellValue;
-      },
-      isCancelBeforeStart() {
-        return cancelBeforeStart;
-      },
-      focusIn() {
-        refInput.current?.focus();
-      },
-      isCancelAfterEnd() {
-        return quantity < 0 || quantity > 1000000;
-      },
-    };
-    return handle;
-  });
+  useImperativeHandle(ref, () => ({
+    getValue() {
+      const cellValue: SizeQuantity = {
+        ...props.value,
+        quantity,
+      };
+      return cellValue;
+    },
+    focusIn() {
+      refInput.current?.focus();
+    },
+    isCancelBeforeStart() {
+      return cancelBeforeStart;
+    },
+    isCancelAfterEnd() {
+      return quantity < 0 || quantity > 1000000;
+    },
+  }));
 
   return (
     <div className="quantity-editor">
@@ -118,7 +120,7 @@ export const SizeQuantityEditor = forwardRef(function SizeQuantityEditor(
         ref={refInput}
         type="number"
         min={0}
-        value={quantity}
+        value={quantity === null ? "" : quantity}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
       />

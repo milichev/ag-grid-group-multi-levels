@@ -90,7 +90,17 @@ body {
       }
     }
   }
-  
+
+  label.setting-label {
+    cursor: pointer;
+
+    .description {
+      color: #999;
+      margin-left: 1.3rem;
+      font-size: 0.759em;
+    }
+  }
+
   .settings-list {
     display: flex;
     flex-direction: column;
@@ -98,9 +108,9 @@ body {
 
     li {
       flex-direction: column;
-
+      
       section {
-        margin: 0.25em 0 1em 1.5em;
+        margin: 0.25em 0 1em 1.3rem;
         padding: 0.5em;
         border: solid 1px #eee;
         border-radius: 0.5em;
@@ -112,7 +122,7 @@ body {
         }
       }
 
-      &:has(>label>input:checked) {
+      &:has(>label.setting-label>input:checked) {
         section {
           border: solid 1px #bbb;
           color: #000;

@@ -1,6 +1,6 @@
 import {
-  ValueFormatterParams,
   ColDef,
+  ValueFormatterParams,
   ValueSetterParams,
 } from "ag-grid-community";
 import {
@@ -31,6 +31,40 @@ type QuantitySetParams = CastProp<
 const valueParser: ColDef["valueParser"] = (params) =>
   toQuantity(params.newValue);
 
+const equals = (a: SizeQuantity, b: SizeQuantity) => a.quantity === b.quantity;
+
+const commonProps: ColDef<GridGroupDataItem> = {
+  type: "quantityColumn",
+  cellEditor: SizeQuantityEditor,
+  lockVisible: true,
+  lockPinned: true,
+  sortable: false,
+  equals,
+  valueParser,
+  valueFormatter: quantityValueFormatter,
+};
+
+const getValueSetter =
+  (
+    setSizeQuantity: (data: GridGroupDataItem, size: SizeQuantity) => void
+  ): ColDef<GridGroupDataItem>["valueSetter"] =>
+  ({ data, newValue, oldValue }: QuantitySetParams) => {
+    const quantity: number | undefined =
+      newValue === null
+        ? 0
+        : newValue.quantity === null
+        ? oldValue.quantity || 0
+        : toQuantity(newValue.quantity);
+    if (typeof quantity === "number" && oldValue) {
+      setSizeQuantity(data, {
+        ...oldValue,
+        quantity,
+      });
+      return true;
+    }
+    return false;
+  };
+
 export const getQuantityColumn = ({
   size,
   product,
@@ -44,47 +78,22 @@ export const getQuantityColumn = ({
 }): ColDef<GridGroupDataItem> | undefined => {
   if (!visibleLevels.sizeGroup || !hasSizeGroups) {
     return {
-      type: "quantityColumn",
+      ...commonProps,
       headerName: size.id,
-      cellEditor: SizeQuantityEditor,
-      valueParser,
       valueGetter: ({ data }): SizeQuantity => data!.sizes?.[size.id],
-      valueSetter: ({ data, newValue }: QuantitySetParams) => {
-        const quantity = toQuantity(newValue.quantity);
-        const sizeData = data!.sizes?.[size.id];
-        if (typeof quantity === "number" && sizeData) {
-          data.sizes[size.id] = {
-            ...sizeData,
-            quantity,
-          };
-          return true;
-        }
-        return false;
-      },
-      valueFormatter: quantityValueFormatter,
+      valueSetter: getValueSetter((data, sizeQuantity) => {
+        data.sizes[size.id] = sizeQuantity;
+      }),
     };
   } else if (size.sizeGroup === product.sizes[0].sizeGroup) {
     return {
-      type: "quantityColumn",
+      ...commonProps,
       headerName: size.name,
-      cellEditor: SizeQuantityEditor,
-      valueParser,
       valueGetter: ({ data }): SizeQuantity =>
         data?.sizes?.[getSizeKey(size.name, data.sizeGroup)],
-      valueSetter: ({ data, newValue }: QuantitySetParams) => {
-        const quantity = toQuantity(newValue.quantity);
-        const sizeKey = getSizeKey(size.name, data.sizeGroup);
-        const sizeData = data!.sizes?.[sizeKey];
-        if (typeof quantity === "number" && sizeData) {
-          data.sizes[sizeKey] = {
-            ...sizeData,
-            quantity,
-          };
-          return true;
-        }
-        return false;
-      },
-      valueFormatter: quantityValueFormatter,
+      valueSetter: getValueSetter((data, sizeQuantity) => {
+        data.sizes[getSizeKey(size.name, data.sizeGroup)] = sizeQuantity;
+      }),
     };
   }
 };

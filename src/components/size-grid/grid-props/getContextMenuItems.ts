@@ -1,5 +1,6 @@
 import { AgGridReactProps } from "ag-grid-react";
 import { GridGroupDataItem, ShipmentsMode } from "../../../interfaces";
+import { levels as allLevels } from "../../../constants";
 import { GridContext } from "../../../hooks/useAppContext";
 import { MenuItemDef } from "ag-grid-community";
 
@@ -18,7 +19,17 @@ export const getContextMenuItems: AgGridReactProps<GridGroupDataItem>["getContex
         menuItems.push({
           name: "Remove Product",
           action: () => {
-            alert(`Here we'll delete the product ${gridItem.product.name}`);
+            alert(
+              `All line items for the ${allLevels
+                .reduce((acc, l) => {
+                  const entity: any = gridItem[l];
+                  if (entity) {
+                    acc.push(`${l} "${entity.name || entity.id}"`);
+                  }
+                  return acc;
+                }, [])
+                .join(", ")} will be deleted`
+            );
           },
         });
         break;

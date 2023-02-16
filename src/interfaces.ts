@@ -86,9 +86,8 @@ export interface GridGroupItem extends Partial<GridDataItem> {
   ttlCost?: number;
 }
 
-export type GroupedLevelProp = `${SelectableLevel}Prop`;
 type GroupedLevelPropValues = {
-  [prop in GroupedLevelProp]?: string;
+  [prop in SelectableLevel as `${SelectableLevel}Prop`]?: string;
 };
 
 export type GridGroupDataItem = GridGroupItem & GroupedLevelPropValues;

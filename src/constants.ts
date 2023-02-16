@@ -9,7 +9,7 @@ export const levels: SelectableLevel[] = [
 
 export const defaultLevels: Level[] = [
   "product",
-  // "shipment",
+  "shipment",
   // "warehouse",
   "sizeGroup",
 ];

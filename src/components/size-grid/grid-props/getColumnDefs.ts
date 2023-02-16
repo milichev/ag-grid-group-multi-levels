@@ -11,6 +11,7 @@ import type {
 import { levels as allLevels } from "../../../constants";
 import { joinUnique } from "../../../helpers/conversion";
 import { getQuantityColumn } from "./getQuantityColumn";
+import { collectSizesTotals } from "../../../helpers/groupItems";
 
 /** Describe columns, which can be grouped, as not grouped ColDefs */
 const groupCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
@@ -43,7 +44,7 @@ const selectableCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
     filter: "agTextColumnFilter",
     minWidth: 140,
     initialWidth: 160,
-    maxWidth: 200,
+    // maxWidth: 200,
     sortable: true,
   },
   warehouse: {
@@ -74,6 +75,9 @@ const levelTotals: ColDef<GridGroupDataItem>[] = [
     type: "ttlQuantityColumn",
     // pinned: "right",
     // lockPinned: true,
+    // valueGetter: (params) => {
+    //   return collectSizesTotals(params.data).ttlUnits;
+    // },
   },
   {
     headerName: "TTL Cost",
@@ -148,13 +152,8 @@ const getAggFunc = (col: ColDef) => {
   const comparer: (a: any, b: any) => number =
     col.colId === "shipment"
       ? (a: Date, b: Date) => +a - +b
-      : (a: string, b: string) => {
-          if (!a.localeCompare) {
-            // eslint-disable-next-line no-debugger
-            debugger;
-          }
-          return a.localeCompare(b, undefined, { ignorePunctuation: true });
-        };
+      : (a: string, b: string) =>
+          a.localeCompare(b, undefined, { ignorePunctuation: true });
   return (params) => {
     if (!params.rowNode.group) {
       return params.values;
@@ -199,7 +198,7 @@ export const getColumnDefsArray = ({
       // suppressDoubleClickExpand: false,
       // suppressEnterExpand: false,
       suppressPadding: true,
-      checkbox: true,
+      checkbox: levelIndex === 0,
       // innerRendererSelector: () => ({
       //   component: GroupInnerRenderer,
       //   params: {},
@@ -216,7 +215,7 @@ export const getColumnDefsArray = ({
       lockVisible: true,
       suppressSizeToFit: true,
       headerComponent: undefined,
-      headerCheckboxSelection: true,
+      headerCheckboxSelection: levelIndex === 0,
     };
 
     // if the grid is grouped, get the group auto-column value
@@ -260,6 +259,7 @@ export const getColumnDefsArray = ({
               colId: l,
               ...groupCols[l],
               ...selectableCols[l],
+              enableRowGroup: true,
             };
             return {
               ...result,
@@ -282,14 +282,14 @@ export const getColumnDefsArray = ({
         )
         .filter((col) => !!col)) as ColDef<GridGroupDataItem>[]) || [];
 
-  const auxCols = (levelAuxCols[level] || []).map((col) => {
-    if (col.enableRowGroup) {
-      return {
-        ...col,
-        aggFunc: getAggFunc(col),
-      };
-    }
-  });
+  const auxCols = (levelAuxCols[level] || []).map((col) =>
+    col.enableRowGroup
+      ? {
+          ...col,
+          aggFunc: getAggFunc(col),
+        }
+      : col
+  );
 
   return [groupCol, ...nonGroup, ...auxCols, ...sizeCols, ...levelTotals];
 };

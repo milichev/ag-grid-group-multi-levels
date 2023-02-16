@@ -10,7 +10,6 @@ import {
   GridDataItem,
   GridGroupDataItem,
   Level,
-  SelectableLevel,
   VisibleLevels,
 } from "../../../interfaces";
 import { getAutoGroupColumnDef, getColumnDefs } from "./getColumnDefs";
@@ -22,6 +21,7 @@ import { onColumnRowGroupChanged } from "./onColumnRowGroupChanged";
 import { columnTypes } from "./columnTypes";
 import { onRowDataUpdated } from "./onRowDataUpdated";
 import { measureStep } from "../../../helpers/perf";
+import { onCellValueChanged } from "./onCellValueChanged";
 
 const defaultColDef: ColDef<GridGroupDataItem> = {
   flex: 1,
@@ -41,6 +41,9 @@ const commonGridProps: Partial<AgGridReactProps<GridGroupDataItem>> = {
   suppressAutoSize: false,
   detailRowAutoHeight: true,
   singleClickEdit: true,
+  stopEditingWhenCellsLoseFocus: true,
+  undoRedoCellEditing: true,
+  enableCellEditingOnBackspace: true,
   allowContextMenuWithControlKey: true,
   suppressAggFuncInHeader: true,
   enableCellChangeFlash: true,
@@ -51,6 +54,7 @@ const commonGridProps: Partial<AgGridReactProps<GridGroupDataItem>> = {
   onColumnRowGroupChanged,
   postProcessPopup,
   onRowDataUpdated,
+  onCellValueChanged,
 };
 
 /*
@@ -66,7 +70,8 @@ const getDetailRendererParams = (
   levels: Level[],
   levelIndex: number,
   visibleLevels: VisibleLevels,
-  appContext: AppContext
+  appContext: AppContext,
+  masterContext: GridContext
 ): AgGridReactProps["detailCellRendererParams"] => {
   const level = levels[levelIndex];
   if (!level) return undefined;
@@ -99,13 +104,26 @@ const getDetailRendererParams = (
       }
     }
 
+    const context: GridContext = {
+      levels: localLevels,
+      levelIndex,
+      appContext,
+      master: {
+        id: params.data.id,
+        api: params.api,
+        columnApi: params.columnApi,
+        context: masterContext,
+      },
+    };
     const detailCellRendererParams = getDetailRendererParams(
       gridData,
       localLevels,
       levelIndex + 1,
       visibleLevels,
-      appContext
+      appContext,
+      context
     );
+
     const columnDefs = getColumnDefs({
       levels: localLevels,
       levelIndex,
@@ -113,6 +131,7 @@ const getDetailRendererParams = (
       product,
       appContext,
     });
+
     const rows = groupItems(
       parentItem.group,
       localLevels,
@@ -120,12 +139,6 @@ const getDetailRendererParams = (
       visibleLevels,
       parentItem
     );
-
-    const context: GridContext = {
-      levels: localLevels,
-      levelIndex,
-      appContext,
-    };
 
     // noinspection UnnecessaryLocalVariableJS
     const result: Partial<IDetailCellRendererParams> = {
@@ -142,7 +155,7 @@ const getDetailRendererParams = (
       },
     };
 
-    // console.log("detailCellRendererParams", result);
+    console.log("detailCellRendererParams", result);
     getParamsStep.finish();
     return result;
   };
@@ -173,19 +186,22 @@ export const getGridProps = (
     product: null,
     appContext,
   });
-  const detailCellRendererParams = getDetailRendererParams(
-    gridData,
-    levels,
-    1,
-    visibleLevels,
-    appContext
-  );
 
   const context: GridContext = {
     levels,
     levelIndex: 0,
     appContext,
+    master: null,
   };
+
+  const detailCellRendererParams = getDetailRendererParams(
+    gridData,
+    levels,
+    1,
+    visibleLevels,
+    appContext,
+    context
+  );
 
   return {
     ...commonGridProps,

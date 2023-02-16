@@ -17,13 +17,13 @@ export const getMainMenuItems: AgGridReactProps<GridGroupDataItem>["getMainMenuI
 
     if (levelItemIndex >= 0) {
       if (levelIndex === 0 && !levelItems[levelItemIndex].visible) {
-        result.splice(result.lastIndexOf("separator"), 0, {
-          name: `Group by ${params.column.getColDef().headerName}`,
-          icon: '<span class="ag-icon ag-icon-group" role="presentation" />',
-          action: () => {
-            toggleLevelItem(level, true, { levelItems, setLevelItems });
-          },
-        });
+        // result.splice(result.lastIndexOf("separator"), 0, {
+        //   name: `Group by ${params.column.getColDef().headerName}`,
+        //   icon: '<span class="ag-icon ag-icon-group" role="presentation" />',
+        //   action: () => {
+        //     toggleLevelItem(level, true, { levelItems, setLevelItems });
+        //   },
+        // });
       } else if (
         levelIndex > 0 &&
         level !== "product" &&
