@@ -46,7 +46,11 @@ const baseQuantityColumn: ColDef<GridGroupDataItem> = {
 
 const quantityColumn: ColDef<GridGroupDataItem> = {
   ...baseQuantityColumn,
-  cellClass: baseQuantityColumn.cellClass + " col-quantity",
+  // cellClass: baseQuantityColumn.cellClass + " col-quantity",
+  cellClass: (params) =>
+    `${baseQuantityColumn.cellClass} col-quantity ${
+      params.value ? "" : "cell-disabled"
+    }`,
   headerClass: baseQuantityColumn.headerClass + " col-quantity",
   editable: true,
 };
