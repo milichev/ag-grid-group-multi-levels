@@ -6,7 +6,7 @@ import {
   SizeQuantity,
   Product,
   GridGroupItem,
-} from "../interfaces";
+} from "../types";
 import { measureStep } from "./perf";
 import { levels as allLevels } from "../constants";
 

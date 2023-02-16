@@ -7,11 +7,10 @@ import type {
   Product,
   SelectableLevel,
   VisibleLevels,
-} from "../../../interfaces";
+} from "../../../types";
 import { levels as allLevels } from "../../../constants";
 import { joinUnique } from "../../../helpers/conversion";
 import { getQuantityColumn } from "./getQuantityColumn";
-import { collectSizesTotals } from "../../../helpers/groupItems";
 
 /** Describe columns, which can be grouped, as not grouped ColDefs */
 const groupCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
@@ -176,12 +175,15 @@ export const getColumnDefsArray = ({
   levelIndex,
   visibleLevels,
   product,
+  appContext,
+  allProducts,
 }: {
   levels: Level[];
   levelIndex: number;
   visibleLevels: VisibleLevels;
   product: Product | null;
   appContext: AppContext;
+  allProducts: Product[];
 }): ColDef<GridGroupDataItem>[] => {
   const level = levels[levelIndex];
   const hasSizeGroups = !!product?.sizes?.some((s) => !!s.sizeGroup);
@@ -208,7 +210,8 @@ export const getColumnDefsArray = ({
       colId: level,
       ...groupCol,
       ...selectableCols[level],
-      cellRenderer: "agGroupCellRenderer",
+      cellRenderer:
+        levelIndex < levels.length - 1 ? "agGroupCellRenderer" : undefined,
       cellRendererParams,
       pinned: "left",
       lockPinned: true,
@@ -227,25 +230,6 @@ export const getColumnDefsArray = ({
           : valueGetter(params);
     }
 
-    // if the grid is grouped, use the group auto column formatter, when possible
-    /*
-    const { valueFormatter } = groupCol;
-    if (typeof valueFormatter === "function") {
-      //    : params.value;
-      groupCol.valueFormatter = (params) => {
-        if (!params.node.group) {
-          return valueFormatter(params);
-        }
-
-        const { valueFormatter: autoGroupValueFormatter } =
-          params.node.rowGroupColumn.getColDef();
-        return typeof autoGroupValueFormatter === "function"
-          ? autoGroupValueFormatter(params)
-          : params.value;
-      };
-    }
-*/
-
     groupCol.minWidth && (groupCol.minWidth += 60);
   }
 
@@ -259,6 +243,9 @@ export const getColumnDefsArray = ({
               colId: l,
               ...groupCols[l],
               ...selectableCols[l],
+              pinned: null,
+              lockPinned: false,
+              lockVisible: false,
               enableRowGroup: true,
             };
             return {
@@ -270,17 +257,37 @@ export const getColumnDefsArray = ({
 
   /** Quantity columns are visible only at the innermost level when a product is available */
   const sizeCols =
-    ((levelIndex === levels.length - 1 &&
-      product?.sizes
-        .map((size) =>
-          getQuantityColumn({
-            size,
-            product,
-            hasSizeGroups,
-            visibleLevels,
-          })
-        )
-        .filter((col) => !!col)) as ColDef<GridGroupDataItem>[]) || [];
+    (levelIndex === levels.length - 1 &&
+      ((appContext.isFlattenSizes
+        ? [
+            ...allProducts
+              .reduce((acc, prd) => {
+                prd.sizes.forEach((size) => {
+                  if (!acc.has(size.id)) {
+                    const col = getQuantityColumn({
+                      size,
+                      product: prd,
+                      hasSizeGroups: false,
+                      visibleLevels: {},
+                    });
+                    acc.set(col.colId, col);
+                  }
+                });
+                return acc;
+              }, new Map<string, ColDef<GridGroupDataItem>>())
+              .values(),
+          ]
+        : product?.sizes
+            .map((size) =>
+              getQuantityColumn({
+                size,
+                product,
+                hasSizeGroups,
+                visibleLevels,
+              })
+            )
+            .filter((col) => !!col)) as ColDef<GridGroupDataItem>[])) ||
+    [];
 
   const auxCols = (levelAuxCols[level] || []).map((col) =>
     col.enableRowGroup

@@ -1,4 +1,4 @@
-import { Level, SelectableLevel, ShipmentsMode } from "./interfaces";
+import { Level, SelectableLevel, ShipmentsMode } from "./types";
 
 export const levels: SelectableLevel[] = [
   "product",

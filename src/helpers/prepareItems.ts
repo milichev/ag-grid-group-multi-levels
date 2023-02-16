@@ -5,7 +5,7 @@ import {
   Product,
   Shipment,
   Warehouse,
-} from "../interfaces";
+} from "../types";
 import { getDataItemId } from "./resolvers";
 import { measureStep, nuPerf, wrap } from "./perf";
 import { getSizeQuantities } from "./dataSource";

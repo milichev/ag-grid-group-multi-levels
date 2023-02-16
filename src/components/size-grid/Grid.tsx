@@ -11,13 +11,7 @@ import {
 } from "ag-grid-community";
 
 import { useAppContext } from "../../hooks/useAppContext";
-import {
-  GridDataItem,
-  GridGroupDataItem,
-  Level,
-  SelectableLevel,
-  Shipment,
-} from "../../interfaces";
+import { GridDataItem, GridGroupDataItem, Level, Shipment } from "../../types";
 import { getGridProps } from "./grid-props/getGridProps";
 import { LevelsToolPanel } from "../LevelsToolPanel";
 import { nuPerf } from "../../helpers/perf";

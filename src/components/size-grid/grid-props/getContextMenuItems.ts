@@ -1,8 +1,8 @@
 import { AgGridReactProps } from "ag-grid-react";
-import { GridGroupDataItem, ShipmentsMode } from "../../../interfaces";
+import { GridGroupDataItem, ShipmentsMode } from "../../../types";
 import { levels as allLevels } from "../../../constants";
-import { GridContext } from "../../../hooks/useAppContext";
 import { MenuItemDef } from "ag-grid-community";
+import { GridContext } from "../types";
 
 export const getContextMenuItems: AgGridReactProps<GridGroupDataItem>["getContextMenuItems"] =
   (params) => {

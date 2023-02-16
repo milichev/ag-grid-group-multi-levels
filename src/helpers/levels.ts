@@ -1,36 +1,53 @@
-import { ShipmentsMode, Level, LevelItem } from "../interfaces";
+import { ShipmentsMode, Level, LevelItem } from "../types";
 import { AppContext } from "../hooks/useAppContext";
 
 export const getLevelIndex = (levelItems: LevelItem[], level: Level) =>
   levelItems.findIndex((item) => item.level === level);
 
-/**
- * When `levelItems` is LineItems, the shipment level cannot be higher than product or warehouse.
- */
 export const fixupLevelItems = ({
   shipmentsMode,
   levelItems,
   setLevelItems,
-}: Pick<AppContext, "shipmentsMode" | "levelItems" | "setLevelItems">) => {
-  if (shipmentsMode === ShipmentsMode.LineItems) {
-    const baseIndex = Math.max(
+  isFlattenSizes,
+}: Pick<
+  AppContext,
+  "shipmentsMode" | "levelItems" | "setLevelItems" | "isFlattenSizes"
+>) => {
+  let baseIndex: number;
+  let targetIndex: number;
+
+  if (isFlattenSizes) {
+    baseIndex = Math.max(
+      getLevelIndex(levelItems, "shipment"),
+      getLevelIndex(levelItems, "warehouse")
+    );
+    targetIndex = getLevelIndex(levelItems, "product");
+  } else if (shipmentsMode === ShipmentsMode.LineItems) {
+    // When `shipmentsMode` is LineItems, the shipment level cannot be higher than product or warehouse.
+    baseIndex = Math.max(
       getLevelIndex(levelItems, "product"),
       getLevelIndex(levelItems, "warehouse")
     );
-    const shipmentIndex = getLevelIndex(levelItems, "shipment");
-    if (baseIndex > shipmentIndex) {
-      const reordered = [...levelItems];
-      const [shipmentItem] = reordered.splice(shipmentIndex, 1);
-      reordered.splice(baseIndex, 0, shipmentItem);
-      setLevelItems(reordered);
-    }
+    targetIndex = getLevelIndex(levelItems, "shipment");
+  }
+
+  if (baseIndex > targetIndex && targetIndex >= 0) {
+    const reordered = [...levelItems];
+    const [shipmentItem] = reordered.splice(targetIndex, 1);
+    reordered.splice(baseIndex, 0, shipmentItem);
+    setLevelItems(reordered);
   }
 };
+
+export const isLevel = (level: Level, ...set: Level[]) => set.includes(level);
 
 export const getLevelMeta = (
   levelItems: LevelItem[],
   level: number | Level,
-  { shipmentsMode }: Pick<AppContext, "shipmentsMode">
+  {
+    shipmentsMode,
+    isFlattenSizes,
+  }: Pick<AppContext, "shipmentsMode" | "isFlattenSizes">
 ) => {
   const i =
     typeof level === "number" ? level : getLevelIndex(levelItems, level);
@@ -38,36 +55,52 @@ export const getLevelMeta = (
     level = levelItems[level].level;
   }
 
-  const enabled = level !== "product";
+  let checked = levelItems[i].visible;
+  if (isFlattenSizes && isLevel(level, "sizeGroup")) {
+    checked = false;
+  }
+
+  const enabled =
+    !isFlattenSizes || isLevel(level, "product", "shipment", "warehouse");
   let upEnabled = i > 0;
   let downEnabled = i < levelItems.length - 1;
+  const nextLevel = levelItems[i + 1]?.level;
+  const prevLevel = levelItems[i - 1]?.level;
+
   switch (level) {
     case "product":
       downEnabled =
         downEnabled &&
-        levelItems[i + 1].level !== "sizeGroup" &&
+        nextLevel !== "sizeGroup" &&
         (shipmentsMode === ShipmentsMode.BuildOrder ||
-          levelItems[i + 1].level !== "shipment");
+          nextLevel !== "shipment");
+      upEnabled =
+        upEnabled &&
+        (!isFlattenSizes || !isLevel(prevLevel, "warehouse", "shipment"));
       break;
     case "warehouse":
       downEnabled =
         downEnabled &&
-        (shipmentsMode === ShipmentsMode.BuildOrder ||
-          levelItems[i + 1].level !== "shipment");
-      break;
-    case "sizeGroup":
-      upEnabled = upEnabled && levelItems[i - 1].level !== "product";
+        (isFlattenSizes
+          ? nextLevel !== "product"
+          : shipmentsMode === ShipmentsMode.BuildOrder ||
+            nextLevel !== "shipment");
       break;
     case "shipment":
       upEnabled =
         upEnabled &&
-        (shipmentsMode === ShipmentsMode.BuildOrder ||
-          (levelItems[i - 1].level !== "product" &&
-            levelItems[i - 1].level !== "warehouse"));
+        (isFlattenSizes
+          ? true
+          : shipmentsMode === ShipmentsMode.BuildOrder ||
+            !isLevel(prevLevel, "product", "warehouse"));
+      downEnabled = downEnabled && (!isFlattenSizes || nextLevel !== "product");
+      break;
+    case "sizeGroup":
+      upEnabled = upEnabled && prevLevel !== "product";
       break;
   }
 
-  return { enabled, upEnabled, downEnabled };
+  return { checked, enabled, upEnabled, downEnabled };
 };
 
 export const toggleLevelItem = (

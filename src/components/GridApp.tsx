@@ -4,7 +4,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
 import { AppContext, AppContextProvider } from "../hooks/useAppContext";
-import { ShipmentsMode, LevelItem } from "../interfaces";
+import { ShipmentsMode, LevelItem, Level } from "../types";
 import {
   getGridDataPerf as getGridData,
   getShipments,
@@ -18,6 +18,7 @@ import {
   defaultShipmentsMode,
   defaultIsAllDeliveries,
 } from "../constants";
+import { isLevel } from "../helpers/levels";
 
 const styles = {
   container: { width: "100%", height: "100%" },
@@ -37,6 +38,7 @@ const GridApp: React.FC = () => {
   const [isAllDeliveries, setIsAllDeliveries] = useState(
     defaultIsAllDeliveries
   );
+  const [isFlattenSizes, setIsFlattenSizes] = useState(false);
 
   const appContext = useMemo<AppContext>(
     () => ({
@@ -47,19 +49,28 @@ const GridApp: React.FC = () => {
       isAllDeliveries:
         isAllDeliveries || shipmentsMode === ShipmentsMode.BuildOrder,
       setIsAllDeliveries,
+      isFlattenSizes,
+      setIsFlattenSizes,
     }),
-    [levelItems, shipmentsMode, isAllDeliveries]
+    [levelItems, shipmentsMode, isAllDeliveries, isFlattenSizes]
   );
 
   const levels = useMemo(() => {
-    const result = levelItems
-      .filter((item) => item.visible)
+    const result: Level[] = levelItems
+      .filter(
+        (item) =>
+          item.visible &&
+          (!isFlattenSizes ||
+            isLevel(item.level, "product", "warehouse", "shipment"))
+      )
       .map((item) => item.level);
-    if (result.at(-1) === "product") {
+
+    if (!isFlattenSizes && result.at(-1) === "product") {
       result.push("sizes");
     }
+
     return result;
-  }, [levelItems]);
+  }, [isFlattenSizes, levelItems]);
 
   const buildOrderShipments = useMemo(
     () => getShipments(defaultCounts.buildOrderShipments),
@@ -71,7 +82,8 @@ const GridApp: React.FC = () => {
     return getGridData({
       counts: defaultCounts,
       buildOrderShipments,
-      shipmentsMode: shipmentsMode,
+      shipmentsMode,
+      isFlattenSizes,
     });
   }, [buildOrderShipments, shipmentsMode]);
 
@@ -79,6 +91,7 @@ const GridApp: React.FC = () => {
     ...defaultCounts,
     gridMode: shipmentsMode,
     isAllDeliveries,
+    isFlattenSizes,
   });
 
   return (

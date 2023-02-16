@@ -7,7 +7,7 @@ import {
   getLevelMeta,
   toggleLevelItem,
 } from "../helpers/levels";
-import { ShipmentsMode } from "../interfaces";
+import { ShipmentsMode } from "../types";
 
 export const LevelsToolPanel: React.FC = () => {
   const {
@@ -17,6 +17,8 @@ export const LevelsToolPanel: React.FC = () => {
     setShipmentsMode,
     isAllDeliveries,
     setIsAllDeliveries,
+    isFlattenSizes,
+    setIsFlattenSizes,
   } = useAppContext();
 
   const handleVisibleChange = useCallback(
@@ -57,18 +59,19 @@ export const LevelsToolPanel: React.FC = () => {
       shipmentsMode: shipmentsMode,
       levelItems,
       setLevelItems,
+      isFlattenSizes,
     });
-  }, [shipmentsMode, levelItems, setLevelItems]);
+  }, [shipmentsMode, levelItems, setLevelItems, isFlattenSizes]);
 
   return (
     <div className="nest-mode-tool-panel">
       <h3>Levels</h3>
       <ul className="mode-list">
-        {levelItems.map(({ level, visible }, i) => {
-          const { enabled, upEnabled, downEnabled } = getLevelMeta(
+        {levelItems.map(({ level }, i) => {
+          const { checked, enabled, upEnabled, downEnabled } = getLevelMeta(
             levelItems,
             i,
-            { shipmentsMode: shipmentsMode }
+            { shipmentsMode, isFlattenSizes }
           );
 
           return (
@@ -76,7 +79,7 @@ export const LevelsToolPanel: React.FC = () => {
               <label className="setting-label">
                 <input
                   type="checkbox"
-                  checked={visible}
+                  checked={checked}
                   disabled={!enabled}
                   onChange={handleVisibleChange}
                   data-level={level}
@@ -156,6 +159,22 @@ export const LevelsToolPanel: React.FC = () => {
           </section>
         </li>
       </ul>
+
+      <h4>Sizes</h4>
+      <div>
+        <label className="setting-label">
+          <input
+            type="checkbox"
+            checked={isFlattenSizes}
+            onChange={(e) => setIsFlattenSizes(e.target.checked)}
+          />
+          Flatten All Sizes
+          <div className="description">
+            Columns for all sizes of all products are displayed at the same
+            level.
+          </div>
+        </label>
+      </div>
 
       <h3>Debug</h3>
       <DebugBox />

@@ -7,7 +7,7 @@ import {
   Size,
   SizeQuantity,
   Warehouse,
-} from "../interfaces";
+} from "../types";
 import { AppContext } from "../hooks/useAppContext";
 import { wrap } from "./perf";
 import { getDataItemId, getSizeKey } from "./resolvers";
@@ -98,6 +98,7 @@ export const getGridData = ({
   counts,
   buildOrderShipments,
   shipmentsMode,
+  isFlattenSizes,
 }: {
   counts: {
     products: number;
@@ -105,7 +106,7 @@ export const getGridData = ({
     sizeGroups: number;
   };
   buildOrderShipments: Shipment[];
-} & Pick<AppContext, "shipmentsMode">): GridDataItem[] => {
+} & Pick<AppContext, "shipmentsMode" | "isFlattenSizes">): GridDataItem[] => {
   const departments = faker.helpers.uniqueArray(
     faker.commerce.department,
     counts.products / 5

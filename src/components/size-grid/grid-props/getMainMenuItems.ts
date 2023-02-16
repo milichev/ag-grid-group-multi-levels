@@ -1,8 +1,8 @@
 import { AgGridReactProps } from "ag-grid-react";
-import { GridGroupDataItem, Level } from "../../../interfaces";
-import { GridContext } from "../../../hooks/useAppContext";
+import { GridGroupDataItem, Level } from "../../../types";
 import { MenuItemDef } from "ag-grid-community";
 import { getLevelIndex, toggleLevelItem } from "../../../helpers/levels";
+import { GridContext } from "../types";
 
 export const getMainMenuItems: AgGridReactProps<GridGroupDataItem>["getMainMenuItems"] =
   (params) => {

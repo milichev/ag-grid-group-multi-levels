@@ -1,7 +1,7 @@
 import { AgGridReactProps } from "ag-grid-react";
-import { GridGroupDataItem, Level } from "../../../interfaces";
-import { GridContext } from "../../../hooks/useAppContext";
+import { GridGroupDataItem, Level } from "../../../types";
 import { getLevelIndex } from "../../../helpers/levels";
+import { GridContext } from "../types";
 
 export const postProcessPopup: AgGridReactProps<GridGroupDataItem>["postProcessPopup"] =
   (params) => {

@@ -1,16 +1,11 @@
 import { createContext, useContext } from "react";
-import {
-  GridGroupDataItem,
-  Level,
-  LevelItem,
-  ShipmentsMode,
-} from "../interfaces";
-import { ColumnApi, GridApi } from "ag-grid-community";
+import { LevelItem, ShipmentsMode } from "../types";
 
 interface ContextValues {
   levelItems: LevelItem[];
   shipmentsMode: ShipmentsMode;
   isAllDeliveries: boolean;
+  isFlattenSizes: boolean;
 }
 
 type ContextValueSetters = {
@@ -24,20 +19,10 @@ export type AppContext = ContextValues & ContextValueSetters;
 const appContext = createContext<AppContext>({
   levelItems: [],
   shipmentsMode: ShipmentsMode.BuildOrder,
+  isAllDeliveries: false,
+  isFlattenSizes: false,
 } as AppContext);
 
 export const AppContextProvider = appContext.Provider;
 
 export const useAppContext = () => useContext(appContext);
-
-export interface GridContext {
-  levels: Level[];
-  levelIndex: number;
-  appContext: AppContext;
-  master: null | {
-    id: string;
-    api: GridApi<GridGroupDataItem>;
-    columnApi: ColumnApi;
-    context: GridContext;
-  };
-}

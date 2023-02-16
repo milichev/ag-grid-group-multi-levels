@@ -5,13 +5,13 @@ import {
 } from "ag-grid-community";
 import { AgGridReactProps } from "ag-grid-react";
 
-import type { AppContext, GridContext } from "../../../hooks/useAppContext";
+import type { AppContext } from "../../../hooks/useAppContext";
 import {
   GridDataItem,
   GridGroupDataItem,
   Level,
   VisibleLevels,
-} from "../../../interfaces";
+} from "../../../types";
 import { getAutoGroupColumnDef, getColumnDefs } from "./getColumnDefs";
 import { groupItems } from "../../../helpers/groupItems";
 import { getMainMenuItems } from "./getMainMenuItems";
@@ -22,6 +22,8 @@ import { columnTypes } from "./columnTypes";
 import { onRowDataUpdated } from "./onRowDataUpdated";
 import { measureStep } from "../../../helpers/perf";
 import { onCellValueChanged } from "./onCellValueChanged";
+import { GridContext } from "../types";
+import { collectEntities } from "../../../helpers/resolvers";
 
 const defaultColDef: ColDef<GridGroupDataItem> = {
   flex: 1,
@@ -55,6 +57,11 @@ const commonGridProps: Partial<AgGridReactProps<GridGroupDataItem>> = {
   postProcessPopup,
   onRowDataUpdated,
   onCellValueChanged,
+  onCellEditingStarted: (params) => {
+    if (params.colDef.type === "quantityColumn" && params.value === undefined) {
+      params.api.stopEditing(true);
+    }
+  },
 };
 
 /*
@@ -124,12 +131,17 @@ const getDetailRendererParams = (
       context
     );
 
+    const allProducts = appContext.isFlattenSizes
+      ? [...collectEntities(parentItem.group).products.values()]
+      : [];
+
     const columnDefs = getColumnDefs({
       levels: localLevels,
       levelIndex,
       visibleLevels,
       product,
       appContext,
+      allProducts,
     });
 
     const rows = groupItems(
@@ -178,13 +190,20 @@ export const getGridProps = (
     return acc;
   }, {} as VisibleLevels);
 
+  const allProducts =
+    appContext.isFlattenSizes && level === "product"
+      ? [...collectEntities(gridData).products.values()]
+      : [];
+
   const rowData = groupItems(gridData, levels, 0, visibleLevels, null);
+
   const columnDefs = getColumnDefs({
     levels,
     levelIndex: 0,
     visibleLevels,
     product: null,
     appContext,
+    allProducts,
   });
 
   const context: GridContext = {

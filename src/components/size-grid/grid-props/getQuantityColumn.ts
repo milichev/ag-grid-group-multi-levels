@@ -9,7 +9,7 @@ import {
   Size,
   SizeQuantity,
   VisibleLevels,
-} from "../../../interfaces";
+} from "../../../types";
 import { formats, toQuantity } from "../../../helpers/conversion";
 import { getSizeKey } from "../../../helpers/resolvers";
 import { SizeQuantityEditor } from "../components/SizeQuantityEditor";
@@ -18,9 +18,13 @@ const quantityValueFormatter = (
   params: CastProp<
     ValueFormatterParams<GridGroupDataItem>,
     "value",
-    SizeQuantity
+    SizeQuantity | undefined
   >
-) => formats.units.format(params.value.quantity);
+) => {
+  return typeof params.value?.quantity === "number"
+    ? formats.units.format(params.value.quantity)
+    : "";
+};
 
 type QuantitySetParams = CastProp<
   ValueSetterParams<GridGroupDataItem>,
@@ -31,11 +35,15 @@ type QuantitySetParams = CastProp<
 const valueParser: ColDef["valueParser"] = (params) =>
   toQuantity(params.newValue);
 
-const equals = (a: SizeQuantity, b: SizeQuantity) => a.quantity === b.quantity;
+const equals = (a: SizeQuantity, b: SizeQuantity) =>
+  a?.quantity === b?.quantity;
 
 const commonProps: ColDef<GridGroupDataItem> = {
   type: "quantityColumn",
-  cellEditor: SizeQuantityEditor,
+  // cellEditor: SizeQuantityEditor,
+  cellEditorSelector: (params) => {
+    return params.value ? { component: SizeQuantityEditor } : undefined;
+  },
   lockVisible: true,
   lockPinned: true,
   sortable: false,
@@ -79,6 +87,7 @@ export const getQuantityColumn = ({
   if (!visibleLevels.sizeGroup || !hasSizeGroups) {
     return {
       ...commonProps,
+      colId: size.id,
       headerName: size.id,
       valueGetter: ({ data }): SizeQuantity => data!.sizes?.[size.id],
       valueSetter: getValueSetter((data, sizeQuantity) => {
@@ -88,6 +97,7 @@ export const getQuantityColumn = ({
   } else if (size.sizeGroup === product.sizes[0].sizeGroup) {
     return {
       ...commonProps,
+      colId: size.name,
       headerName: size.name,
       valueGetter: ({ data }): SizeQuantity =>
         data?.sizes?.[getSizeKey(size.name, data.sizeGroup)],
