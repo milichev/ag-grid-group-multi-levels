@@ -16,6 +16,7 @@ import { getGridProps } from "./grid-props/getGridProps";
 import { LevelsToolPanel } from "../LevelsToolPanel";
 import { nuPerf } from "../../helpers/perf";
 import { prepareItems } from "../../helpers/prepareItems";
+import { ToolPanelColumnCompParams } from "ag-grid-community/dist/lib/interfaces/iToolPanel";
 
 const sideBar: SideBarDef = {
   toolPanels: [
@@ -28,6 +29,10 @@ const sideBar: SideBarDef = {
       minWidth: 225,
       maxWidth: 225,
       width: 225,
+      toolPanelParams: {
+        suppressValues: true,
+        suppressPivots: true,
+      } as ToolPanelColumnCompParams,
     },
     {
       id: "filters",

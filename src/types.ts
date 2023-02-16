@@ -74,7 +74,7 @@ export enum ShipmentsMode {
   LineItems = "LINE_ITEMS",
 }
 
-export type VisibleLevels = Partial<Record<Level, true>>;
+export type VisibleLevels = Partial<Record<Level, number>>;
 
 export interface GridGroupItem extends Partial<GridDataItem> {
   id: string;

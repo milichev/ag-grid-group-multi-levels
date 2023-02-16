@@ -61,7 +61,8 @@ export const getLevelMeta = (
   }
 
   const enabled =
-    !isFlattenSizes || isLevel(level, "product", "shipment", "warehouse");
+    level !== "product" &&
+    (!isFlattenSizes || isLevel(level, "product", "shipment", "warehouse"));
   let upEnabled = i > 0;
   let downEnabled = i < levelItems.length - 1;
   const nextLevel = levelItems[i + 1]?.level;

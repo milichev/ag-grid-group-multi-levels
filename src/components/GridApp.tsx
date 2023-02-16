@@ -39,6 +39,7 @@ const GridApp: React.FC = () => {
     defaultIsAllDeliveries
   );
   const [isFlattenSizes, setIsFlattenSizes] = useState(false);
+  const [isLimitedSizes, setIsLimitedSizes] = useState(false);
 
   const appContext = useMemo<AppContext>(
     () => ({
@@ -51,8 +52,10 @@ const GridApp: React.FC = () => {
       setIsAllDeliveries,
       isFlattenSizes,
       setIsFlattenSizes,
+      isLimitedSizes,
+      setIsLimitedSizes,
     }),
-    [levelItems, shipmentsMode, isAllDeliveries, isFlattenSizes]
+    [levelItems, shipmentsMode, isAllDeliveries, isFlattenSizes, isLimitedSizes]
   );
 
   const levels = useMemo(() => {
@@ -78,14 +81,16 @@ const GridApp: React.FC = () => {
   );
 
   // get fake grid order data
-  const gridData = useMemo(() => {
-    return getGridData({
-      counts: defaultCounts,
-      buildOrderShipments,
-      shipmentsMode,
-      isFlattenSizes,
-    });
-  }, [buildOrderShipments, shipmentsMode]);
+  const gridData = useMemo(
+    () =>
+      getGridData({
+        counts: defaultCounts,
+        buildOrderShipments,
+        shipmentsMode,
+        isLimitedSizes,
+      }),
+    [buildOrderShipments, isLimitedSizes, shipmentsMode]
+  );
 
   nuPerf.setContext({
     ...defaultCounts,

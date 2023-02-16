@@ -32,9 +32,11 @@ const entity = {
   product: ({
     sizeGroupCount = 3,
     departments = [],
+    limitedSizes,
   }: {
     sizeGroupCount?: number;
     departments?: string[] | null;
+    limitedSizes?: Size[];
   }): Product => {
     const retail = faker.datatype.number({
       precision: 0.01,
@@ -51,22 +53,32 @@ const entity = {
       { probability: 0.3 }
     ) ?? [""];
 
-    const sizeNames = faker.helpers.uniqueArray(
-      faker.company.catchPhraseDescriptor,
-      faker.datatype.number({ min: 2, max: 4 })
-    );
+    let sizes: Size[];
 
-    const sizes: Size[] = [];
-
-    sizeGroups.forEach((sizeGroup) => {
-      sizeNames.forEach((sizeName) => {
-        sizes.push({
-          id: sizeGroup ? `${sizeGroup} - ${sizeName}` : sizeName,
-          name: sizeName,
-          sizeGroup,
+    if (limitedSizes) {
+      sizes = faker.helpers.arrayElements(
+        limitedSizes,
+        faker.datatype.number({
+          min: limitedSizes.length * 0.75,
+          max: limitedSizes.length,
+        })
+      );
+    } else {
+      sizes = [];
+      const sizeNames = faker.helpers.uniqueArray(
+        faker.company.catchPhraseDescriptor,
+        faker.datatype.number({ min: 2, max: 4 })
+      );
+      sizeGroups.forEach((sizeGroup) => {
+        sizeNames.forEach((sizeName) => {
+          sizes.push({
+            id: sizeGroup ? `${sizeGroup} - ${sizeName}` : sizeName,
+            name: sizeName,
+            sizeGroup,
+          });
         });
       });
-    });
+    }
 
     return {
       id: uniqueBasic.id(),
@@ -98,7 +110,7 @@ export const getGridData = ({
   counts,
   buildOrderShipments,
   shipmentsMode,
-  isFlattenSizes,
+  isLimitedSizes,
 }: {
   counts: {
     products: number;
@@ -106,17 +118,35 @@ export const getGridData = ({
     sizeGroups: number;
   };
   buildOrderShipments: Shipment[];
-} & Pick<AppContext, "shipmentsMode" | "isFlattenSizes">): GridDataItem[] => {
+} & Pick<AppContext, "shipmentsMode" | "isLimitedSizes">): GridDataItem[] => {
   const departments = faker.helpers.uniqueArray(
     faker.commerce.department,
     counts.products / 5
   );
+
+  let limitedSizes: Size[] | undefined;
+  if (isLimitedSizes) {
+    limitedSizes = [];
+    const sizeNames = ["XS", "XS", "S", "M", "L", "XL"];
+    ["Men", "Women", "Children"].forEach((sizeGroup) => {
+      sizeNames.forEach((sizeName) => {
+        limitedSizes.push({
+          id: sizeGroup ? `${sizeGroup} - ${sizeName}` : sizeName,
+          name: sizeName,
+          sizeGroup,
+        });
+      });
+    });
+  }
+
   // get working products
   const products = faker.helpers.uniqueArray<Product>(
-    entity.product.bind(entity, {
-      sizeGroupCount: counts.sizeGroups,
-      departments,
-    }),
+    () =>
+      entity.product({
+        sizeGroupCount: counts.sizeGroups,
+        departments,
+        limitedSizes,
+      }),
     counts.products
   );
   // get all warehouses

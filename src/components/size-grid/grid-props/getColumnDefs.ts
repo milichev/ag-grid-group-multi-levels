@@ -237,7 +237,10 @@ export const getColumnDefsArray = ({
   const nonGroup =
     levelIndex === 0
       ? allLevels
-          .filter((l) => l !== level && l !== "sizeGroup" && !visibleLevels[l])
+          .filter(
+            (l) =>
+              l !== level && l !== "sizeGroup" && visibleLevels[l] === undefined
+          )
           .map((l): ColDef => {
             const result: ColDef = {
               colId: l,
@@ -268,7 +271,7 @@ export const getColumnDefsArray = ({
                       size,
                       product: prd,
                       hasSizeGroups: false,
-                      visibleLevels: {},
+                      visibleLevels,
                     });
                     acc.set(col.colId, col);
                   }

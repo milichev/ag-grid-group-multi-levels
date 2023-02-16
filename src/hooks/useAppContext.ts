@@ -6,6 +6,7 @@ interface ContextValues {
   shipmentsMode: ShipmentsMode;
   isAllDeliveries: boolean;
   isFlattenSizes: boolean;
+  isLimitedSizes: boolean;
 }
 
 type ContextValueSetters = {
@@ -21,6 +22,7 @@ const appContext = createContext<AppContext>({
   shipmentsMode: ShipmentsMode.BuildOrder,
   isAllDeliveries: false,
   isFlattenSizes: false,
+  isLimitedSizes: false,
 } as AppContext);
 
 export const AppContextProvider = appContext.Provider;

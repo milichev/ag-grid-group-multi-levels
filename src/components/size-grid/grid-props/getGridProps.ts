@@ -84,27 +84,24 @@ const getDetailRendererParams = (
   if (!level) return undefined;
 
   return (
-    params: ICellRendererParams
+    params: ICellRendererParams<GridGroupDataItem>
   ): Partial<IDetailCellRendererParams<GridGroupDataItem>> => {
     const getParamsStep = measureStep({
       name: "detailRendererParams",
       async: false,
     });
-    const parentItem = params.data;
+    const item = params.data;
 
     const product =
-      levels.indexOf("product") < levelIndex
-        ? parentItem.group[0].product
-        : null;
+      visibleLevels.product < levelIndex ? item.group[0].product : null;
     const hasSizeGroups = product?.sizes?.some((s) => !!s.sizeGroup);
     let localLevels = levels;
 
     // remove unneeded sizeGroup nested level, if any
     if (product && !hasSizeGroups) {
-      const sizeGroupIdx = levels.indexOf("sizeGroup");
-      if (sizeGroupIdx >= levelIndex) {
+      if (visibleLevels.sizeGroup >= levelIndex) {
         localLevels = [...levels];
-        localLevels.splice(sizeGroupIdx, 1);
+        localLevels.splice(visibleLevels.sizeGroup, 1);
         if (localLevels.length === levelIndex) {
           localLevels.push("sizes");
         }
@@ -132,7 +129,7 @@ const getDetailRendererParams = (
     );
 
     const allProducts = appContext.isFlattenSizes
-      ? [...collectEntities(parentItem.group).products.values()]
+      ? [...collectEntities(item.group).products.values()]
       : [];
 
     const columnDefs = getColumnDefs({
@@ -145,11 +142,11 @@ const getDetailRendererParams = (
     });
 
     const rows = groupItems(
-      parentItem.group,
+      item.group,
       localLevels,
       levelIndex,
       visibleLevels,
-      parentItem
+      item
     );
 
     // noinspection UnnecessaryLocalVariableJS
@@ -161,13 +158,25 @@ const getDetailRendererParams = (
         context,
         masterDetail: !!detailCellRendererParams,
         detailCellRendererParams,
+        // sideBar: {
+        //   toolPanels: ["columns", "filters"],
+        // },
       },
       getDetailRowData: (params) => {
         params.successCallback(rows);
       },
     };
 
-    console.log("detailCellRendererParams", result);
+    const parentLevel = masterContext.levels[masterContext.levelIndex];
+    const parentEntity = item[parentLevel] as any;
+    console.log(
+      `detailCellRendererParams ${parentLevel}: ${
+        parentEntity?.name || parentEntity?.id
+      }`,
+      result,
+      rows
+    );
+
     getParamsStep.finish();
     return result;
   };
@@ -185,8 +194,8 @@ export const getGridProps = (
       columnDefs: [],
     };
   }
-  const visibleLevels = levels.reduce((acc, level) => {
-    acc[level] = true;
+  const visibleLevels = levels.reduce((acc, level, i) => {
+    acc[level] = i;
     return acc;
   }, {} as VisibleLevels);
 

@@ -84,7 +84,7 @@ export const getQuantityColumn = ({
   product: Product;
   hasSizeGroups: boolean;
 }): ColDef<GridGroupDataItem> | undefined => {
-  if (!visibleLevels.sizeGroup || !hasSizeGroups) {
+  if (visibleLevels.sizeGroup === undefined || !hasSizeGroups) {
     return {
       ...commonProps,
       colId: size.id,
