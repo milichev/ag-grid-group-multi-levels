@@ -20,11 +20,10 @@ const quantityValueFormatter = (
     "value",
     SizeQuantity | undefined
   >
-) => {
-  return typeof params.value?.quantity === "number"
+) =>
+  typeof params.value?.quantity === "number"
     ? formats.units.format(params.value.quantity)
     : "";
-};
 
 type QuantitySetParams = CastProp<
   ValueSetterParams<GridGroupDataItem>,
@@ -41,9 +40,8 @@ const equals = (a: SizeQuantity, b: SizeQuantity) =>
 const commonProps: ColDef<GridGroupDataItem> = {
   type: "quantityColumn",
   // cellEditor: SizeQuantityEditor,
-  cellEditorSelector: (params) => {
-    return params.value ? { component: SizeQuantityEditor } : undefined;
-  },
+  cellEditorSelector: (params) =>
+    params.value ? { component: SizeQuantityEditor } : undefined,
   lockVisible: true,
   lockPinned: true,
   sortable: false,
@@ -63,6 +61,7 @@ const getValueSetter =
         : newValue.quantity === null
         ? oldValue.quantity || 0
         : toQuantity(newValue.quantity);
+    // TODO: need to check correctness of the quantity application because it seems that new values are applied to bunch of rows instead.
     if (typeof quantity === "number" && oldValue) {
       setSizeQuantity(data, {
         ...oldValue,
@@ -89,7 +88,12 @@ export const getQuantityColumn = ({
       ...commonProps,
       colId: size.id,
       headerName: size.id,
-      valueGetter: ({ data }): SizeQuantity => data!.sizes?.[size.id],
+      valueGetter: (params): SizeQuantity => {
+        if (!params.data) {
+          return undefined;
+        }
+        return params.data!.sizes?.[size.id];
+      },
       valueSetter: getValueSetter((data, sizeQuantity) => {
         data.sizes[size.id] = sizeQuantity;
       }),

@@ -250,6 +250,7 @@ export const getColumnDefsArray = ({
               lockPinned: false,
               lockVisible: false,
               enableRowGroup: true,
+              suppressSizeToFit: false,
             };
             return {
               ...result,

@@ -81,7 +81,7 @@ export const Grid: React.FC<{
         items,
         buildOrderShipments,
       }),
-    [items, shipmentsMode, isAllDeliveries, buildOrderShipments]
+    [shipmentsMode, isAllDeliveries, items, buildOrderShipments]
   );
 
   const gridProps = useMemo(() => {

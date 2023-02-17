@@ -1,3 +1,4 @@
+import _ from "lodash";
 import {
   GridDataItem,
   GridGroupDataItem,
@@ -8,6 +9,7 @@ import {
 } from "../types";
 import { measureStep } from "./perf";
 import { levels as allLevels } from "../constants";
+import { isLevel } from "./levels";
 
 const getItemPropKey = (item: GridDataItem, level: Level): string => {
   switch (level) {
@@ -51,7 +53,8 @@ export const groupItems = (
       ? groupBySizeGroup(product, dataItems)
       : groupByEntity(level, levelIndex, visibleLevels, dataItems);
 
-  const gridItems: GridGroupDataItem[] = [];
+  let gridItems: GridGroupDataItem[] = [];
+
   byIds.forEach((group, id) => {
     const sizeGroup = level === "sizeGroup" ? id : parentSizeGroup;
     let sizeInfo: SizeInfo;
@@ -77,12 +80,58 @@ export const groupItems = (
     gridItems.push(gridItem);
   });
 
-  // TODO: do we need to apply default sort to result?
+  const sortStep = measureStep({ name: "groupSort", async: false });
+
+  // TODO: seems that the property list based lodash sorting is a way faster, but let's leave our own one to check later.
+  // const sortLevels = [level, ...propLevels.filter((l) => l !== level)];
+  // gridItems.sort(getItemComparer(sortLevels));
+
+  const sortProps = _.flatten(
+    [level]
+      .concat(propLevels.filter((l) => l !== level))
+      .map((l) =>
+        isLevel(l, "product", "warehouse")
+          ? `${l}.name`
+          : l === "shipment"
+          ? ["shipment.startDate", "shipment.endDate"]
+          : l === "sizeGroup"
+          ? l
+          : undefined
+      )
+  );
+  gridItems = _.sortBy(gridItems, sortProps) as typeof gridItems;
+  sortStep.finish();
 
   step.finish();
 
   return gridItems;
 };
+
+/*
+const getItemComparer =
+  (levels: Level[]) =>
+  (a: GridGroupDataItem, b: GridGroupDataItem): number => {
+    let result = 0;
+    for (let i = 0; i < levels.length && result === 0; i++) {
+      const level = levels[i];
+      switch (level) {
+        case "product":
+        case "warehouse":
+          result = a[level].name.localeCompare(b[level].name, undefined, {
+            ignorePunctuation: true,
+          });
+          break;
+        case "shipment":
+          result = +a.shipment.startDate - +b.shipment.startDate;
+          if (result === 0) {
+            result = +a.shipment.endDate - +b.shipment.endDate;
+          }
+          break;
+      }
+    }
+    return result;
+s  };
+*/
 
 function groupBySizeGroup(product: Product, dataItems: GridDataItem[]) {
   const byIds = new Map<string, GridDataItem[]>();
