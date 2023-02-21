@@ -3,6 +3,7 @@ import {
   ValueFormatterParams,
   ValueSetterParams,
 } from "ag-grid-community";
+import _ from "lodash";
 import {
   GridGroupDataItem,
   Product,
@@ -14,10 +15,8 @@ import { formats, toQuantity } from "../../../helpers/conversion";
 import { getSizeKey } from "../../../helpers/resolvers";
 import { SizeQuantityEditor } from "../components/SizeQuantityEditor";
 import { SizeGridAggFunc, SizeGridColDef } from "../types";
-import fp from "lodash/fp";
-import _ from "lodash";
 
-const quantityValueFormatter = (
+const valueFormatter = (
   params: CastProp<
     ValueFormatterParams<GridGroupDataItem>,
     "value",
@@ -40,47 +39,33 @@ const valueParser: ColDef["valueParser"] = (params) =>
 const equals = (a: SizeQuantity, b: SizeQuantity) =>
   a?.quantity === b?.quantity;
 
-type AggQuantity = Pick<SizeQuantity, "quantity"> & { id: number };
+const comparator: SizeGridColDef["comparator"] = (
+  a: SizeQuantity,
+  b: SizeQuantity
+) => a?.quantity - b?.quantity;
 
-let accId = 0;
+type AggQuantity = Pick<SizeQuantity, "quantity">;
 
-const aggUnique = fp.pipe([
-  fp.filter<SizeQuantity>(fp.negate(fp.isNil)),
-  // fp.flatten,
-  // fp.sortBy<SizeQuantity>(_.identity),
-  // fp.sortedUniq,
-  fp.reduce<AggQuantity, AggQuantity>(
+const aggFunc: SizeGridAggFunc<SizeQuantity> = (params) =>
+  _.filter<SizeQuantity>(params.values, (q) => !!q).reduce<AggQuantity>(
     (acc, s) => {
       acc.quantity += s.quantity;
       return acc;
     },
-    { quantity: 0, id: accId++ }
-  ),
-]);
-
-const aggFunc: SizeGridAggFunc<SizeQuantity> = (params) => {
-  return _.filter<SizeQuantity>(params.values, fp.negate(fp.isNil)).reduce(
-    (acc, s) => {
-      acc.quantity += s.quantity;
-      return acc;
-    },
-    { quantity: 0, id: accId++ }
+    { quantity: 0 }
   );
-};
 
 const commonProps: SizeGridColDef = {
   type: "quantityColumn",
-  // cellEditor: SizeQuantityEditor,
   cellEditorSelector: (params) =>
     params.value ? { component: SizeQuantityEditor } : undefined,
-  // lockVisible: true,
   lockPinned: true,
-  sortable: false,
-  // aggFunc: getAggFunc({ agg: aggregate.sum() }),
+  sortable: true,
+  comparator,
   equals,
   aggFunc,
   valueParser,
-  valueFormatter: quantityValueFormatter,
+  valueFormatter,
 };
 
 const getValueSetter =
@@ -91,18 +76,20 @@ const getValueSetter =
     const quantity: number | undefined =
       newValue === null
         ? 0
-        : newValue.quantity === null
+        : // null quantity edit result means "Delete"
+        newValue.quantity === null
         ? oldValue.quantity || 0
         : toQuantity(newValue.quantity);
-    // TODO: need to check correctness of the quantity application because it seems that new values are applied to bunch of rows instead.
-    if (typeof quantity === "number" && oldValue) {
-      setSizeQuantity(data, {
-        ...oldValue,
-        quantity,
-      });
-      return true;
+
+    if (typeof quantity !== "number" || oldValue) {
+      return false;
     }
-    return false;
+
+    setSizeQuantity(data, {
+      ...oldValue,
+      quantity,
+    });
+    return true;
   };
 
 export const getQuantityColumn = ({
@@ -136,11 +123,8 @@ export const getQuantityColumn = ({
       ...commonProps,
       colId: size.name,
       headerName: size.name,
-      valueGetter: (params): SizeQuantity => {
-        return params.data?.sizes?.[
-          getSizeKey(size.name, params.data.sizeGroup)
-        ];
-      },
+      valueGetter: (params): SizeQuantity =>
+        params.data?.sizes?.[getSizeKey(size.name, params.data.sizeGroup)],
       valueSetter: getValueSetter((data, sizeQuantity) => {
         data.sizes[getSizeKey(size.name, data.sizeGroup)] = sizeQuantity;
       }),

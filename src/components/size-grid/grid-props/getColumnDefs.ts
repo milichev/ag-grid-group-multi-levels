@@ -46,18 +46,6 @@ const genericValueFormatter = (
       : params.value;
 };
 
-// getAggFunc({
-//   agg: aggregate.join<any>({
-//     unique: true,
-//     map:
-//       colId === "shipment"
-//         ? (d: Date) => {
-//             return d.toISOString();
-//           }
-//         : undefined,
-//   }),
-// });
-
 /** Describe columns, which can be grouped, as not grouped ColDefs */
 const groupCols: Record<SelectableLevel, SizeGridColDef> = {
   product: {

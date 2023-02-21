@@ -96,7 +96,7 @@ const getDetailRendererParams = (
       if (visibleLevels.sizeGroup >= levelIndex) {
         localLevels = [...levels];
         localLevels.splice(visibleLevels.sizeGroup, 1);
-        if (localLevels.length === levelIndex) {
+        if (localLevels.length === levelIndex && !appContext.isFlattenSizes) {
           localLevels.push("sizes");
         }
       }

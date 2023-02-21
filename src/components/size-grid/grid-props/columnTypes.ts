@@ -42,30 +42,23 @@ const ttlPriceColumn: SizeGridColDef = {
 
 const baseQuantityColumn: SizeGridColDef = {
   ...numericColumn,
-  // valueFormatter: getRangeFormatter("units"),
+  valueFormatter: getRangeFormatter("units"),
 };
 
 const quantityColumn: SizeGridColDef = {
   ...baseQuantityColumn,
-  // cellClass: baseQuantityColumn.cellClass + " col-quantity",
   cellClass: (params) =>
     `${baseQuantityColumn.cellClass} col-quantity ${
       params.value ? "" : "cell-disabled"
     }`,
   headerClass: baseQuantityColumn.headerClass + " col-quantity",
   editable: true,
-  valueFormatter: (params) => {
-    return formats.units.format(params.value);
-  },
 };
 
 const ttlQuantityColumn: SizeGridColDef = {
   ...baseQuantityColumn,
   cellClass: baseQuantityColumn.cellClass + " ttl-cell",
   aggFunc: "sum",
-  valueFormatter: (params) => {
-    return formats.units.format(params.value);
-  },
 };
 
 /** Describe reusable column props */
