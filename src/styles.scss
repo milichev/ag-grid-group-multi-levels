@@ -34,11 +34,14 @@ body {
   &.cell-disabled {
     pointer-events: none;
   }
-  
-  &:hover:not(.ag-cell-inline-editing),
-  &.ag-cell-focus:not(.ag-cell-inline-editing):not(.cell-disabled) {
-    background-color: rgba(33, 150, 243, 0.13);
-  }
+
+  // TODO: fix the grouping to prevent leaf rows to be group nodes
+  //.ag-row:not(.ag-row-group) {
+  .ag-row > &:hover:not(.ag-cell-inline-editing),
+    &.ag-cell-focus:not(.ag-cell-inline-editing):not(.cell-disabled) {
+      background-color: rgba(33, 150, 243, 0.13);
+    }
+  //}
 }
 .ag-header-cell.col-quantity {
   .ag-header-cell-label {

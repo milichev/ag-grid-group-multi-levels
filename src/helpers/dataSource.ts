@@ -33,25 +33,27 @@ const entity = {
     sizeGroupCount = 3,
     departments = [],
     limitedSizes,
+    isUseSizeGroups,
   }: {
     sizeGroupCount?: number;
     departments?: string[] | null;
     limitedSizes?: Size[];
-  }): Product => {
+  } & Pick<AppContext, "isUseSizeGroups">): Product => {
     const retail = faker.datatype.number({
       precision: 0.01,
       min: 4,
       max: 1200,
     });
 
-    const sizeGroups = faker.helpers.maybe(
-      () =>
-        faker.helpers.uniqueArray(
-          faker.random.word,
-          faker.datatype.number({ min: 2, max: sizeGroupCount })
-        ),
-      { probability: 0.3 }
-    ) ?? [""];
+    const sizeGroups = (isUseSizeGroups &&
+      faker.helpers.maybe(
+        () =>
+          faker.helpers.uniqueArray(
+            faker.random.word,
+            faker.datatype.number({ min: 2, max: sizeGroupCount })
+          ),
+        { probability: 0.3 }
+      )) || [""];
 
     let sizes: Size[];
 
@@ -111,6 +113,7 @@ export const getGridData = ({
   buildOrderShipments,
   shipmentsMode,
   isLimitedSizes,
+  isUseSizeGroups,
 }: {
   counts: {
     products: number;
@@ -118,7 +121,10 @@ export const getGridData = ({
     sizeGroups: number;
   };
   buildOrderShipments: Shipment[];
-} & Pick<AppContext, "shipmentsMode" | "isLimitedSizes">): GridDataItem[] => {
+} & Pick<
+  AppContext,
+  "shipmentsMode" | "isLimitedSizes" | "isUseSizeGroups"
+>): GridDataItem[] => {
   const departments = faker.helpers.uniqueArray(
     faker.commerce.department,
     counts.products / 5
@@ -128,15 +134,17 @@ export const getGridData = ({
   if (isLimitedSizes) {
     limitedSizes = [];
     const sizeNames = ["XS", "XS", "S", "M", "L", "XL"];
-    ["Men", "Women", "Children"].forEach((sizeGroup) => {
-      sizeNames.forEach((sizeName) => {
-        limitedSizes.push({
-          id: sizeGroup ? `${sizeGroup} - ${sizeName}` : sizeName,
-          name: sizeName,
-          sizeGroup,
+    (isUseSizeGroups ? ["Men", "Women", "Children"] : [""]).forEach(
+      (sizeGroup) => {
+        sizeNames.forEach((sizeName) => {
+          limitedSizes.push({
+            id: sizeGroup ? `${sizeGroup} - ${sizeName}` : sizeName,
+            name: sizeName,
+            sizeGroup,
+          });
         });
-      });
-    });
+      }
+    );
   }
 
   // get working products
@@ -146,6 +154,7 @@ export const getGridData = ({
         sizeGroupCount: counts.sizeGroups,
         departments,
         limitedSizes,
+        isUseSizeGroups,
       }),
     counts.products
   );

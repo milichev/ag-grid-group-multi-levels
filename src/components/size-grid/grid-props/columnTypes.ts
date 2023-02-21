@@ -1,7 +1,8 @@
-import { ColDef, IAggFuncParams } from "ag-grid-community";
+import { IAggFuncParams } from "ag-grid-community";
 import { GridGroupDataItem } from "../../../types";
-import { getRange, range } from "../../../helpers/conversion";
+import { getRange, range, formats } from "../../../helpers/conversion";
 import { ValueFormatterFunc } from "ag-grid-community/dist/lib/entities/colDef";
+import { SizeGridColDef } from "../types";
 
 type CustomColumnTypes =
   | "priceColumn"
@@ -9,12 +10,12 @@ type CustomColumnTypes =
   | "ttlPriceColumn"
   | "ttlQuantityColumn";
 
-const getAggValueFormatter =
+const getRangeFormatter =
   (type: keyof typeof range): ValueFormatterFunc<GridGroupDataItem> =>
   (params) =>
     range[type](params.value);
 
-const numericColumn: ColDef<GridGroupDataItem> = {
+const numericColumn: SizeGridColDef = {
   type: "numericColumn",
   cellClass: "ag-right-aligned-cell",
   headerClass: "ag-right-aligned-cell",
@@ -25,26 +26,26 @@ const numericColumn: ColDef<GridGroupDataItem> = {
   filter: "agNumberColumnFilter",
 };
 
-const priceColumn: ColDef<GridGroupDataItem> = {
+const priceColumn: SizeGridColDef = {
   ...numericColumn,
   aggFunc: (params: IAggFuncParams<GridGroupDataItem, number>) =>
-    !params.rowNode.leafGroup || params.values.length === 0
+    !params.rowNode.group || params.values.length === 0
       ? params.values
       : getRange(params.values),
-  valueFormatter: getAggValueFormatter("money"),
+  valueFormatter: getRangeFormatter("money"),
 };
 
-const ttlPriceColumn: ColDef<GridGroupDataItem> = {
+const ttlPriceColumn: SizeGridColDef = {
   ...priceColumn,
   cellClass: priceColumn.cellClass + " ttl-cell",
 };
 
-const baseQuantityColumn: ColDef<GridGroupDataItem> = {
+const baseQuantityColumn: SizeGridColDef = {
   ...numericColumn,
-  valueFormatter: getAggValueFormatter("units"),
+  // valueFormatter: getRangeFormatter("units"),
 };
 
-const quantityColumn: ColDef<GridGroupDataItem> = {
+const quantityColumn: SizeGridColDef = {
   ...baseQuantityColumn,
   // cellClass: baseQuantityColumn.cellClass + " col-quantity",
   cellClass: (params) =>
@@ -53,19 +54,22 @@ const quantityColumn: ColDef<GridGroupDataItem> = {
     }`,
   headerClass: baseQuantityColumn.headerClass + " col-quantity",
   editable: true,
+  valueFormatter: (params) => {
+    return formats.units.format(params.value);
+  },
 };
 
-const ttlQuantityColumn: ColDef<GridGroupDataItem> = {
+const ttlQuantityColumn: SizeGridColDef = {
   ...baseQuantityColumn,
   cellClass: baseQuantityColumn.cellClass + " ttl-cell",
   aggFunc: "sum",
+  valueFormatter: (params) => {
+    return formats.units.format(params.value);
+  },
 };
 
 /** Describe reusable column props */
-export const columnTypes: Record<
-  CustomColumnTypes,
-  ColDef<GridGroupDataItem>
-> = {
+export const columnTypes: Record<CustomColumnTypes, SizeGridColDef> = {
   priceColumn,
   quantityColumn,
   ttlQuantityColumn,

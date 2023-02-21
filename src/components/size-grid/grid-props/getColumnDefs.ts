@@ -1,4 +1,6 @@
-import { ColDef, GroupCellRendererParams } from "ag-grid-community";
+import _ from "lodash";
+import fp from "lodash/fp";
+import { ColDef, ColumnApi, GroupCellRendererParams } from "ag-grid-community";
 
 import type { AppContext } from "../../../hooks/useAppContext";
 import type {
@@ -9,17 +11,65 @@ import type {
   VisibleLevels,
 } from "../../../types";
 import { levels as allLevels } from "../../../constants";
-import { joinUnique } from "../../../helpers/conversion";
 import { getQuantityColumn } from "./getQuantityColumn";
+import {
+  SizeGridAggFunc,
+  SizeGridColDef,
+  SizeGridValueFormatterFunc,
+} from "../types";
+
+const MAX_AGG_JOIN_COUNT = 5;
+
+const aggUnique = fp.pipe([
+  fp.filter(fp.negate(fp.isNil)),
+  fp.flatten,
+  fp.sortBy(_.identity),
+  fp.sortedUniq,
+]);
+
+const genericAggFunc: SizeGridAggFunc<number> = (params) =>
+  aggUnique(params.values);
+
+const genericValueFormatter = (
+  ownFormatter: SizeGridColDef["valueFormatter"]
+): SizeGridValueFormatterFunc => {
+  const formatJoin = (values: any[]) => {
+    return `${values.slice(0, MAX_AGG_JOIN_COUNT).join("; ")}${
+      values.length > MAX_AGG_JOIN_COUNT ? ";…" : ""
+    }`;
+  };
+
+  return (params) => {
+    return _.isArray(params.value)
+      ? formatJoin(params.value)
+      : typeof ownFormatter === "function"
+      ? ownFormatter(params)
+      : params.value;
+  };
+};
+
+// getAggFunc({
+//   agg: aggregate.join<any>({
+//     unique: true,
+//     map:
+//       colId === "shipment"
+//         ? (d: Date) => {
+//             return d.toISOString();
+//           }
+//         : undefined,
+//   }),
+// });
 
 /** Describe columns, which can be grouped, as not grouped ColDefs */
-const groupCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
+const groupCols: Record<SelectableLevel, SizeGridColDef> = {
   product: {
     // field: 'product.name',
-    valueGetter: ({ data }) =>
-      `${data.product?.name}${
-        data.product?.sizes?.some((s) => !!s.sizeGroup) ? " *" : ""
-      }`,
+    valueGetter: (params) =>
+      params.node.group
+        ? ""
+        : `${params.data?.product?.name}${
+            params.data?.product?.sizes?.some((s) => !!s.sizeGroup) ? " *" : ""
+          }`,
   },
   warehouse: {
     field: "warehouse.name",
@@ -37,13 +87,12 @@ const groupCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
 };
 
 /** Describe columns, which can be grouped, for both grouped and not grouped states */
-const selectableCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
+const selectableCols: Record<SelectableLevel, SizeGridColDef> = {
   product: {
     headerName: "Product Name",
     filter: "agTextColumnFilter",
     minWidth: 140,
     initialWidth: 160,
-    // maxWidth: 200,
     sortable: true,
   },
   warehouse: {
@@ -67,16 +116,13 @@ const selectableCols: Record<SelectableLevel, ColDef<GridGroupDataItem>> = {
   },
 };
 
-const levelTotals: ColDef<GridGroupDataItem>[] = [
+const levelTotals: SizeGridColDef[] = [
   {
     headerName: "TTL Units",
     field: "ttlUnits",
     type: "ttlQuantityColumn",
     // pinned: "right",
     // lockPinned: true,
-    // valueGetter: (params) => {
-    //   return collectSizesTotals(params.data).ttlUnits;
-    // },
   },
   {
     headerName: "TTL Cost",
@@ -88,9 +134,7 @@ const levelTotals: ColDef<GridGroupDataItem>[] = [
   },
 ];
 
-const levelAuxCols: Partial<
-  Record<SelectableLevel, ColDef<GridGroupDataItem>[]>
-> = {
+const levelAuxCols: Partial<Record<SelectableLevel, SizeGridColDef[]>> = {
   product: [
     {
       headerName: "Department",
@@ -147,22 +191,6 @@ const levelAuxCols: Partial<
   ],
 };
 
-const getAggFunc = (col: ColDef) => {
-  const comparer: (a: any, b: any) => number =
-    col.colId === "shipment"
-      ? (a: Date, b: Date) => +a - +b
-      : (a: string, b: string) =>
-          a.localeCompare(b, undefined, { ignorePunctuation: true });
-  return (params) => {
-    if (!params.rowNode.group) {
-      return params.values;
-    }
-    return params.values?.length
-      ? joinUnique(params.values, "; ", comparer)
-      : "";
-  };
-};
-
 export const getColumnDefs: typeof getColumnDefsArray = (...args) => {
   // noinspection UnnecessaryLocalVariableJS
   const cols = getColumnDefsArray(...args).filter(Boolean);
@@ -177,6 +205,7 @@ export const getColumnDefsArray = ({
   product,
   appContext,
   allProducts,
+  columnApi,
 }: {
   levels: Level[];
   levelIndex: number;
@@ -184,12 +213,16 @@ export const getColumnDefsArray = ({
   product: Product | null;
   appContext: AppContext;
   allProducts: Product[];
-}): ColDef<GridGroupDataItem>[] => {
+  columnApi: ColumnApi | null;
+}): SizeGridColDef[] => {
   const level = levels[levelIndex];
   const hasSizeGroups = !!product?.sizes?.some((s) => !!s.sizeGroup);
 
+  const hasRowGroup =
+    !!columnApi?.getColumn(level) && columnApi?.getRowGroupColumns().length > 0;
+
   /** Leftmost pinned column the grid is grouped by */
-  let groupCol: ColDef<GridGroupDataItem> = groupCols[level as SelectableLevel];
+  let groupCol: SizeGridColDef = groupCols[level as SelectableLevel];
   if (groupCol && (level !== "sizeGroup" || hasSizeGroups)) {
     // TODO: pick only required
     const cellRendererParams: Partial<
@@ -215,6 +248,7 @@ export const getColumnDefsArray = ({
       cellRendererParams,
       pinned: "left",
       lockPinned: true,
+      hide: hasRowGroup,
       lockVisible: true,
       suppressSizeToFit: true,
       headerComponent: undefined,
@@ -226,7 +260,7 @@ export const getColumnDefsArray = ({
     if (typeof valueGetter === "function") {
       groupCol.valueGetter = (params) =>
         params.node.group
-          ? params.node.groupData["ag-Grid-AutoColumn"]
+          ? params.node.groupData?.["ag-Grid-AutoColumn"]
           : valueGetter(params);
     }
 
@@ -247,6 +281,7 @@ export const getColumnDefsArray = ({
               ...groupCols[l],
               ...selectableCols[l],
               pinned: null,
+              maxWidth: 200,
               lockPinned: false,
               lockVisible: false,
               enableRowGroup: true,
@@ -254,12 +289,14 @@ export const getColumnDefsArray = ({
             };
             return {
               ...result,
-              aggFunc: getAggFunc(result),
+              aggFunc: genericAggFunc,
+              valueFormatter: genericValueFormatter(result.valueFormatter),
             };
           })
       : [];
 
-  /** Quantity columns are visible only at the innermost level when a product is available */
+  /** Quantity columns are visible only at the innermost level when a product is available,
+   * OR when sizes are flattened to the product level. */
   const sizeCols =
     (levelIndex === levels.length - 1 &&
       ((appContext.isFlattenSizes
@@ -278,7 +315,7 @@ export const getColumnDefsArray = ({
                   }
                 });
                 return acc;
-              }, new Map<string, ColDef<GridGroupDataItem>>())
+              }, new Map<string, SizeGridColDef>())
               .values(),
           ]
         : product?.sizes
@@ -290,25 +327,26 @@ export const getColumnDefsArray = ({
                 visibleLevels,
               })
             )
-            .filter((col) => !!col)) as ColDef<GridGroupDataItem>[])) ||
+            .filter((col) => !!col)) as SizeGridColDef[])) ||
     [];
 
-  const auxCols = (levelAuxCols[level] || []).map((col) =>
-    col.enableRowGroup
-      ? {
-          ...col,
-          aggFunc: getAggFunc(col),
-        }
-      : col
-  );
+  const auxCols = (levelAuxCols[level] || []).map((col): SizeGridColDef => {
+    const colId = col.colId || col.field?.split(".").at(-1);
+    return {
+      colId,
+      ...col,
+      aggFunc: col.enableRowGroup ? genericAggFunc : undefined,
+      valueFormatter: col.enableRowGroup
+        ? genericValueFormatter(col.valueFormatter)
+        : undefined,
+    };
+  });
 
   return [groupCol, ...nonGroup, ...auxCols, ...sizeCols, ...levelTotals];
 };
 
-export const getAutoGroupColumnDef = (
-  level: Level
-): ColDef<GridGroupDataItem> => {
-  const baseColDef: ColDef<GridGroupDataItem> | undefined = {
+export const getAutoGroupColumnDef = (level: Level): SizeGridColDef => {
+  const baseColDef: SizeGridColDef | undefined = {
     ...(groupCols[level] || {}),
     ...(selectableCols[level] || {}),
   };

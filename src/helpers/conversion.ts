@@ -4,9 +4,11 @@ import _ from "lodash";
 export const formats = {
   units: Intl.NumberFormat("en", { maximumFractionDigits: 0 }),
   money: Intl.NumberFormat("en", { style: "currency", currency: "USD" }),
+  date: Intl.DateTimeFormat("en"),
 } as const;
 
 type RangeFormatter = (value: number | [number, number] | number[][]) => string;
+
 export const range = Object.entries(formats).reduce(
   (acc, [name, format]: [keyof typeof formats, Intl.NumberFormat]) => {
     const rangeFormatter: RangeFormatter = (value) => {
@@ -47,12 +49,6 @@ export const getRange = (values: number[]): [number, number] =>
     },
     [Number.MAX_VALUE, Number.MIN_VALUE]
   );
-
-export const joinUnique = <T>(
-  values: T[],
-  separator = "; ",
-  comparer?: (a: T, b: T) => number
-): string => [...new Set(values)].sort(comparer).join(separator);
 
 export const toQuantity = (val: string | number): number | undefined =>
   typeof val === "string" && /^\d+$/.test(val)

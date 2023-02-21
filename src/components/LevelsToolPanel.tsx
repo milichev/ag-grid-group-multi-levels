@@ -21,6 +21,8 @@ export const LevelsToolPanel: React.FC = () => {
     setIsFlattenSizes,
     isLimitedSizes,
     setIsLimitedSizes,
+    isUseSizeGroups,
+    setIsUseSizeGroups,
   } = useAppContext();
 
   const handleVisibleChange = useCallback(
@@ -189,6 +191,16 @@ export const LevelsToolPanel: React.FC = () => {
             <div className="description">
               Suppose this brand uses a strict set of sizes for all products.
             </div>
+          </label>
+        </li>
+        <li>
+          <label className="setting-label">
+            <input
+              type="checkbox"
+              checked={isUseSizeGroups}
+              onChange={(e) => setIsUseSizeGroups(e.target.checked)}
+            />
+            Use Size Groups
           </label>
         </li>
       </ul>

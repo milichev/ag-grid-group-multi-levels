@@ -1,10 +1,4 @@
-import {
-  GridDataItem,
-  Product,
-  Warehouse,
-  Shipment,
-  ShipmentsMode,
-} from "../types";
+import { GridDataItem, Product, Shipment, Warehouse } from "../types";
 
 export const getDataItemId = (
   product: Product,
@@ -16,8 +10,8 @@ export const getSizeKey = (sizeName: string, sizeGroup: string) =>
   sizeGroup ? `${sizeGroup} - ${sizeName}` : sizeName;
 
 export const collectEntities = (
-  items: GridDataItem[],
-  { ids = false, products = false, warehouses = false, shipments = false } = {}
+  items: GridDataItem[]
+  // { ids = false, products = false, warehouses = false, shipments = false } = {}
 ) => {
   const allProducts = new Map<string, Product>();
   const allWarehouses = new Map<string, Warehouse>();

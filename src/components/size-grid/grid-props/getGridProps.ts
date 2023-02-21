@@ -1,5 +1,6 @@
 import {
-  ColDef,
+  ColumnApi,
+  GridApi,
   ICellRendererParams,
   IDetailCellRendererParams,
 } from "ag-grid-community";
@@ -22,10 +23,10 @@ import { columnTypes } from "./columnTypes";
 import { onRowDataUpdated } from "./onRowDataUpdated";
 import { measureStep } from "../../../helpers/perf";
 import { onCellValueChanged } from "./onCellValueChanged";
-import { GridContext } from "../types";
+import { GridContext, SizeGridColDef, SizeGridProps } from "../types";
 import { collectEntities } from "../../../helpers/resolvers";
 
-const defaultColDef: ColDef<GridGroupDataItem> = {
+const defaultColDef: SizeGridColDef = {
   flex: 1,
   minWidth: 100,
   enableValue: true,
@@ -36,7 +37,7 @@ const defaultColDef: ColDef<GridGroupDataItem> = {
   resizable: true,
 };
 
-const commonGridProps: Partial<AgGridReactProps<GridGroupDataItem>> = {
+const commonGridProps: Partial<SizeGridProps> = {
   defaultColDef,
   columnTypes,
   animateRows: true,
@@ -139,6 +140,7 @@ const getDetailRendererParams = (
       product,
       appContext,
       allProducts,
+      columnApi: null,
     });
 
     const rows = groupItems(
@@ -185,8 +187,10 @@ const getDetailRendererParams = (
 export const getGridProps = (
   levels: Level[],
   gridData: GridDataItem[],
-  appContext: AppContext
-): Partial<AgGridReactProps<GridGroupDataItem>> => {
+  appContext: AppContext,
+  gridApi: GridApi | null,
+  columnApi: ColumnApi | null
+): Partial<SizeGridProps> => {
   const level = levels[0];
   if (!level) {
     return {
@@ -213,6 +217,7 @@ export const getGridProps = (
     product: null,
     appContext,
     allProducts,
+    columnApi,
   });
 
   const context: GridContext = {

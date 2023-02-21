@@ -5,6 +5,7 @@ import {
   GridGroupItem,
   Level,
   Product,
+  SizeInfo,
   VisibleLevels,
 } from "../types";
 import { measureStep } from "./perf";
@@ -175,8 +176,6 @@ function groupByEntity(
 
   return byIds;
 }
-
-type SizeInfo = Pick<GridGroupDataItem, "sizes" | "sizeIds">;
 
 const getSizesBySizeGroup = (sizeInfo: SizeInfo, sizeGroup: string): SizeInfo =>
   sizeGroup

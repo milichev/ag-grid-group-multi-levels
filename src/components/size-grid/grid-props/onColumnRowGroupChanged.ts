@@ -2,9 +2,9 @@ import { AgGridReactProps } from "ag-grid-react";
 import { GridGroupDataItem, Level, SelectableLevel } from "../../../types";
 import { toggleLevelItem } from "../../../helpers/levels";
 import { levels as allLevels } from "../../../constants";
-import { GridContext } from "../types";
+import { GridContext, SizeGridProps } from "../types";
 
-export const onColumnRowGroupChanged: AgGridReactProps<GridGroupDataItem>["onColumnRowGroupChanged"] =
+export const onColumnRowGroupChanged: SizeGridProps["onColumnRowGroupChanged"] =
   (params) => {
     const { levelIndex, levels, appContext }: GridContext = params.context;
     console.log("onColumnRowGroupChanged", { levelIndex, levels, params });

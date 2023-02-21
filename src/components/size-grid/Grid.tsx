@@ -85,7 +85,13 @@ export const Grid: React.FC<{
   );
 
   const gridProps = useMemo(() => {
-    const result = getGridProps(levels, itemsToDisplay, appContext);
+    const result = getGridProps(
+      levels,
+      itemsToDisplay,
+      appContext,
+      gridApi.current,
+      columnApi.current
+    );
     nuPerf.setContext({
       itemsSource: items.length,
       itemsGrid: itemsToDisplay.length,

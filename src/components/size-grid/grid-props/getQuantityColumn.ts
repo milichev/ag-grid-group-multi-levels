@@ -13,6 +13,9 @@ import {
 import { formats, toQuantity } from "../../../helpers/conversion";
 import { getSizeKey } from "../../../helpers/resolvers";
 import { SizeQuantityEditor } from "../components/SizeQuantityEditor";
+import { SizeGridAggFunc, SizeGridColDef } from "../types";
+import fp from "lodash/fp";
+import _ from "lodash";
 
 const quantityValueFormatter = (
   params: CastProp<
@@ -37,15 +40,45 @@ const valueParser: ColDef["valueParser"] = (params) =>
 const equals = (a: SizeQuantity, b: SizeQuantity) =>
   a?.quantity === b?.quantity;
 
-const commonProps: ColDef<GridGroupDataItem> = {
+type AggQuantity = Pick<SizeQuantity, "quantity"> & { id: number };
+
+let accId = 0;
+
+const aggUnique = fp.pipe([
+  fp.filter<SizeQuantity>(fp.negate(fp.isNil)),
+  // fp.flatten,
+  // fp.sortBy<SizeQuantity>(_.identity),
+  // fp.sortedUniq,
+  fp.reduce<AggQuantity, AggQuantity>(
+    (acc, s) => {
+      acc.quantity += s.quantity;
+      return acc;
+    },
+    { quantity: 0, id: accId++ }
+  ),
+]);
+
+const aggFunc: SizeGridAggFunc<SizeQuantity> = (params) => {
+  return _.filter<SizeQuantity>(params.values, fp.negate(fp.isNil)).reduce(
+    (acc, s) => {
+      acc.quantity += s.quantity;
+      return acc;
+    },
+    { quantity: 0, id: accId++ }
+  );
+};
+
+const commonProps: SizeGridColDef = {
   type: "quantityColumn",
   // cellEditor: SizeQuantityEditor,
   cellEditorSelector: (params) =>
     params.value ? { component: SizeQuantityEditor } : undefined,
-  lockVisible: true,
+  // lockVisible: true,
   lockPinned: true,
   sortable: false,
+  // aggFunc: getAggFunc({ agg: aggregate.sum() }),
   equals,
+  aggFunc,
   valueParser,
   valueFormatter: quantityValueFormatter,
 };
@@ -53,7 +86,7 @@ const commonProps: ColDef<GridGroupDataItem> = {
 const getValueSetter =
   (
     setSizeQuantity: (data: GridGroupDataItem, size: SizeQuantity) => void
-  ): ColDef<GridGroupDataItem>["valueSetter"] =>
+  ): SizeGridColDef["valueSetter"] =>
   ({ data, newValue, oldValue }: QuantitySetParams) => {
     const quantity: number | undefined =
       newValue === null
@@ -79,10 +112,10 @@ export const getQuantityColumn = ({
   hasSizeGroups,
 }: {
   size: Size;
-  visibleLevels: VisibleLevels;
   product: Product;
+  visibleLevels: VisibleLevels;
   hasSizeGroups: boolean;
-}): ColDef<GridGroupDataItem> | undefined => {
+}): SizeGridColDef | undefined => {
   if (visibleLevels.sizeGroup === undefined || !hasSizeGroups) {
     return {
       ...commonProps,
@@ -92,7 +125,7 @@ export const getQuantityColumn = ({
         if (!params.data) {
           return undefined;
         }
-        return params.data!.sizes?.[size.id];
+        return params.data.sizes?.[size.id];
       },
       valueSetter: getValueSetter((data, sizeQuantity) => {
         data.sizes[size.id] = sizeQuantity;
@@ -103,8 +136,11 @@ export const getQuantityColumn = ({
       ...commonProps,
       colId: size.name,
       headerName: size.name,
-      valueGetter: ({ data }): SizeQuantity =>
-        data?.sizes?.[getSizeKey(size.name, data.sizeGroup)],
+      valueGetter: (params): SizeQuantity => {
+        return params.data?.sizes?.[
+          getSizeKey(size.name, params.data.sizeGroup)
+        ];
+      },
       valueSetter: getValueSetter((data, sizeQuantity) => {
         data.sizes[getSizeKey(size.name, data.sizeGroup)] = sizeQuantity;
       }),

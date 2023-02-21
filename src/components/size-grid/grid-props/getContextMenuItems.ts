@@ -2,66 +2,73 @@ import { AgGridReactProps } from "ag-grid-react";
 import { GridGroupDataItem, ShipmentsMode } from "../../../types";
 import { levels as allLevels } from "../../../constants";
 import { MenuItemDef } from "ag-grid-community";
-import { GridContext } from "../types";
+import { GridContext, SizeGridProps } from "../types";
 
-export const getContextMenuItems: AgGridReactProps<GridGroupDataItem>["getContextMenuItems"] =
-  (params) => {
-    const {
-      levels,
-      levelIndex,
-      appContext: { shipmentsMode },
-    }: GridContext = params.context;
-    const gridItem = params.node.data;
-    const menuItems: (string | MenuItemDef)[] = [];
+export const getContextMenuItems: SizeGridProps["getContextMenuItems"] = (
+  params
+) => {
+  const {
+    levels,
+    levelIndex,
+    appContext: { shipmentsMode, isAllDeliveries },
+  }: GridContext = params.context;
+  const gridItem = params.node.data;
+  const menuItems: (string | MenuItemDef)[] = [];
 
-    switch (levels[levelIndex]) {
-      case "product":
-        menuItems.push({
-          name: "Remove Product",
-          action: () => {
-            alert(
-              `All line items for the ${allLevels
-                .reduce((acc, l) => {
-                  const entity: any = gridItem[l];
-                  if (entity) {
-                    acc.push(`${l} "${entity.name || entity.id}"`);
-                  }
-                  return acc;
-                }, [])
-                .join(", ")} will be deleted`
-            );
-          },
-        });
-        break;
-      case "shipment":
-        if (shipmentsMode === ShipmentsMode.LineItems) {
-          menuItems.push(
-            {
-              name: "Change Dates...",
-              action: () => {
-                alert(`Here we'll display a dialog with calendar`);
-              },
-            },
-            {
-              name: "Remove Shipment",
-              action: () => {
-                alert(`Here we'll delete the shipment ${gridItem.shipment.id}`);
-              },
-            }
+  switch (levels[levelIndex]) {
+    case "product":
+      menuItems.push({
+        name: "Remove Product",
+        action: () => {
+          alert(
+            `All line items for the ${allLevels
+              .reduce((acc, l) => {
+                const entity: any = gridItem[l];
+                if (entity) {
+                  acc.push(`${l} "${entity.name || entity.id}"`);
+                }
+                return acc;
+              }, [])
+              .join(", ")} will be deleted`
           );
-        } else {
+        },
+      });
+      break;
+    case "shipment":
+      if (shipmentsMode === ShipmentsMode.LineItems) {
+        menuItems.push(
+          {
+            name: "Change Dates...",
+            action: () => {
+              alert(`Here we'll display a dialog with calendar`);
+            },
+          },
+          {
+            name: "Remove Shipment",
+            action: () => {
+              alert(`Here we'll delete the shipment ${gridItem.shipment.id}`);
+            },
+          }
+        );
+      } else {
+        menuItems.push({
+          name: "Cannot remove shipments in Build Order",
+          disabled: true,
+        });
+      }
+      break;
+  }
+
+  const childLevel = levels[levelIndex + 1];
+  switch (childLevel) {
+    case "shipment":
+      if (shipmentsMode === ShipmentsMode.LineItems) {
+        if (isAllDeliveries) {
           menuItems.push({
-            name: "Cannot remove shipments in Build Order",
+            name: "Cannot add a shipments when All Deliveries is on",
             disabled: true,
           });
-        }
-        break;
-    }
-
-    const childLevel = levels[levelIndex + 1];
-    switch (childLevel) {
-      case "shipment":
-        if (shipmentsMode === ShipmentsMode.LineItems) {
+        } else {
           menuItems.push({
             name: "Add Shipment",
             subMenu: [
@@ -77,23 +84,24 @@ export const getContextMenuItems: AgGridReactProps<GridGroupDataItem>["getContex
             ],
           });
         }
-        break;
-      case "warehouse":
-        if (shipmentsMode === ShipmentsMode.LineItems) {
-          menuItems.push({
-            name: "Add a Warehouse",
-            subMenu: [
-              {
-                name: "Unlisted Warehouse 1",
-              },
-              {
-                name: "Unlisted Warehouse 1",
-              },
-            ],
-          });
-        }
-        break;
-    }
+      }
+      break;
+    case "warehouse":
+      if (shipmentsMode === ShipmentsMode.LineItems) {
+        menuItems.push({
+          name: "Add a Warehouse",
+          subMenu: [
+            {
+              name: "Unlisted Warehouse 1",
+            },
+            {
+              name: "Unlisted Warehouse 1",
+            },
+          ],
+        });
+      }
+      break;
+  }
 
-    return menuItems;
-  };
+  return menuItems;
+};

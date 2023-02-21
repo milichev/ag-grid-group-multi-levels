@@ -1,14 +1,8 @@
-import _ from "lodash";
-import {
-  GridDataItem,
-  ShipmentsMode,
-  Product,
-  Shipment,
-  Warehouse,
-} from "../types";
-import { getDataItemId } from "./resolvers";
+import { GridDataItem, Shipment, ShipmentsMode, SizeInfo } from "../types";
+import { collectEntities, getDataItemId } from "./resolvers";
 import { measureStep, nuPerf, wrap } from "./perf";
 import { getSizeQuantities } from "./dataSource";
+import { AppContext } from "../hooks/useAppContext";
 
 export const prepareItems = wrap(
   ({
@@ -18,10 +12,9 @@ export const prepareItems = wrap(
     buildOrderShipments,
   }: {
     shipmentsMode: ShipmentsMode;
-    isAllDeliveries: boolean;
     items: GridDataItem[];
     buildOrderShipments: Shipment[];
-  }) => {
+  } & Pick<AppContext, "isAllDeliveries">) => {
     nuPerf.clearContext("prepareItems");
     if (isAllDeliveries || shipmentsMode === ShipmentsMode.BuildOrder) {
       const collectStep = measureStep({
@@ -29,30 +22,14 @@ export const prepareItems = wrap(
         async: false,
       });
 
-      const allProducts = new Map<string, Product>();
-      const allWarehouses = new Map<string, Warehouse>();
-      const allShipments = new Map<string, Shipment>();
-      const itemIds = new Set<GridDataItem["id"]>();
+      const { itemIds, products, warehouses, shipments } =
+        collectEntities(items);
 
       if (shipmentsMode === ShipmentsMode.BuildOrder) {
         buildOrderShipments.forEach((shipment) =>
-          allShipments.set(shipment.id, shipment)
+          shipments.set(shipment.id, shipment)
         );
       }
-
-      items.forEach((item) => {
-        itemIds.add(item.id);
-
-        if (!allProducts.has(item.product.id)) {
-          allProducts.set(item.product.id, item.product);
-        }
-        if (!allWarehouses.has(item.warehouse.id)) {
-          allWarehouses.set(item.warehouse.id, item.warehouse);
-        }
-        if (!allShipments.has(item.shipment.id)) {
-          allShipments.set(item.shipment.id, item.shipment);
-        }
-      });
 
       collectStep.finish();
 
@@ -64,23 +41,23 @@ export const prepareItems = wrap(
       items = items.slice();
 
       // populate missing items, if any
-      allProducts.forEach((product) => {
-        let productSizeQuantities:
-          | ReturnType<typeof getSizeQuantities>
-          | undefined;
+      products.forEach((product) => {
+        let productSizeQuantities: SizeInfo | undefined;
 
-        allWarehouses.forEach((warehouse) =>
-          allShipments.forEach((shipment) => {
+        warehouses.forEach((warehouse) =>
+          shipments.forEach((shipment) => {
             const id = getDataItemId(product, warehouse, shipment);
             if (!itemIds.has(id)) {
+              if (!productSizeQuantities) {
+                productSizeQuantities = getSizeQuantities(product.sizes);
+              }
               const empty: GridDataItem = {
                 id,
                 product,
                 warehouse,
                 shipment,
-                ...(productSizeQuantities
-                  ? _.clone(productSizeQuantities)
-                  : (productSizeQuantities = getSizeQuantities(product.sizes))),
+                sizeIds: productSizeQuantities.sizeIds.slice(),
+                sizes: cloneSizeQuantities(productSizeQuantities),
               };
               items.push(empty);
             }
@@ -96,3 +73,12 @@ export const prepareItems = wrap(
   "prepareItems",
   false
 );
+
+const cloneSizeQuantities = (sizeInfo: SizeInfo) =>
+  sizeInfo.sizeIds.reduce((acc, id) => {
+    acc[id] = {
+      ...sizeInfo[id],
+      quantity: 0,
+    };
+    return acc;
+  }, {} as SizeInfo["sizes"]);

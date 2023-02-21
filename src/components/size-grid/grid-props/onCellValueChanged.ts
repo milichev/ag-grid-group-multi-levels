@@ -4,16 +4,18 @@ import { collectSizesTotals } from "../../../helpers/groupItems";
 import { IRowNode } from "ag-grid-community/dist/lib/interfaces/iRowNode";
 import { GridApi } from "ag-grid-community";
 import { measureStep } from "../../../helpers/perf";
-import { GridContext } from "../types";
+import { GridContext, SizeGridProps } from "../types";
+import { isCellValueChanged } from "./helpers";
 
-export const onCellValueChanged: AgGridReactProps<GridGroupDataItem>["onCellValueChanged"] =
-  (params) => {
-    const step = measureStep({ name: "onCellValueChanged", async: false });
-    if (params.colDef.type === "quantityColumn") {
-      refreshTtlCells(params.node, params.api, params.context);
-    }
-    step.finish();
-  };
+export const onCellValueChanged: SizeGridProps["onCellValueChanged"] = (
+  params
+) => {
+  const step = measureStep({ name: "onCellValueChanged", async: false });
+  if (params.colDef.type === "quantityColumn" && isCellValueChanged(params)) {
+    refreshTtlCells(params.node, params.api, params.context);
+  }
+  step.finish();
+};
 
 const refreshTtlCells = (
   node: IRowNode<GridGroupDataItem>,
@@ -46,11 +48,14 @@ const refreshTtlCells = (
 
   node.setData(item);
 
-  // api.refreshCells({
-  //   rowNodes: [node],
-  //   columns: ["ttlUnits", "ttlCost"],
-  // });
+  // the cell content is already updated with setData, but we need to forcefully refresh cells to make them flash on update.
+  api.refreshCells({
+    rowNodes: [node],
+    columns: ["ttlUnits", "ttlCost"],
+    force: true,
+  });
 
+  // traverse to the master grid, if any
   const { master }: GridContext = context;
   if (master) {
     const masterNode = master.api.getRowNode(master.id);

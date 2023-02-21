@@ -7,6 +7,7 @@ interface ContextValues {
   isAllDeliveries: boolean;
   isFlattenSizes: boolean;
   isLimitedSizes: boolean;
+  isUseSizeGroups: boolean;
 }
 
 type ContextValueSetters = {
@@ -23,6 +24,7 @@ const appContext = createContext<AppContext>({
   isAllDeliveries: false,
   isFlattenSizes: false,
   isLimitedSizes: false,
+  isUseSizeGroups: true,
 } as AppContext);
 
 export const AppContextProvider = appContext.Provider;

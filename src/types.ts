@@ -35,6 +35,8 @@ export interface SizeQuantity extends Size {
   quantity: number;
 }
 
+export type SizeInfo = Pick<GridGroupDataItem, "sizes" | "sizeIds">;
+
 export interface GridDataItem {
   id: string;
   product: Product;
@@ -91,3 +93,5 @@ type GroupedLevelPropValues = {
 };
 
 export type GridGroupDataItem = GridGroupItem & GroupedLevelPropValues;
+
+export type Compare<TValue> = (a: TValue, b: TValue) => number;

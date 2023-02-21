@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { StrictMode, useMemo, useState } from "react";
 import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
@@ -40,6 +40,7 @@ const GridApp: React.FC = () => {
   );
   const [isFlattenSizes, setIsFlattenSizes] = useState(false);
   const [isLimitedSizes, setIsLimitedSizes] = useState(false);
+  const [isUseSizeGroups, setIsUseSizeGroups] = useState(true);
 
   const appContext = useMemo<AppContext>(
     () => ({
@@ -54,8 +55,17 @@ const GridApp: React.FC = () => {
       setIsFlattenSizes,
       isLimitedSizes,
       setIsLimitedSizes,
+      isUseSizeGroups,
+      setIsUseSizeGroups,
     }),
-    [levelItems, shipmentsMode, isAllDeliveries, isFlattenSizes, isLimitedSizes]
+    [
+      levelItems,
+      shipmentsMode,
+      isAllDeliveries,
+      isFlattenSizes,
+      isLimitedSizes,
+      isUseSizeGroups,
+    ]
   );
 
   const levels = useMemo(() => {
@@ -88,8 +98,9 @@ const GridApp: React.FC = () => {
         buildOrderShipments,
         shipmentsMode,
         isLimitedSizes,
+        isUseSizeGroups,
       }),
-    [buildOrderShipments, isLimitedSizes, shipmentsMode]
+    [buildOrderShipments, isLimitedSizes, isUseSizeGroups, shipmentsMode]
   );
 
   nuPerf.setContext({
@@ -100,17 +111,19 @@ const GridApp: React.FC = () => {
   });
 
   return (
-    <div style={styles.container}>
-      <div style={styles.grid} className="ag-theme-alpine">
-        <AppContextProvider value={appContext}>
-          <Grid
-            items={gridData}
-            levels={levels}
-            buildOrderShipments={buildOrderShipments}
-          />
-        </AppContextProvider>
+    <StrictMode>
+      <div style={styles.container}>
+        <div style={styles.grid} className="ag-theme-alpine">
+          <AppContextProvider value={appContext}>
+            <Grid
+              items={gridData}
+              levels={levels}
+              buildOrderShipments={buildOrderShipments}
+            />
+          </AppContextProvider>
+        </div>
       </div>
-    </div>
+    </StrictMode>
   );
 };
 
