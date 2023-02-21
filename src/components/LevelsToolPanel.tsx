@@ -8,6 +8,7 @@ import {
   toggleLevelItem,
 } from "../helpers/levels";
 import { ShipmentsMode } from "../types";
+import { gaEvents } from "../helpers/ga";
 
 export const LevelsToolPanel: React.FC = () => {
   const {
@@ -30,6 +31,7 @@ export const LevelsToolPanel: React.FC = () => {
       const level = e.target.getAttribute("data-level");
       const visible = e.target.checked;
       toggleLevelItem(level, visible, { levelItems, setLevelItems });
+      gaEvents.toggleLevel(level, visible);
     },
     [levelItems, setLevelItems]
   );
