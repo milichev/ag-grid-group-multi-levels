@@ -1,8 +1,14 @@
-import { ShipmentsMode, Level, LevelItem } from "../types";
+import { Level, LevelItem, ShipmentsMode, VisibleLevels } from "../types";
 import { AppContext } from "../hooks/useAppContext";
 
 export const getLevelIndex = (levelItems: LevelItem[], level: Level) =>
   levelItems.findIndex((item) => item.level === level);
+
+export const getVisibleLevels = (levels: Level[]) =>
+  levels.reduce((acc, level, i) => {
+    acc[level] = i;
+    return acc;
+  }, {} as VisibleLevels);
 
 export const fixupLevelItems = ({
   shipmentsMode,

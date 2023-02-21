@@ -1,7 +1,6 @@
-import { AgGridReactProps } from "ag-grid-react";
-import { GridGroupDataItem, Level, SelectableLevel } from "../../../types";
+import { SelectableLevel } from "../../../types";
 import { toggleLevelItem } from "../../../helpers/levels";
-import { levels as allLevels } from "../../../constants";
+import { allLevels } from "../../../constants";
 import { GridContext, SizeGridProps } from "../types";
 
 export const onColumnRowGroupChanged: SizeGridProps["onColumnRowGroupChanged"] =
@@ -11,6 +10,7 @@ export const onColumnRowGroupChanged: SizeGridProps["onColumnRowGroupChanged"] =
 
     const groupColLevel = params.column?.getColId() as SelectableLevel;
     if (allLevels.includes(groupColLevel)) {
+      params.columnApi.removeRowGroupColumn(groupColLevel);
       toggleLevelItem(groupColLevel, true, appContext);
     } else {
       const levelColumn = params.columnApi.getColumn(levels[levelIndex]);

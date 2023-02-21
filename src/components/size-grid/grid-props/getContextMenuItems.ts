@@ -1,6 +1,5 @@
-import { AgGridReactProps } from "ag-grid-react";
-import { GridGroupDataItem, ShipmentsMode } from "../../../types";
-import { levels as allLevels } from "../../../constants";
+import { ShipmentsMode } from "../../../types";
+import { allLevels } from "../../../constants";
 import { MenuItemDef } from "ag-grid-community";
 import { GridContext, SizeGridProps } from "../types";
 

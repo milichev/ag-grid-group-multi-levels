@@ -1,6 +1,7 @@
 import { Level, SelectableLevel, ShipmentsMode } from "./types";
+import type { ContextValues } from "./hooks/useAppContext";
 
-export const levels: SelectableLevel[] = [
+export const allLevels: SelectableLevel[] = [
   "product",
   "warehouse",
   "shipment",
@@ -19,8 +20,12 @@ export const defaultCounts = {
   warehouses: 5,
   buildOrderShipments: 5,
   sizeGroups: 3,
+} as const;
+
+export const defaultSettings: Omit<ContextValues, "levelItems"> = {
+  isAllDeliveries: true,
+  isUseSizeGroups: true,
+  isLimitedSizes: false,
+  isFlattenSizes: false,
+  shipmentsMode: ShipmentsMode.BuildOrder,
 };
-
-export const defaultShipmentsMode = ShipmentsMode.LineItems;
-
-export const defaultIsAllDeliveries = false;

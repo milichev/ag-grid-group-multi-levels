@@ -9,7 +9,7 @@ import {
   VisibleLevels,
 } from "../types";
 import { measureStep } from "./perf";
-import { levels as allLevels } from "../constants";
+import { allLevels } from "../constants";
 import { isLevel } from "./levels";
 
 const getItemPropKey = (item: GridDataItem, level: Level): string => {

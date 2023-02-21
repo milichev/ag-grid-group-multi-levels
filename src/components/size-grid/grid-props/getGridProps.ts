@@ -25,6 +25,7 @@ import { measureStep } from "../../../helpers/perf";
 import { onCellValueChanged } from "./onCellValueChanged";
 import { GridContext, SizeGridColDef, SizeGridProps } from "../types";
 import { collectEntities } from "../../../helpers/resolvers";
+import { getVisibleLevels } from "../../../helpers/levels";
 
 const defaultColDef: SizeGridColDef = {
   flex: 1,
@@ -64,14 +65,6 @@ const commonGridProps: Partial<SizeGridProps> = {
     }
   },
 };
-
-/*
-Object.keys(commonGridProps).forEach((key) => {
-  if (typeof commonGridProps[key] === "function") {
-    commonGridProps[key] = wrap(commonGridProps[key], key, false);
-  }
-});
-*/
 
 const getDetailRendererParams = (
   gridData: GridDataItem[],
@@ -198,10 +191,7 @@ export const getGridProps = (
       columnDefs: [],
     };
   }
-  const visibleLevels = levels.reduce((acc, level, i) => {
-    acc[level] = i;
-    return acc;
-  }, {} as VisibleLevels);
+  const visibleLevels = getVisibleLevels(levels);
 
   const allProducts =
     appContext.isFlattenSizes && level === "product"

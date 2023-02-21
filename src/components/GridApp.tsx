@@ -4,7 +4,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
 import { AppContext, AppContextProvider } from "../hooks/useAppContext";
-import { ShipmentsMode, LevelItem, Level } from "../types";
+import { Level, LevelItem, ShipmentsMode } from "../types";
 import {
   getGridDataPerf as getGridData,
   getShipments,
@@ -12,11 +12,10 @@ import {
 import { nuPerf, wrap } from "../helpers/perf";
 import { Grid } from "./size-grid";
 import {
-  defaultLevels,
-  levels as allLevels,
   defaultCounts,
-  defaultShipmentsMode,
-  defaultIsAllDeliveries,
+  defaultLevels,
+  defaultSettings,
+  allLevels,
 } from "../constants";
 import { isLevel } from "../helpers/levels";
 
@@ -34,13 +33,21 @@ const GridApp: React.FC = () => {
       })
     )
   );
-  const [shipmentsMode, setShipmentsMode] = useState(defaultShipmentsMode);
-  const [isAllDeliveries, setIsAllDeliveries] = useState(
-    defaultIsAllDeliveries
+  const [shipmentsMode, setShipmentsMode] = useState(
+    defaultSettings.shipmentsMode
   );
-  const [isFlattenSizes, setIsFlattenSizes] = useState(false);
-  const [isLimitedSizes, setIsLimitedSizes] = useState(false);
-  const [isUseSizeGroups, setIsUseSizeGroups] = useState(true);
+  const [isAllDeliveries, setIsAllDeliveries] = useState(
+    defaultSettings.isAllDeliveries
+  );
+  const [isFlattenSizes, setIsFlattenSizes] = useState(
+    defaultSettings.isFlattenSizes
+  );
+  const [isLimitedSizes, setIsLimitedSizes] = useState(
+    defaultSettings.isLimitedSizes
+  );
+  const [isUseSizeGroups, setIsUseSizeGroups] = useState(
+    defaultSettings.isUseSizeGroups
+  );
 
   const appContext = useMemo<AppContext>(
     () => ({

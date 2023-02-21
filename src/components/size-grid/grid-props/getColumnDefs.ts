@@ -10,7 +10,7 @@ import type {
   SelectableLevel,
   VisibleLevels,
 } from "../../../types";
-import { levels as allLevels } from "../../../constants";
+import { allLevels } from "../../../constants";
 import { getQuantityColumn } from "./getQuantityColumn";
 import {
   SizeGridAggFunc,
@@ -33,19 +33,17 @@ const genericAggFunc: SizeGridAggFunc<number> = (params) =>
 const genericValueFormatter = (
   ownFormatter: SizeGridColDef["valueFormatter"]
 ): SizeGridValueFormatterFunc => {
-  const formatJoin = (values: any[]) => {
-    return `${values.slice(0, MAX_AGG_JOIN_COUNT).join("; ")}${
+  const formatJoin = (values: any[]) =>
+    `${values.slice(0, MAX_AGG_JOIN_COUNT).join("; ")}${
       values.length > MAX_AGG_JOIN_COUNT ? ";…" : ""
     }`;
-  };
 
-  return (params) => {
-    return _.isArray(params.value)
+  return (params) =>
+    _.isArray(params.value)
       ? formatJoin(params.value)
       : typeof ownFormatter === "function"
       ? ownFormatter(params)
       : params.value;
-  };
 };
 
 // getAggFunc({
@@ -100,6 +98,8 @@ const selectableCols: Record<SelectableLevel, SizeGridColDef> = {
     filter: "agTextColumnFilter",
     sortable: true,
     minWidth: 150,
+    headerValueGetter: (params) =>
+      params.columnApi.getRowGroupColumns().length ? "Warehouses" : "Warehouse",
   },
   shipment: {
     headerName: "Shipment",
@@ -107,6 +107,8 @@ const selectableCols: Record<SelectableLevel, SizeGridColDef> = {
     sortable: true,
     minWidth: 220,
     initialWidth: 220,
+    headerValueGetter: (params) =>
+      params.columnApi.getRowGroupColumns().length ? "Shipments" : "Shipment",
   },
   sizeGroup: {
     headerName: "Size Group",
@@ -142,7 +144,6 @@ const levelAuxCols: Partial<Record<SelectableLevel, SizeGridColDef[]>> = {
       enableRowGroup: true,
       minWidth: 100,
       sortable: true,
-      // valueFormatter: ({ value }) => `Dept: ${value}`,
     },
     {
       headerName: "Gender",
@@ -150,7 +151,6 @@ const levelAuxCols: Partial<Record<SelectableLevel, SizeGridColDef[]>> = {
       enableRowGroup: true,
       minWidth: 100,
       sortable: true,
-      // valueFormatter: ({ value }) => (value ? `Gender: ${value}` : ""),
     },
     {
       headerName: "Cost",
