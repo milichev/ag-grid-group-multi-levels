@@ -9,10 +9,10 @@ import {
   Product,
   Size,
   SizeQuantity,
-  VisibleLevels,
-} from "../../../types";
-import { formats, toQuantity } from "../../../helpers/conversion";
-import { getSizeKey } from "../../../helpers/resolvers";
+  LevelIndices,
+} from "../../../data/types";
+import { formats, toQuantity } from "../../../helpers/formatting";
+import { getSizeKey } from "../../../data/resolvers";
 import { SizeQuantityEditor } from "../components/SizeQuantityEditor";
 import { SizeGridAggFunc, SizeGridColDef } from "../types";
 
@@ -29,7 +29,7 @@ const valueFormatter = (
 
 type QuantitySetParams = CastProp<
   ValueSetterParams<GridGroupDataItem>,
-  "newValue",
+  "newValue" | "oldValue",
   SizeQuantity
 >;
 
@@ -81,29 +81,33 @@ const getValueSetter =
         ? oldValue.quantity || 0
         : toQuantity(newValue.quantity);
 
-    if (typeof quantity !== "number" || oldValue) {
+    if (typeof quantity !== "number" || quantity === oldValue.quantity) {
       return false;
     }
 
+    // TODO: implement the real data saving here with the fallback strategy
     setSizeQuantity(data, {
       ...oldValue,
       quantity,
     });
+
+    console.log(`Changed quantity: ${data.id}: ${quantity}`, data);
+
     return true;
   };
 
 export const getQuantityColumn = ({
   size,
   product,
-  visibleLevels,
+  levelIndices,
   hasSizeGroups,
 }: {
   size: Size;
   product: Product;
-  visibleLevels: VisibleLevels;
+  levelIndices: LevelIndices;
   hasSizeGroups: boolean;
 }): SizeGridColDef | undefined => {
-  if (visibleLevels.sizeGroup === undefined || !hasSizeGroups) {
+  if (levelIndices.sizeGroup === undefined || !hasSizeGroups) {
     return {
       ...commonProps,
       colId: size.id,

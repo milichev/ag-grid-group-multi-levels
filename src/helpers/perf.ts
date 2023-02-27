@@ -1,5 +1,6 @@
 import _ from "lodash";
 import { afterFrame } from "./afterFrame";
+import { getGridData } from "../data/getFake";
 
 const outPrefix = "[nu.perf]";
 const global: any = window;
@@ -217,6 +218,11 @@ export const wrap = <F extends (...args: any[]) => any>(
 
     return result;
   } as F;
+
+export const wrapObj = <T extends Record<string | number | symbol, any>>(
+  obj: T,
+  prefix = ""
+) => _.mapValues(obj, (f, key) => wrap(f, `${prefix}${key}`, false)) as T;
 
 export const nuPerf = /*(top as any).__nu_perf ??*/ createNuPerf();
 global.__nu_perf = nuPerf;

@@ -1,4 +1,4 @@
-import { ShipmentsMode } from "../../../types";
+import { ShipmentsMode } from "../../../data/types";
 import { allLevels } from "../../../constants";
 import { MenuItemDef } from "ag-grid-community";
 import { GridContext, SizeGridProps } from "../types";

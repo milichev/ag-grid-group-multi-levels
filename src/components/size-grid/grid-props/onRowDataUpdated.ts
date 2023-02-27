@@ -1,5 +1,3 @@
-import { AgGridReactProps } from "ag-grid-react";
-import { GridGroupDataItem } from "../../../types";
 import { ColumnApi, GridApi } from "ag-grid-community";
 import { afterFrame } from "../../../helpers/afterFrame";
 import { SizeGridProps } from "../types";

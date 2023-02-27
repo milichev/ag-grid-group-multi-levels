@@ -3,14 +3,15 @@ import { DebugBox } from "./DebugBox";
 import { useAppContext } from "../hooks/useAppContext";
 import {
   fixupLevelItems,
-  getLevelIndex,
+  getLevelItemIndex,
+  getLevelItemIndices,
   getLevelMeta,
   toggleLevelItem,
-} from "../helpers/levels";
-import { ShipmentsMode } from "../types";
+} from "../data/levels";
+import { ShipmentsMode } from "../data/types";
 import { gaEvents } from "../helpers/ga";
 
-export const LevelsToolPanel: React.FC = () => {
+export const LevelsToolPanel: React.FC = React.memo(() => {
   const {
     levelItems,
     setLevelItems,
@@ -40,7 +41,7 @@ export const LevelsToolPanel: React.FC = () => {
     (e) => {
       const level = e.target.getAttribute("data-level");
       const isUp = e.target.getAttribute("data-dir") === "up";
-      const i = getLevelIndex(levelItems, level);
+      const i = getLevelItemIndex(levelItems, level);
       if (i > 0 && isUp) {
         setLevelItems([
           ...levelItems.slice(0, i - 1),
@@ -69,6 +70,8 @@ export const LevelsToolPanel: React.FC = () => {
     });
   }, [shipmentsMode, levelItems, setLevelItems, isFlattenSizes]);
 
+  const levelItemIndices = getLevelItemIndices(levelItems);
+
   return (
     <div className="nest-mode-tool-panel">
       <h3>Levels</h3>
@@ -77,6 +80,7 @@ export const LevelsToolPanel: React.FC = () => {
           const { checked, enabled, upEnabled, downEnabled } = getLevelMeta(
             levelItems,
             i,
+            levelItemIndices,
             { shipmentsMode, isFlattenSizes }
           );
 
@@ -211,4 +215,4 @@ export const LevelsToolPanel: React.FC = () => {
       <DebugBox />
     </div>
   );
-};
+});

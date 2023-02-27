@@ -3,21 +3,13 @@ import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
-import { AppContext, AppContextProvider } from "../hooks/useAppContext";
-import { Level, LevelItem, ShipmentsMode } from "../types";
-import {
-  getGridDataPerf as getGridData,
-  getShipments,
-} from "../helpers/dataSource";
+import { type AppContext, AppContextProvider } from "../hooks/useAppContext";
+import { ShipmentsMode } from "../data/types";
+import { getFake } from "../data/getFake";
 import { nuPerf, wrap } from "../helpers/perf";
 import { Grid } from "./size-grid";
-import {
-  defaultCounts,
-  defaultLevels,
-  defaultSettings,
-  allLevels,
-} from "../constants";
-import { isLevel } from "../helpers/levels";
+import { defaultCounts, defaultLevels, defaultSettings } from "../constants";
+import { fixupLevelItems, resolveDisplayLevels } from "../data/levels";
 
 const styles = {
   container: { width: "100%", height: "100%" },
@@ -25,14 +17,6 @@ const styles = {
 };
 
 const GridApp: React.FC = () => {
-  const [levelItems, setLevelItems] = useState(
-    allLevels.map(
-      (level): LevelItem => ({
-        level,
-        visible: defaultLevels.includes(level),
-      })
-    )
-  );
   const [shipmentsMode, setShipmentsMode] = useState(
     defaultSettings.shipmentsMode
   );
@@ -47,6 +31,13 @@ const GridApp: React.FC = () => {
   );
   const [isUseSizeGroups, setIsUseSizeGroups] = useState(
     defaultSettings.isUseSizeGroups
+  );
+  const [levelItems, setLevelItems] = useState(() =>
+    fixupLevelItems({
+      shipmentsMode,
+      levelItems: [...defaultLevels],
+      isFlattenSizes,
+    })
   );
 
   const appContext = useMemo<AppContext>(
@@ -75,32 +66,17 @@ const GridApp: React.FC = () => {
     ]
   );
 
-  const levels = useMemo(() => {
-    const result: Level[] = levelItems
-      .filter(
-        (item) =>
-          item.visible &&
-          (!isFlattenSizes ||
-            isLevel(item.level, "product", "warehouse", "shipment"))
-      )
-      .map((item) => item.level);
-
-    if (!isFlattenSizes && result.at(-1) === "product") {
-      result.push("sizes");
-    }
-
-    return result;
-  }, [isFlattenSizes, levelItems]);
+  const levels = useMemo(() => resolveDisplayLevels(appContext), [appContext]);
 
   const buildOrderShipments = useMemo(
-    () => getShipments(defaultCounts.buildOrderShipments),
+    () => getFake.shipments(defaultCounts.buildOrderShipments),
     []
   );
 
   // get fake grid order data
   const gridData = useMemo(
     () =>
-      getGridData({
+      getFake.gridData({
         counts: defaultCounts,
         buildOrderShipments,
         shipmentsMode,

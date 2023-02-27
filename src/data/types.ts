@@ -76,7 +76,7 @@ export enum ShipmentsMode {
   LineItems = "LINE_ITEMS",
 }
 
-export type VisibleLevels = Partial<Record<Level, number>>;
+export type LevelIndices = Partial<Record<Level, number>>;
 
 export interface GridGroupItem extends Partial<GridDataItem> {
   id: string;
@@ -94,4 +94,15 @@ type GroupedLevelPropValues = {
 
 export type GridGroupDataItem = GridGroupItem & GroupedLevelPropValues;
 
-export type Compare<TValue> = (a: TValue, b: TValue) => number;
+export interface EntityBucket {
+  itemIds?: Set<GridDataItem["id"]>;
+  products?: Map<Product["id"], Product>;
+  warehouses?: Map<Warehouse["id"], Warehouse>;
+  shipments?: Map<Shipment["id"], Shipment>;
+  sizeGroups?: Set<Size["sizeGroup"]>;
+}
+
+export interface LevelData {
+  items: GridGroupDataItem[];
+  entities: EntityBucket;
+}

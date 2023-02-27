@@ -1,11 +1,10 @@
-import { AgGridReactProps } from "ag-grid-react";
-import { GridGroupDataItem } from "../../../types";
-import { collectSizesTotals } from "../../../helpers/groupItems";
+import { GridGroupDataItem } from "../../../data/types";
 import { IRowNode } from "ag-grid-community/dist/lib/interfaces/iRowNode";
 import { GridApi } from "ag-grid-community";
 import { measureStep } from "../../../helpers/perf";
 import { GridContext, SizeGridProps } from "../types";
 import { isCellValueChanged } from "./helpers";
+import { collectSizesTotals } from "../../../data/totals";
 
 export const onCellValueChanged: SizeGridProps["onCellValueChanged"] = (
   params

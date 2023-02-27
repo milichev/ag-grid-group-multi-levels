@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { LevelItem, ShipmentsMode } from "../types";
+import { LevelItem, ShipmentsMode } from "../data/types";
 
 export interface ContextValues {
   levelItems: LevelItem[];

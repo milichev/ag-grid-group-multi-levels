@@ -1,6 +1,6 @@
-import { SelectableLevel } from "../../../types";
+import { SelectableLevel } from "../../../data/types";
 import { GetMainMenuItemsParams, MenuItemDef } from "ag-grid-community";
-import { getVisibleLevels, toggleLevelItem } from "../../../helpers/levels";
+import { getLevelIndices, toggleLevelItem } from "../../../data/levels";
 import { GridContext, SizeGridProps } from "../types";
 import { allLevels } from "../../../constants";
 
@@ -24,9 +24,9 @@ function preprocessLevel(
     levels,
     appContext: { levelItems, setLevelItems },
   }: GridContext = params.context;
-  const visibleLevels = getVisibleLevels(levels);
+  const levelIndices = getLevelIndices(levels);
 
-  if (levelIndex === 0 && visibleLevels[level] === undefined) {
+  if (levelIndex === 0 && levelIndices[level] === undefined) {
     const groupLevelItem: MenuItemDef = {
       name: `Group by ${params.column.getColDef().headerName}`,
       icon: '<span class="ag-icon ag-icon-group" role="presentation" />',
@@ -42,7 +42,7 @@ function preprocessLevel(
     }
   } else if (
     level !== "product" &&
-    visibleLevels[level] === levelIndex &&
+    levelIndices[level] === levelIndex &&
     params.column.isPinnedLeft()
   ) {
     result.splice(result.lastIndexOf("separator"), 0, {

@@ -1,5 +1,5 @@
 import ReactGA from "react-ga4";
-import { Level } from "../types";
+import { Level } from "../data/types";
 
 export const gaEvents = {
   toggleLevel: (level: Level, visible: boolean) =>

@@ -1,30 +1,38 @@
-import { Level, SelectableLevel, ShipmentsMode } from "./types";
+import { Level, LevelItem, SelectableLevel, ShipmentsMode } from "./data/types";
 import type { ContextValues } from "./hooks/useAppContext";
+import { isLevel } from "./data/levels";
 
-export const allLevels: SelectableLevel[] = [
+// reorder levels by default here
+export const allLevels: readonly SelectableLevel[] = Object.freeze([
+  "sizeGroup",
   "product",
   "warehouse",
   "shipment",
-  "sizeGroup",
-];
+]);
 
-export const defaultLevels: Level[] = [
-  "product",
-  "shipment",
-  // "warehouse",
-  "sizeGroup",
-];
+export const defaultLevels: readonly LevelItem[] = Object.freeze(
+  allLevels.map((level) => ({
+    level,
+    visible: isLevel(
+      level,
+      // uncomment to turn the level on by default
+      "sizeGroup",
+      "product",
+      "warehouse",
+      "shipment"
+    ),
+  }))
+);
 
 export const defaultCounts = {
-  products: 20,
-  warehouses: 5,
+  products: 2,
+  warehouses: 2,
   buildOrderShipments: 5,
-  sizeGroups: 3,
 } as const;
 
 export const defaultSettings: Omit<ContextValues, "levelItems"> = {
   isAllDeliveries: true,
-  isUseSizeGroups: true,
+  isUseSizeGroups: false,
   isLimitedSizes: false,
   isFlattenSizes: false,
   shipmentsMode: ShipmentsMode.BuildOrder,

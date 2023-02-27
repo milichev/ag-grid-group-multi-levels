@@ -8,8 +8,8 @@ import type {
   Level,
   Product,
   SelectableLevel,
-  VisibleLevels,
-} from "../../../types";
+  LevelIndices,
+} from "../../../data/types";
 import { allLevels } from "../../../constants";
 import { getQuantityColumn } from "./getQuantityColumn";
 import {
@@ -65,10 +65,19 @@ const groupCols: Record<SelectableLevel, SizeGridColDef> = {
     filterParams: {
       suppressAndOrCondition: true,
     },
+    comparator: (a: GridGroupDataItem, b: GridGroupDataItem) => {
+      const aStart = +(a.shipment?.startDate || 0);
+      const bStart = +(b.shipment?.startDate || 0);
+      return aStart !== bStart
+        ? aStart - bStart
+        : +(a.shipment?.endDate || 0) - +(b.shipment?.endDate || 0);
+    },
     valueFormatter: (params) => params.data?.shipment?.id ?? "",
   },
   sizeGroup: {
     field: "sizeGroup",
+    valueFormatter: (params) =>
+      params.value === "" ? "[EMPTY]" : params.value,
   },
 };
 
@@ -103,6 +112,10 @@ const selectableCols: Record<SelectableLevel, SizeGridColDef> = {
     filter: "agTextColumnFilter",
     sortable: true,
     minWidth: 200,
+    headerValueGetter: (params) =>
+      params.columnApi.getRowGroupColumns().length
+        ? "Size Groups"
+        : "Size Group",
   },
 };
 
@@ -189,7 +202,7 @@ export const getColumnDefs: typeof getColumnDefsArray = (...args) => {
 export const getColumnDefsArray = ({
   levels,
   levelIndex,
-  visibleLevels,
+  levelIndices,
   product,
   appContext,
   allProducts,
@@ -197,14 +210,18 @@ export const getColumnDefsArray = ({
 }: {
   levels: Level[];
   levelIndex: number;
-  visibleLevels: VisibleLevels;
+  levelIndices: LevelIndices;
   product: Product | null;
   appContext: AppContext;
   allProducts: Product[];
   columnApi: ColumnApi | null;
 }): SizeGridColDef[] => {
   const level = levels[levelIndex];
-  const hasSizeGroups = !!product?.sizes?.some((s) => !!s.sizeGroup);
+  const isRootLevel = levelIndex === 0;
+  const isLeafLevel = levelIndex === levels.length - 1;
+  const hasSizeGroups =
+    levelIndices.sizeGroup < levelIndices.product ||
+    !!product?.sizes?.some((s) => !!s.sizeGroup);
 
   const hasRowGroup =
     !!columnApi?.getColumn(level) && columnApi?.getRowGroupColumns().length > 0;
@@ -221,7 +238,7 @@ export const getColumnDefsArray = ({
       // suppressDoubleClickExpand: false,
       // suppressEnterExpand: false,
       suppressPadding: true,
-      checkbox: levelIndex === 0,
+      checkbox: isRootLevel,
       // innerRendererSelector: () => ({
       //   component: GroupInnerRenderer,
       //   params: {},
@@ -231,8 +248,7 @@ export const getColumnDefsArray = ({
       colId: level,
       ...groupCol,
       ...selectableCols[level],
-      cellRenderer:
-        levelIndex < levels.length - 1 ? "agGroupCellRenderer" : undefined,
+      cellRenderer: !isLeafLevel ? "agGroupCellRenderer" : undefined,
       cellRendererParams,
       pinned: "left",
       lockPinned: true,
@@ -240,7 +256,7 @@ export const getColumnDefsArray = ({
       lockVisible: true,
       suppressSizeToFit: true,
       headerComponent: undefined,
-      headerCheckboxSelection: levelIndex === 0,
+      headerCheckboxSelection: isRootLevel,
     };
 
     // if the grid is grouped, get the group auto-column value
@@ -256,37 +272,36 @@ export const getColumnDefsArray = ({
   }
 
   /** If it's a top level, an array of the groupable columns that are not added to grouping */
-  const nonGroup =
-    levelIndex === 0
-      ? allLevels
-          .filter(
-            (l) =>
-              l !== level && l !== "sizeGroup" && visibleLevels[l] === undefined
-          )
-          .map((l): ColDef => {
-            const result: ColDef = {
-              colId: l,
-              ...groupCols[l],
-              ...selectableCols[l],
-              pinned: null,
-              maxWidth: 200,
-              lockPinned: false,
-              lockVisible: false,
-              enableRowGroup: true,
-              suppressSizeToFit: false,
-            };
-            return {
-              ...result,
-              aggFunc: genericAggFunc,
-              valueFormatter: genericValueFormatter(result.valueFormatter),
-            };
-          })
-      : [];
+  const nonGroup = isRootLevel
+    ? allLevels
+        .filter(
+          (l) =>
+            l !== level && l !== "sizeGroup" && levelIndices[l] === undefined
+        )
+        .map((l): ColDef => {
+          const result: ColDef = {
+            colId: l,
+            ...groupCols[l],
+            ...selectableCols[l],
+            pinned: null,
+            maxWidth: 200,
+            lockPinned: false,
+            lockVisible: false,
+            enableRowGroup: true,
+            suppressSizeToFit: false,
+          };
+          return {
+            ...result,
+            aggFunc: genericAggFunc,
+            valueFormatter: genericValueFormatter(result.valueFormatter),
+          };
+        })
+    : [];
 
   /** Quantity columns are visible only at the innermost level when a product is available,
    * OR when sizes are flattened to the product level. */
   const sizeCols =
-    (levelIndex === levels.length - 1 &&
+    (isLeafLevel &&
       ((appContext.isFlattenSizes
         ? [
             ...allProducts
@@ -297,7 +312,7 @@ export const getColumnDefsArray = ({
                       size,
                       product: prd,
                       hasSizeGroups: false,
-                      visibleLevels,
+                      levelIndices,
                     });
                     acc.set(col.colId, col);
                   }
@@ -312,7 +327,7 @@ export const getColumnDefsArray = ({
                 size,
                 product,
                 hasSizeGroups,
-                visibleLevels,
+                levelIndices,
               })
             )
             .filter((col) => !!col)) as SizeGridColDef[])) ||

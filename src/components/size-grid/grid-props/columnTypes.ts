@@ -1,6 +1,6 @@
 import { IAggFuncParams } from "ag-grid-community";
-import { GridGroupDataItem } from "../../../types";
-import { getRange, range, formats } from "../../../helpers/conversion";
+import { GridGroupDataItem } from "../../../data/types";
+import { getRange, range } from "../../../helpers/formatting";
 import { ValueFormatterFunc } from "ag-grid-community/dist/lib/entities/colDef";
 import { SizeGridColDef } from "../types";
 

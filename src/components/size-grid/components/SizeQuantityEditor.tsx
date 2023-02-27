@@ -10,7 +10,7 @@ import React, {
   useState,
 } from "react";
 import { ICellEditorParams } from "ag-grid-community";
-import { GridGroupDataItem, SizeQuantity } from "../../../types";
+import { GridGroupDataItem, SizeQuantity } from "../../../data/types";
 import { ICellEditor } from "ag-grid-community/dist/lib/interfaces/iCellEditor";
 import { afterFrame } from "../../../helpers/afterFrame";
 

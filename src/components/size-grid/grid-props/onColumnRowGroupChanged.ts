@@ -1,5 +1,5 @@
-import { SelectableLevel } from "../../../types";
-import { toggleLevelItem } from "../../../helpers/levels";
+import { SelectableLevel } from "../../../data/types";
+import { toggleLevelItem } from "../../../data/levels";
 import { allLevels } from "../../../constants";
 import { GridContext, SizeGridProps } from "../types";
 

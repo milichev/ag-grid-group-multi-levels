@@ -1,4 +1,5 @@
 /// <reference types="react-scripts" />
+// noinspection JSUnusedGlobalSymbols
 
 declare module "react/jsx-runtime" {
   export default any;
@@ -23,3 +24,5 @@ type Methods<T> = Pick<
 type CastProp<T extends object, K extends keyof T, C> = {
   [P in keyof T]: P extends K ? C : T[P];
 };
+
+type Compare<TValue> = (a: TValue, b: TValue) => number;

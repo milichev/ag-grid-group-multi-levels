@@ -1,181 +1,16 @@
-import {
-  ColumnApi,
-  GridApi,
-  ICellRendererParams,
-  IDetailCellRendererParams,
-} from "ag-grid-community";
-import { AgGridReactProps } from "ag-grid-react";
+import { ColumnApi, GridApi } from "ag-grid-community";
 
 import type { AppContext } from "../../../hooks/useAppContext";
-import {
-  GridDataItem,
-  GridGroupDataItem,
-  Level,
-  VisibleLevels,
-} from "../../../types";
+import { GridDataItem, Level, Product } from "../../../data/types";
 import { getAutoGroupColumnDef, getColumnDefs } from "./getColumnDefs";
-import { groupItems } from "../../../helpers/groupItems";
-import { getMainMenuItems } from "./getMainMenuItems";
-import { postProcessPopup } from "./postProcessPopup";
-import { getContextMenuItems } from "./getContextMenuItems";
-import { onColumnRowGroupChanged } from "./onColumnRowGroupChanged";
-import { columnTypes } from "./columnTypes";
-import { onRowDataUpdated } from "./onRowDataUpdated";
-import { measureStep } from "../../../helpers/perf";
-import { onCellValueChanged } from "./onCellValueChanged";
-import { GridContext, SizeGridColDef, SizeGridProps } from "../types";
-import { collectEntities } from "../../../helpers/resolvers";
-import { getVisibleLevels } from "../../../helpers/levels";
-
-const defaultColDef: SizeGridColDef = {
-  flex: 1,
-  minWidth: 100,
-  enableValue: true,
-  enableRowGroup: false,
-  enablePivot: false,
-  sortable: true,
-  filter: true,
-  resizable: true,
-};
-
-const commonGridProps: Partial<SizeGridProps> = {
-  defaultColDef,
-  columnTypes,
-  animateRows: true,
-  suppressAutoSize: false,
-  detailRowAutoHeight: true,
-  singleClickEdit: true,
-  stopEditingWhenCellsLoseFocus: true,
-  undoRedoCellEditing: true,
-  enableCellEditingOnBackspace: true,
-  allowContextMenuWithControlKey: true,
-  suppressAggFuncInHeader: true,
-  enableCellChangeFlash: true,
-  getRowId: (params) => params.data.id,
-  onRowGroupOpened: (params) => console.log("onRowGroupOpened", params),
-  getContextMenuItems,
-  getMainMenuItems,
-  onColumnRowGroupChanged,
-  postProcessPopup,
-  onRowDataUpdated,
-  onCellValueChanged,
-  onCellEditingStarted: (params) => {
-    if (params.colDef.type === "quantityColumn" && params.value === undefined) {
-      params.api.stopEditing(true);
-    }
-  },
-};
-
-const getDetailRendererParams = (
-  gridData: GridDataItem[],
-  levels: Level[],
-  levelIndex: number,
-  visibleLevels: VisibleLevels,
-  appContext: AppContext,
-  masterContext: GridContext
-): AgGridReactProps["detailCellRendererParams"] => {
-  const level = levels[levelIndex];
-  if (!level) return undefined;
-
-  return (
-    params: ICellRendererParams<GridGroupDataItem>
-  ): Partial<IDetailCellRendererParams<GridGroupDataItem>> => {
-    const getParamsStep = measureStep({
-      name: "detailRendererParams",
-      async: false,
-    });
-    const item = params.data;
-
-    const product =
-      visibleLevels.product < levelIndex ? item.group[0].product : null;
-    const hasSizeGroups = product?.sizes?.some((s) => !!s.sizeGroup);
-    let localLevels = levels;
-
-    // remove unneeded sizeGroup nested level, if any
-    if (product && !hasSizeGroups) {
-      if (visibleLevels.sizeGroup >= levelIndex) {
-        localLevels = [...levels];
-        localLevels.splice(visibleLevels.sizeGroup, 1);
-        if (localLevels.length === levelIndex && !appContext.isFlattenSizes) {
-          localLevels.push("sizes");
-        }
-      }
-    }
-
-    const context: GridContext = {
-      levels: localLevels,
-      levelIndex,
-      appContext,
-      master: {
-        id: params.data.id,
-        api: params.api,
-        columnApi: params.columnApi,
-        context: masterContext,
-      },
-    };
-    const detailCellRendererParams = getDetailRendererParams(
-      gridData,
-      localLevels,
-      levelIndex + 1,
-      visibleLevels,
-      appContext,
-      context
-    );
-
-    const allProducts = appContext.isFlattenSizes
-      ? [...collectEntities(item.group).products.values()]
-      : [];
-
-    const columnDefs = getColumnDefs({
-      levels: localLevels,
-      levelIndex,
-      visibleLevels,
-      product,
-      appContext,
-      allProducts,
-      columnApi: null,
-    });
-
-    const rows = groupItems(
-      item.group,
-      localLevels,
-      levelIndex,
-      visibleLevels,
-      item
-    );
-
-    // noinspection UnnecessaryLocalVariableJS
-    const result: Partial<IDetailCellRendererParams> = {
-      detailGridOptions: {
-        ...commonGridProps,
-        autoGroupColumnDef: getAutoGroupColumnDef(level),
-        columnDefs,
-        context,
-        masterDetail: !!detailCellRendererParams,
-        detailCellRendererParams,
-        // sideBar: {
-        //   toolPanels: ["columns", "filters"],
-        // },
-      },
-      getDetailRowData: (params) => {
-        params.successCallback(rows);
-      },
-    };
-
-    const parentLevel = masterContext.levels[masterContext.levelIndex];
-    const parentEntity = item[parentLevel] as any;
-    console.log(
-      `detailCellRendererParams ${parentLevel}: ${
-        parentEntity?.name || parentEntity?.id
-      }`,
-      result,
-      rows
-    );
-
-    getParamsStep.finish();
-    return result;
-  };
-};
+import { groupItems } from "../../../data/groupItems";
+import { GridContext, SizeGridProps } from "../types";
+import { collectEntities } from "../../../data/resolvers";
+import { getLevelIndices } from "../../../data/levels";
+import {
+  commonGridProps,
+  getDetailRendererParams,
+} from "./getDetailRendererParams";
 
 export const getGridProps = (
   levels: Level[],
@@ -191,19 +26,23 @@ export const getGridProps = (
       columnDefs: [],
     };
   }
-  const visibleLevels = getVisibleLevels(levels);
+  const levelIndices = getLevelIndices(levels);
 
   const allProducts =
     appContext.isFlattenSizes && level === "product"
-      ? [...collectEntities(gridData).products.values()]
+      ? [
+          ...collectEntities(gridData, {
+            products: new Map<Product["id"], Product>(),
+          }).products.values(),
+        ]
       : [];
 
-  const rowData = groupItems(gridData, levels, 0, visibleLevels, null);
+  const { items } = groupItems(gridData, levels, 0, levelIndices, null);
 
   const columnDefs = getColumnDefs({
     levels,
     levelIndex: 0,
-    visibleLevels,
+    levelIndices,
     product: null,
     appContext,
     allProducts,
@@ -221,7 +60,7 @@ export const getGridProps = (
     gridData,
     levels,
     1,
-    visibleLevels,
+    levelIndices,
     appContext,
     context
   );
@@ -229,7 +68,7 @@ export const getGridProps = (
   return {
     ...commonGridProps,
     autoGroupColumnDef: getAutoGroupColumnDef(level),
-    rowData,
+    rowData: items,
     // quickFilterText: gridData[0].product.department,
     columnDefs,
     masterDetail: !!detailCellRendererParams,

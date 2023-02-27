@@ -56,3 +56,5 @@ export const toQuantity = (val: string | number): number | undefined =>
     : typeof val === "number" && !Number.isNaN(val)
     ? val
     : undefined;
+
+export const toISODateString = (date: Date) => date.toISOString().slice(0, 10);

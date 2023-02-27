@@ -1,7 +1,7 @@
-import { GridDataItem, Shipment, ShipmentsMode, SizeInfo } from "../types";
+import { GridDataItem, Shipment, ShipmentsMode, SizeInfo } from "./types";
 import { collectEntities, getDataItemId } from "./resolvers";
-import { measureStep, nuPerf, wrap } from "./perf";
-import { getSizeQuantities } from "./dataSource";
+import { measureStep, nuPerf, wrap } from "../helpers/perf";
+import { getSizeQuantities } from "./getFake";
 import { AppContext } from "../hooks/useAppContext";
 
 export const prepareItems = wrap(

@@ -1,22 +1,48 @@
 import { faker } from "@faker-js/faker";
 import {
   GridDataItem,
-  ShipmentsMode,
   Product,
   Shipment,
+  ShipmentsMode,
   Size,
   SizeQuantity,
   Warehouse,
-} from "../types";
+} from "./types";
 import { AppContext } from "../hooks/useAppContext";
-import { wrap } from "./perf";
+import { wrapObj } from "../helpers/perf";
 import { getDataItemId, getSizeKey } from "./resolvers";
+import { toISODateString } from "../helpers/formatting";
+
+const attempt = <T>(
+  get: () => T,
+  isOk: (v: T) => boolean,
+  { attempts = 50 }: { attempts?: number } = {}
+) => {
+  let tries = 0;
+  let v: T;
+  do {
+    if (attempts > 0 && tries >= attempts) {
+      throw new Error(`max ${attempts} attempts reached`);
+    }
+    tries += 1;
+    v = get();
+  } while (!isOk(v));
+  return v;
+};
 
 const basic = {
   id: () => faker.datatype.hexadecimal({ case: "upper", length: 24 }).slice(2),
   productName: () => faker.commerce.productName(),
   warehouseName: () => faker.address.city(),
+  sizeName: () =>
+    faker.word.adjective({ length: { min: 2, max: 6 }, strategy: "shortest" }),
   warehouseCode: () => faker.address.stateAbbr(),
+  departmentName: () => faker.commerce.department(),
+  gender: () =>
+    attempt(
+      () => faker.name.gender(),
+      (g) => g.split(/[\s*]/gi).length === 1
+    ),
 } as const;
 
 const wrapUnique = <T extends Record<string, () => any>>(methods: T) =>
@@ -30,71 +56,54 @@ const uniqueBasic = wrapUnique(basic);
 
 const entity = {
   product: ({
-    sizeGroupCount = 3,
-    departments = [],
-    limitedSizes,
+    departments,
     isUseSizeGroups,
+    isLimitedSizes,
   }: {
-    sizeGroupCount?: number;
-    departments?: string[] | null;
-    limitedSizes?: Size[];
-  } & Pick<AppContext, "isUseSizeGroups">): Product => {
+    departments: DepartmentMap;
+  } & Pick<AppContext, "isUseSizeGroups" | "isLimitedSizes">): Product => {
+    const department = faker.helpers.arrayElement(Object.keys(departments));
+
+    const sizeGroups = (isUseSizeGroups &&
+      faker.helpers.maybe(() => departments[department].sizeGroups, {
+        probability: 0.3,
+      })) || [""];
+
+    const sizeNames: string[] = isLimitedSizes
+      ? departments[department].sizes
+      : faker.helpers.uniqueArray(
+          basic.sizeName,
+          faker.datatype.number({ min: 2, max: 4 })
+        );
+
+    const sizes: Size[] = [];
+    sizeGroups.forEach((sizeGroup) => {
+      sizeNames.forEach((sizeName) => {
+        sizes.push({
+          id: sizeGroup ? `${sizeGroup} - ${sizeName}` : sizeName,
+          name: sizeName,
+          sizeGroup,
+        });
+      });
+    });
+
     const retail = faker.datatype.number({
       precision: 0.01,
       min: 4,
       max: 1200,
     });
-
-    const sizeGroups = (isUseSizeGroups &&
-      faker.helpers.maybe(
-        () =>
-          faker.helpers.uniqueArray(
-            faker.random.word,
-            faker.datatype.number({ min: 2, max: sizeGroupCount })
-          ),
-        { probability: 0.3 }
-      )) || [""];
-
-    let sizes: Size[];
-
-    if (limitedSizes) {
-      sizes = faker.helpers.arrayElements(
-        limitedSizes,
-        faker.datatype.number({
-          min: limitedSizes.length * 0.75,
-          max: limitedSizes.length,
-        })
-      );
-    } else {
-      sizes = [];
-      const sizeNames = faker.helpers.uniqueArray(
-        faker.company.catchPhraseDescriptor,
-        faker.datatype.number({ min: 2, max: 4 })
-      );
-      sizeGroups.forEach((sizeGroup) => {
-        sizeNames.forEach((sizeName) => {
-          sizes.push({
-            id: sizeGroup ? `${sizeGroup} - ${sizeName}` : sizeName,
-            name: sizeName,
-            sizeGroup,
-          });
-        });
-      });
-    }
+    const wholesale =
+      retail * faker.datatype.number({ precision: 0.001, min: 0.5, max: 0.95 });
 
     return {
       id: uniqueBasic.id(),
       image: faker.image.fashion(),
       name: uniqueBasic.productName(),
       color: faker.color.human(),
-      department: departments
-        ? faker.helpers.arrayElement(departments)
-        : faker.commerce.department(),
+      department,
       gender: faker.helpers.arrayElement(["male", "female", "other"]),
       retail,
-      wholesale:
-        retail *
-        faker.datatype.number({ precision: 0.001, min: 0.5, max: 0.95 }),
+      wholesale,
       sizes,
     };
   },
@@ -108,6 +117,12 @@ const entity = {
   }),
 };
 
+type DepartmentData = {
+  sizeGroups: string[];
+  sizes: string[];
+};
+type DepartmentMap = Record<string, DepartmentData>;
+
 export const getGridData = ({
   counts,
   buildOrderShipments,
@@ -118,43 +133,47 @@ export const getGridData = ({
   counts: {
     products: number;
     warehouses: number;
-    sizeGroups: number;
   };
   buildOrderShipments: Shipment[];
 } & Pick<
   AppContext,
   "shipmentsMode" | "isLimitedSizes" | "isUseSizeGroups"
 >): GridDataItem[] => {
-  const departments = faker.helpers.uniqueArray(
+  const departmentNames = faker.helpers.uniqueArray(
     faker.commerce.department,
     counts.products / 5
   );
+  const predefinedSizeGroups = [
+    faker.helpers.uniqueArray(basic.gender, 4),
+    ["Earthlings", "Xenomorphs", "Unicorns"],
+    ["Silver", "Gold", "Platinum", "Plutonium"],
+    faker.helpers.uniqueArray(faker.commerce.productMaterial, 3),
+    ["Petite", "Regular", "Small"],
+  ];
+  const predefinedSizeNames = [
+    [...Array(13)].map((_u, i) => `${6 + i * 0.5}`),
+    ["S", "M", "L"],
+    ["XS", "XS", "S", "M", "L", "XL"],
+    ["XXXS", "XXS", "XS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
+  ];
 
-  let limitedSizes: Size[] | undefined;
-  if (isLimitedSizes) {
-    limitedSizes = [];
-    const sizeNames = ["XS", "XS", "S", "M", "L", "XL"];
-    (isUseSizeGroups ? ["Men", "Women", "Children"] : [""]).forEach(
-      (sizeGroup) => {
-        sizeNames.forEach((sizeName) => {
-          limitedSizes.push({
-            id: sizeGroup ? `${sizeGroup} - ${sizeName}` : sizeName,
-            name: sizeName,
-            sizeGroup,
-          });
-        });
-      }
-    );
-  }
+  const departments = departmentNames.reduce((acc, nm) => {
+    acc[nm] = {
+      sizeGroups: faker.helpers.arrayElement(predefinedSizeGroups),
+      sizes: isLimitedSizes
+        ? faker.helpers.arrayElement(predefinedSizeNames)
+        : [],
+    };
+    return acc;
+  }, {} as DepartmentMap);
 
   // get working products
   const products = faker.helpers.uniqueArray<Product>(
     () =>
       entity.product({
-        sizeGroupCount: counts.sizeGroups,
         departments,
-        limitedSizes,
         isUseSizeGroups,
+        isLimitedSizes,
       }),
     counts.products
   );
@@ -202,8 +221,6 @@ export const getGridData = ({
   return items;
 };
 
-export const getGridDataPerf = wrap(getGridData, "getGridData", false);
-
 export const getSizeQuantities = (
   sizes: Size[],
   isRandQuantity = false
@@ -234,9 +251,7 @@ const addDays = (date: Date, amount: number) => {
   return result;
 };
 
-const toISODateString = (date: Date) => date.toISOString().slice(0, 10);
-
-export const getShipments = (
+const getShipments = (
   count: number,
   { defaultDeliveryWindow = 7, isBuildOrder = false } = {}
 ) => {
@@ -254,3 +269,11 @@ export const getShipments = (
   });
   return shipments;
 };
+
+export const getFake = wrapObj(
+  {
+    shipments: getShipments,
+    gridData: getGridData,
+  },
+  "fake:"
+);

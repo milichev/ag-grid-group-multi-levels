@@ -1,4 +1,4 @@
-import { GridGroupDataItem, Level } from "../../types";
+import { GridGroupDataItem, Level } from "../../data/types";
 import { ColDef, ColumnApi, GridApi } from "ag-grid-community";
 import { AppContext } from "../../hooks/useAppContext";
 import { AgGridReactProps } from "ag-grid-react";
