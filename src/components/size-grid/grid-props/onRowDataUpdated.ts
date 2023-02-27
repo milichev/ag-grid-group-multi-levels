@@ -8,5 +8,5 @@ const sizeColumnsToFitDeferred = (api: GridApi, columnApi: ColumnApi) =>
   });
 
 export const onRowDataUpdated: SizeGridProps["onRowDataUpdated"] = (params) => {
-  sizeColumnsToFitDeferred(params.api, params.columnApi);
+  // sizeColumnsToFitDeferred(params.api, params.columnApi);
 };

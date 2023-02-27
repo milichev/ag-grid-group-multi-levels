@@ -12,8 +12,8 @@ import {
   TotalInfo,
   Warehouse,
 } from "./types";
-import { measureStep } from "../helpers/perf";
-import { allLevels } from "../constants";
+import { measureStep, measureAction } from "../helpers/perf";
+import { allLevels, emptySizeGroupId } from "../constants";
 import { getItemEntities, getItemPropKey } from "./resolvers";
 import { collectGroupTotals, collectProductTotals } from "./totals";
 
@@ -39,21 +39,23 @@ export const groupItems = (
     visibleLevels.product < levelIndex ? dataItems[0].product : undefined;
   product && entities.products.set(product.id, product);
 
-  let byIds: Map<string, GridDataItem[]>;
-  switch (level) {
-    case "sizeGroup":
-      byIds = product
-        ? groupBySizeGroupWithinProduct(product, dataItems)
-        : groupBySizeGroupOverProducts(dataItems, entities);
-      break;
-    default:
-      byIds = groupByEntity(level, levelIndex, visibleLevels, dataItems);
-      break;
-  }
+  const byIds: Map<string, GridDataItem[]> = measureAction(() => {
+    switch (level) {
+      case "sizeGroup":
+        return product
+          ? groupBySizeGroupWithinProduct(product, dataItems)
+          : groupBySizeGroupOverProducts(dataItems, entities);
+      default:
+        return groupByEntity(level, levelIndex, visibleLevels, dataItems);
+    }
+  }, "groupItems:byIds");
 
   // GridGroupDataItem properties to be applied to items at this level
   const propLevels = allLevels.reduce((acc, l) => {
-    if (visibleLevels[l] <= levelIndex || visibleLevels[l] === undefined) {
+    if (
+      visibleLevels[l] <= levelIndex ||
+      (visibleLevels[l] === undefined && visibleLevels.product <= levelIndex)
+    ) {
       acc.push(l);
     }
     return acc;
@@ -63,40 +65,44 @@ export const groupItems = (
     parent && visibleLevels.sizeGroup < levelIndex
       ? parent.sizeGroup
       : undefined;
-
+  const isLeafLevel = levelIndex === levels.length - 1;
   let items: GridGroupDataItem[] = [];
-  byIds.forEach((group, id) => {
-    const sizeGroup = level === "sizeGroup" ? id : parentSizeGroup;
 
-    let sizeInfo: SizeInfo;
-    let total: TotalInfo;
-    if (levelIndex === levels.length - 1) {
-      sizeInfo = getSizesBySizeGroup(group[0], sizeGroup);
-      total = collectProductTotals(sizeInfo, product, sizeGroup);
-    } else {
-      total = collectGroupTotals(group, sizeGroup);
-    }
+  measureAction(() => {
+    byIds.forEach((group, id) => {
+      const sizeGroup = level === "sizeGroup" ? id : parentSizeGroup;
 
-    const gridItem: GridGroupDataItem = {
-      id,
-      level,
-      group,
-      parent,
-      ...sizeInfo,
-      total,
-    };
+      let sizeInfo: SizeInfo;
+      let total: TotalInfo;
+      if (isLeafLevel) {
+        sizeInfo = getSizesBySizeGroup(group[0], sizeGroup);
+        total = collectProductTotals(sizeInfo, group[0].product, sizeGroup);
+      } else {
+        total = collectGroupTotals(group, sizeGroup);
+      }
 
-    propLevels.forEach(
-      (l) =>
-        (gridItem[l] = l === "sizeGroup" ? sizeGroup : (group[0][l] as any))
-    );
+      const gridItem: GridGroupDataItem = {
+        id: level === "sizeGroup" && sizeGroup === "" ? emptySizeGroupId : id,
+        level,
+        group,
+        parent,
+        ...sizeInfo,
+        total,
+      };
 
-    items.push(gridItem);
-  });
+      propLevels.forEach(
+        (l) =>
+          (gridItem[l] = l === "sizeGroup" ? sizeGroup : (group[0][l] as any))
+      );
 
-  const sortStep = measureStep({ name: "groupSort", async: false });
-  items = sortItems(items, level, propLevels);
-  sortStep.finish();
+      items.push(gridItem);
+    });
+  }, "groupItems:map");
+
+  items = measureAction(
+    () => sortItems(items, level, propLevels),
+    "groupItems:sort"
+  );
 
   step.finish();
 
@@ -138,8 +144,9 @@ function groupBySizeGroupWithinProduct(
   const byIds = new Map<string, GridDataItem[]>();
 
   product.sizes.forEach((size) => {
-    if (size.sizeGroup && !byIds.has(size.sizeGroup)) {
-      byIds.set(size.sizeGroup, dataItems);
+    const { sizeGroup } = size;
+    if (!byIds.has(sizeGroup)) {
+      byIds.set(sizeGroup, dataItems);
     }
   });
 
@@ -150,23 +157,24 @@ function groupBySizeGroupOverProducts(
   dataItems: GridDataItem[],
   entities: EntityBucket
 ) {
-  const byIds = new Map<string, GridDataItem[]>();
+  const byIds = new Map<string, Set<GridDataItem>>();
 
   dataItems.forEach((item) => {
     item.product.sizes.forEach((size) => {
       const { sizeGroup } = size;
       let group = byIds.get(sizeGroup);
       if (!group) {
-        group = [item];
+        group = new Set([item]);
         byIds.set(sizeGroup, group);
-      } else {
-        group.push(item);
+        getItemEntities(item, entities);
+      } else if (!group.has(item)) {
+        group.add(item);
+        getItemEntities(item, entities);
       }
-      getItemEntities(item, entities);
     });
   });
 
-  return byIds;
+  return new Map([...byIds.entries()].map(([id, set]) => [id, [...set]]));
 }
 
 function groupByEntity(
@@ -176,7 +184,10 @@ function groupByEntity(
   dataItems: GridDataItem[]
 ) {
   const idLevels = allLevels.reduce((acc, l) => {
-    if (l === level || (levelIndex === 0 && visibleLevels[l] === undefined)) {
+    if (
+      l === level ||
+      (visibleLevels[l] === undefined && level === "product")
+    ) {
       acc.push(l);
     }
     return acc;
@@ -205,7 +216,10 @@ const getSizesBySizeGroup = (sizeInfo: SizeInfo, sizeGroup: string): SizeInfo =>
   sizeGroup
     ? sizeInfo.sizeIds.reduce(
         (acc, id) => {
-          if (sizeInfo.sizes[id].sizeGroup === sizeGroup) {
+          if (
+            sizeGroup === undefined ||
+            sizeInfo.sizes[id].sizeGroup === sizeGroup
+          ) {
             acc.sizes[id] = sizeInfo.sizes[id];
             acc.sizeIds.push(id);
           }

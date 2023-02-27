@@ -36,7 +36,7 @@ export const addTotals = (
 ) =>
   sizeInfo.sizeIds?.forEach((sizeId) => {
     const size = sizeInfo.sizes[sizeId];
-    if (sizeGroup && size.sizeGroup === sizeGroup) {
+    if (sizeGroup === undefined || size.sizeGroup === sizeGroup) {
       total.units += size.quantity;
       total.cost += product.wholesale * size.quantity;
     }

@@ -1,17 +1,12 @@
-import {
-  GridDataItem,
-  GridGroupDataItem,
-  Level,
-  LevelIndices,
-} from "../../../data/types";
+import { GridDataItem, Level, LevelIndices } from "../../../data/types";
 import { AppContext } from "../../../hooks/useAppContext";
-import { GridContext, SizeGridColDef, SizeGridProps } from "../types";
-import { AgGridReactProps } from "ag-grid-react";
 import {
-  ICellRendererParams,
-  IDetailCellRendererParams,
-} from "ag-grid-community";
-import { measureStep } from "../../../helpers/perf";
+  GridContext,
+  SizeGridColDef,
+  SizeGridGetDetailCellRendererParams,
+  SizeGridProps,
+} from "../types";
+import { measureAction, wrap } from "../../../helpers/perf";
 import { collectEntities } from "../../../data/resolvers";
 import { getAutoGroupColumnDef, getColumnDefs } from "./getColumnDefs";
 import { groupItems } from "../../../data/groupItems";
@@ -48,8 +43,13 @@ export const commonGridProps: Partial<SizeGridProps> = {
   allowContextMenuWithControlKey: true,
   suppressAggFuncInHeader: true,
   enableCellChangeFlash: true,
+  suppressReactUi: false,
+  // TODO: ag-grid version v29.0.0 often crashes in addStickyRow method.
+  // groupRowsSticky: true,
   getRowId: (params) => params.data.id,
-  onRowGroupOpened: (params) => console.log("onRowGroupOpened", params),
+  onRowGroupOpened: (params) => {
+    console.log("onRowGroupOpened", params);
+  },
   getContextMenuItems,
   getMainMenuItems,
   onColumnRowGroupChanged,
@@ -70,17 +70,13 @@ export const getDetailRendererParams = (
   levelIndices: LevelIndices,
   appContext: AppContext,
   masterContext: GridContext
-): AgGridReactProps["detailCellRendererParams"] => {
+) => {
   const level = levels[levelIndex];
   if (!level) return undefined;
 
-  return (
-    params: ICellRendererParams<GridGroupDataItem>
-  ): Partial<IDetailCellRendererParams<GridGroupDataItem>> => {
-    const getParamsStep = measureStep({
-      name: "detailRendererParams",
-      async: false,
-    });
+  const detailCellRendererParams: SizeGridGetDetailCellRendererParams = (
+    params
+  ) => {
     const item = params.data;
 
     const product =
@@ -126,9 +122,13 @@ export const getDetailRendererParams = (
       context
     );
 
-    const allProducts = appContext.isFlattenSizes
-      ? [...collectEntities(item.group).products.values()]
-      : [];
+    const allProducts = measureAction(
+      () =>
+        appContext.isFlattenSizes
+          ? [...collectEntities(item.group).products.values()]
+          : [],
+      "collectEntities"
+    );
 
     const columnDefs = getColumnDefs({
       levels: localLevels,
@@ -148,8 +148,7 @@ export const getDetailRendererParams = (
       item
     );
 
-    // noinspection UnnecessaryLocalVariableJS
-    const result: Partial<IDetailCellRendererParams> = {
+    return {
       detailGridOptions: {
         ...commonGridProps,
         autoGroupColumnDef: getAutoGroupColumnDef(currentLevel),
@@ -162,18 +161,11 @@ export const getDetailRendererParams = (
         params.successCallback(items);
       },
     };
-
-    const parentLevel = masterContext.levels[masterContext.levelIndex];
-    const parentEntity = item[parentLevel] as any;
-    console.log(
-      `detailCellRendererParams ${parentLevel}: ${
-        parentEntity?.name || parentEntity?.id
-      }`,
-      result,
-      items
-    );
-
-    getParamsStep.finish();
-    return result;
   };
+
+  return wrap(
+    detailCellRendererParams,
+    `detailCellRendererParams:${level}`,
+    false
+  );
 };

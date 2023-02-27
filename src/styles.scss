@@ -30,7 +30,7 @@ body {
 .ag-cell.col-quantity {
   text-align: right;
   cursor: text;
-  
+
   &.cell-disabled {
     pointer-events: none;
   }
@@ -38,9 +38,9 @@ body {
   // TODO: fix the grouping to prevent leaf rows to be group nodes
   //.ag-row:not(.ag-row-group) {
   .ag-row > &:hover:not(.ag-cell-inline-editing),
-    &.ag-cell-focus:not(.ag-cell-inline-editing):not(.cell-disabled) {
-      background-color: rgba(33, 150, 243, 0.13);
-    }
+  &.ag-cell-focus:not(.ag-cell-inline-editing):not(.cell-disabled) {
+    background-color: rgba(33, 150, 243, 0.13);
+  }
   //}
 }
 .ag-header-cell.col-quantity {
@@ -64,7 +64,6 @@ body {
   }
 }
 
-
 .ag-row .ag-body-viewport .ag-cell-wrapper.ag-row-group {
   // resets the left indent of nested group levels
   padding-left: 0;
@@ -79,10 +78,20 @@ body {
     min-height: unset;
   }
 }
+
 .nest-mode-tool-panel {
   padding: 1rem;
-  
-  h4 { margin-bottom: 0.5em; }
+
+  h3 {
+    &:first-child {
+      margin-top: 0;
+    }
+    margin-bottom: 0.5em;
+  }
+  h4 {
+    margin-bottom: 0.5em;
+    margin-top: 0.17em;
+  }
 
   .settings-list,
   .mode-list {
@@ -107,9 +116,9 @@ body {
     cursor: pointer;
 
     .description {
-      color: #999;
+      color: #888;
       margin-left: 1.3rem;
-      font-size: 0.759em;
+      font-size: 0.8em;
     }
   }
 
@@ -120,7 +129,7 @@ body {
 
     li {
       flex-direction: column;
-      
+
       section {
         margin: 0.25em 0 1em 1.3rem;
         padding: 0.5em;
@@ -128,13 +137,13 @@ body {
         border-radius: 0.5em;
         pointer-events: none;
         color: #a9a9a9;
-        
+
         &:empty {
           display: none;
         }
       }
 
-      &:has(>label.setting-label>input:checked) {
+      &:has(> label.setting-label > input:checked) {
         section {
           border: solid 1px #bbb;
           color: #000;
@@ -154,11 +163,11 @@ body {
       color: #666;
       padding: 0;
       font-size: 0.8em;
-      
+
       &:hover {
         color: #000;
       }
-      
+
       &[data-dir="up"] {
         margin-bottom: -0.175em;
       }
@@ -181,7 +190,7 @@ body {
 .quantity-editor {
   display: flex;
   height: 100%;
-  
+
   input {
     width: 100%;
     padding: 0;
@@ -196,21 +205,32 @@ body {
   list-style-type: none;
   padding: 0;
   font-family: monospace;
+  font-size: 0.9em;
+  letter-spacing: -0.5px;
+  user-select: text;
+  overflow-x: clip;
 
   li {
     margin: 0;
     padding: 0;
     display: flex;
-    
+    &:hover {
+      background-color: #eeeeee;
+    }
+
     .label {
       flex-grow: 1;
       overflow: hidden;
       text-overflow: ellipsis;
+
+      &:hover {
+        overflow: visible;
+      }
     }
-    
+
     &.perf {
       color: #999;
-      
+
       &.fast .value {
         background-color: #beff8b;
       }

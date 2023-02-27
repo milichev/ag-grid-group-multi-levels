@@ -108,8 +108,6 @@ export const Grid: React.FC<Props> = React.memo(
       return result;
     }, [levels, itemsToDisplay, appContext, items.length]);
 
-    console.log("gridProps", gridProps);
-
     return (
       <AgGridReact<GridGroupDataItem>
         {...gridProps}

@@ -140,14 +140,14 @@ const createStep = (
     startMark,
     endMark,
     startMs,
-    finish: () => {
+    finish: (...args: any[]) => {
       const cb = () => {
         const endMs = performance.now();
         performance?.mark?.(endMark);
         performance?.measure?.(name, startMark, endMark);
         steps.delete(name);
         const elapsed = (endMs - startMs).toFixed(3);
-        console.log(`${outPrefix} END ${name} (${elapsed})`);
+        console.log(`${outPrefix} END ${name} (${elapsed})`, ...args);
         nuPerf.setContext({ [`${CONTEXT_PREFIX}${name}`]: elapsed }, true);
       };
 
@@ -190,6 +190,20 @@ export const measureStep = ({
   return step;
 };
 
+export const measureAction = <F extends AnyFunction>(
+  action: F,
+  name = action.name
+): ReturnType<F> => {
+  const step = measureStep({ name, async: false });
+  let result: ReturnType<F>;
+  try {
+    result = action();
+  } finally {
+    step.finish(result);
+  }
+  return result;
+};
+
 export const getStep = (name: string, suppressMissingWarning = false) => {
   const step: MeasureStep | undefined = steps.get(name);
   if (!step && !suppressMissingWarning) {
@@ -209,11 +223,11 @@ export const wrap = <F extends (...args: any[]) => any>(
 
     if (async && result?.then && _.isFunction(result.then)) {
       result = result.then((resolved) => {
-        step.finish();
+        step.finish(resolved);
         return resolved;
       });
     } else {
-      step.finish();
+      step.finish(result);
     }
 
     return result;

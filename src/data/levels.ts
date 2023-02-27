@@ -28,7 +28,8 @@ export const resolveDisplayLevels = ({
       switch (item.level) {
         case "sizeGroup": {
           const productLevelIndex = getLevelItemIndex(levelItems, "product");
-          return isFlattenSizes ? i < productLevelIndex : i > productLevelIndex;
+          // return isFlattenSizes ? i < productLevelIndex : i > productLevelIndex;
+          return !isFlattenSizes || i < productLevelIndex;
         }
       }
       return true;
@@ -81,7 +82,7 @@ export const fixupLevelItems = ({
   }
   // when no flatten-sizes, a size group has meaning under its product
   else {
-    reorderItem(resultItems, "sizeGroup", "below", ["product"]);
+    // reorderItem(resultItems, "sizeGroup", "below", ["product"]);
   }
 
   // when `shipmentsMode` is LineItems, the shipment level cannot be higher than product or warehouse.
@@ -152,9 +153,10 @@ export const getLevelMeta = (
       downEnabled = downEnabled && (!isFlattenSizes || nextLevel !== "product");
       break;
     case "sizeGroup":
-      checked = checked && isFlattenSizes === i < levelIndices.product;
-      upEnabled = upEnabled && prevLevel === "product" && isFlattenSizes;
-      downEnabled = downEnabled && nextLevel === "product" && !isFlattenSizes;
+      // can be checked if flatten-sizes and above products
+      checked = checked && (!isFlattenSizes || i < levelIndices.product);
+      // upEnabled = upEnabled && prevLevel === "product" && isFlattenSizes;
+      downEnabled = downEnabled && (!isFlattenSizes || nextLevel !== "product");
       break;
   }
 
