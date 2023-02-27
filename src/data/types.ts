@@ -35,8 +35,6 @@ export interface SizeQuantity extends Size {
   quantity: number;
 }
 
-export type SizeInfo = Pick<GridGroupDataItem, "sizes" | "sizeIds">;
-
 export interface GridDataItem {
   id: string;
   product: Product;
@@ -46,6 +44,8 @@ export interface GridDataItem {
   sizes: Record<string, SizeQuantity>;
   sizeIds: string[];
 }
+
+export type SizeInfo = Pick<GridDataItem, "sizes" | "sizeIds">;
 
 export type Level =
   | keyof Pick<GridDataItem, "shipment" | "product" | "warehouse" | "sizes">
@@ -78,14 +78,18 @@ export enum ShipmentsMode {
 
 export type LevelIndices = Partial<Record<Level, number>>;
 
+export interface TotalInfo {
+  units: number;
+  cost: number;
+}
+
 export interface GridGroupItem extends Partial<GridDataItem> {
   id: string;
   level: Level;
   group: GridDataItem[];
   sizeGroup?: string;
   parent: GridGroupDataItem | null;
-  ttlUnits?: number;
-  ttlCost?: number;
+  total: TotalInfo;
 }
 
 type GroupedLevelPropValues = {

@@ -17,6 +17,7 @@ import {
   SizeGridColDef,
   SizeGridValueFormatterFunc,
 } from "../types";
+import { formatSizes } from "../../../data/resolvers";
 
 const MAX_AGG_JOIN_COUNT = 5;
 
@@ -119,18 +120,20 @@ const selectableCols: Record<SelectableLevel, SizeGridColDef> = {
   },
 };
 
-const levelTotals: SizeGridColDef[] = [
+export const levelTotals: SizeGridColDef[] = [
   {
+    colId: "totalUnits",
     headerName: "TTL Units",
-    field: "ttlUnits",
     type: "ttlQuantityColumn",
+    valueGetter: (params) => params.data.total.units,
     // pinned: "right",
     // lockPinned: true,
   },
   {
+    colId: "totalCost",
     headerName: "TTL Cost",
-    field: "ttlCost",
     type: "ttlPriceColumn",
+    valueGetter: (params) => params.data.total.cost,
     aggFunc: "sum",
     // pinned: "right",
     // lockPinned: true,
@@ -152,6 +155,11 @@ const levelAuxCols: Partial<Record<SelectableLevel, SizeGridColDef[]>> = {
       enableRowGroup: true,
       minWidth: 100,
       sortable: true,
+    },
+    {
+      headerName: "Sizes",
+      valueGetter: (params) =>
+        params.data?.product ? formatSizes(params.data.product) : undefined,
     },
     {
       headerName: "Cost",

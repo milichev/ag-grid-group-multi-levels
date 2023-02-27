@@ -1,8 +1,31 @@
-import { GridDataItem, Shipment, ShipmentsMode, SizeInfo } from "./types";
-import { collectEntities, getDataItemId } from "./resolvers";
+import {
+  GridDataItem,
+  Shipment,
+  ShipmentsMode,
+  Size,
+  SizeInfo,
+  SizeQuantity,
+} from "./types";
+import { collectEntities, getDataItemId, getSizeKey } from "./resolvers";
 import { measureStep, nuPerf, wrap } from "../helpers/perf";
-import { getSizeQuantities } from "./getFake";
 import { AppContext } from "../hooks/useAppContext";
+
+export const getSizeQuantities = (sizes: Size[]): SizeInfo => {
+  const sizeIds = [];
+  const sizeQuantities = sizes.reduce((acc, size) => {
+    const sizeId = getSizeKey(size.name, size.sizeGroup);
+    sizeIds.push(sizeId);
+    acc[sizeId] = {
+      id: size.id,
+      name: size.name,
+      sizeGroup: size.sizeGroup,
+      quantity: 0,
+    };
+    return acc;
+  }, {} as Record<string, SizeQuantity>);
+
+  return { sizeIds, sizes: sizeQuantities };
+};
 
 export const prepareItems = wrap(
   ({

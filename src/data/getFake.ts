@@ -5,13 +5,15 @@ import {
   Shipment,
   ShipmentsMode,
   Size,
-  SizeQuantity,
+  SizeInfo,
   Warehouse,
 } from "./types";
 import { AppContext } from "../hooks/useAppContext";
 import { wrapObj } from "../helpers/perf";
-import { getDataItemId, getSizeKey } from "./resolvers";
+import { getDataItemId, sortSizeNames } from "./resolvers";
 import { toISODateString } from "../helpers/formatting";
+import { getSizeQuantities } from "./prepareItems";
+import { regularSizeNames } from "../constants";
 
 const attempt = <T>(
   get: () => T,
@@ -48,7 +50,8 @@ const basic = {
 const wrapUnique = <T extends Record<string, () => any>>(methods: T) =>
   (Object.keys(methods) as [keyof T]).reduce((acc, key) => {
     const method = methods[key];
-    acc[key] = () => faker.helpers.unique(method);
+    const store = {};
+    acc[key] = () => faker.helpers.unique(method, undefined, { store });
     return acc;
   }, {} as { [K in keyof T]: () => ReturnType<T[K]> });
 
@@ -69,12 +72,20 @@ const entity = {
         probability: 0.3,
       })) || [""];
 
-    const sizeNames: string[] = isLimitedSizes
-      ? departments[department].sizes
-      : faker.helpers.uniqueArray(
-          basic.sizeName,
-          faker.datatype.number({ min: 2, max: 4 })
-        );
+    const sizeNames: string[] = sortSizeNames(
+      isLimitedSizes
+        ? faker.helpers.arrayElements(
+            departments[department].sizes,
+            faker.datatype.number({
+              min: departments[department].sizes.length / 3,
+              max: departments[department].sizes.length,
+            })
+          )
+        : faker.helpers.uniqueArray(
+            basic.sizeName,
+            faker.datatype.number({ min: 2, max: 4 })
+          )
+    );
 
     const sizes: Size[] = [];
     sizeGroups.forEach((sizeGroup) => {
@@ -152,9 +163,9 @@ export const getGridData = ({
   ];
   const predefinedSizeNames = [
     [...Array(13)].map((_u, i) => `${6 + i * 0.5}`),
-    ["S", "M", "L"],
-    ["XS", "XS", "S", "M", "L", "XL"],
-    ["XXXS", "XXS", "XS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
+    // ["S", "M", "L"],
+    regularSizeNames,
+    // ["XXXS", "XXS", "XS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
   ];
 
   const departments = departmentNames.reduce((acc, nm) => {
@@ -206,13 +217,15 @@ export const getGridData = ({
               }
             );
 
+      const { sizes, sizeIds } = getSizeQuantities(product.sizes);
+
       shipments.forEach((shipment) => {
         items.push({
           id: getDataItemId(product, warehouse, shipment),
           product,
           warehouse,
           shipment,
-          ...getSizeQuantities(product.sizes, true),
+          ...getRandQuantities({ sizes, sizeIds }),
         });
       });
     });
@@ -221,27 +234,16 @@ export const getGridData = ({
   return items;
 };
 
-export const getSizeQuantities = (
-  sizes: Size[],
-  isRandQuantity = false
-): Pick<GridDataItem, "sizes" | "sizeIds"> => {
-  const sizeIds = [];
-  const sizeQuantities = sizes.reduce((acc, size) => {
-    const sizeId = getSizeKey(size.name, size.sizeGroup);
-    sizeIds.push(sizeId);
+const getRandQuantities = ({ sizeIds, sizes }: SizeInfo): SizeInfo => ({
+  sizeIds,
+  sizes: sizeIds.reduce((acc, sizeId) => {
     acc[sizeId] = {
-      id: size.id,
-      name: size.name,
-      sizeGroup: size.sizeGroup,
-      quantity: isRandQuantity
-        ? faker.datatype.number({ min: 0, max: 150 })
-        : 0,
+      ...sizes[sizeId],
+      quantity: faker.datatype.number({ min: 0, max: 150 }),
     };
     return acc;
-  }, {} as Record<string, SizeQuantity>);
-
-  return { sizeIds, sizes: sizeQuantities };
-};
+  }, {} as GridDataItem["sizes"]),
+});
 
 const addDays = (date: Date, amount: number) => {
   const result = new Date(date);

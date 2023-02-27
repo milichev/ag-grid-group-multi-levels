@@ -16,7 +16,7 @@ export const defaultLevels: readonly LevelItem[] = Object.freeze(
     visible: isLevel(
       level,
       // uncomment to turn the level on by default
-      "sizeGroup",
+      // "sizeGroup",
       "product",
       "warehouse",
       "shipment"
@@ -25,7 +25,7 @@ export const defaultLevels: readonly LevelItem[] = Object.freeze(
 );
 
 export const defaultCounts = {
-  products: 2,
+  products: 50,
   warehouses: 2,
   buildOrderShipments: 5,
 } as const;
@@ -33,7 +33,14 @@ export const defaultCounts = {
 export const defaultSettings: Omit<ContextValues, "levelItems"> = {
   isAllDeliveries: true,
   isUseSizeGroups: false,
-  isLimitedSizes: false,
+  isLimitedSizes: true,
   isFlattenSizes: false,
   shipmentsMode: ShipmentsMode.BuildOrder,
 };
+
+export const regularSizeNames = ["S", "M", "L"];
+const xSizeCount = 3;
+for (let i = 1; i <= xSizeCount; i++) {
+  regularSizeNames.unshift(`${"X".repeat(i)}S`);
+  regularSizeNames.push(`${"X".repeat(i)}L`);
+}

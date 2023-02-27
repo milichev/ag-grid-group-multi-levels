@@ -1,3 +1,5 @@
+import fp from "lodash/fp";
+import _ from "lodash";
 import {
   EntityBucket,
   GridDataItem,
@@ -7,6 +9,8 @@ import {
   Size,
   Warehouse,
 } from "./types";
+import { regularSizeNames } from "../constants";
+import * as stream from "stream";
 
 export const getDataItemId = (
   product: Product,
@@ -66,3 +70,108 @@ export const getItemEntities = (item: GridDataItem, entities: EntityBucket) => {
     });
   }
 };
+
+type SizeSortRec = [string, number];
+const numSizeRe = /^\d+(?:\.\d+)?$/;
+const sizeSeparator = ", ";
+
+const trySortNumberSizes = (names: string[]): SizeSortRec[] => {
+  const numbers = Array<SizeSortRec>(names.length);
+  for (let i = 0; i < names.length; i++) {
+    if (!numSizeRe.test(names[i])) {
+      return undefined;
+    }
+    numbers[i] = [names[i], +names[i]];
+  }
+  return _.sortBy(numbers, (rec) => rec[1]);
+};
+
+const tryGroupNumberSizes = (names: string[]) => {
+  const sorted = trySortNumberSizes(names);
+  if (!sorted) {
+    return undefined;
+  }
+
+  let minStep: number;
+  sorted.forEach(([name, val], i, arr) => {
+    if (i > 0) {
+      const step = val - arr[i - 1][1];
+      if (i === 1 || step < minStep) {
+        minStep = step;
+      }
+    }
+  });
+
+  return formatSortedSizes(sorted, minStep, sizeSeparator);
+};
+
+const formatSortedSizes = (
+  sorted: SizeSortRec[],
+  step: number,
+  separator = ", "
+) =>
+  sorted
+    .reduce((ranges, rec) => {
+      let tail: SizeSortRec[];
+      if (
+        ranges.length > 0 &&
+        rec[1] - (tail = ranges.at(-1)).at(-1)[1] === step
+      ) {
+        if (tail.length === 1) {
+          tail.push(rec);
+        } else {
+          tail[1] = rec;
+        }
+      } else {
+        ranges.push([rec]);
+      }
+      return ranges;
+    }, [] as SizeSortRec[][])
+    .map((pair) => {
+      return pair.length === 1
+        ? pair[0][0]
+        : `${pair[0][0]}${pair[1][1] - pair[0][1] === step ? separator : "-"}${
+            pair[1][0]
+          }`;
+    })
+    .join(separator);
+
+const regularSizeIndices = regularSizeNames.reduce((acc, size, i) => {
+  acc[size] = i;
+  return acc;
+}, {} as Record<string, number>);
+
+const trySortRegularSizes = (names: string[]): SizeSortRec[] => {
+  const numbers = Array<SizeSortRec>(names.length);
+  for (let i = 0; i < names.length; i++) {
+    const regularIndex = regularSizeIndices[names[i].toUpperCase()];
+    if (regularIndex === undefined) {
+      return undefined;
+    }
+    numbers[i] = [names[i], regularIndex];
+  }
+  return _.sortBy(numbers, (rec) => rec[1]);
+};
+
+const tryGroupRegularSizes = (names: string[]) => {
+  const sorted = trySortRegularSizes(names);
+  return sorted ? formatSortedSizes(sorted, 1, sizeSeparator) : undefined;
+};
+
+export const sortSizeNames = (names: string[]): string[] => {
+  const sorted = trySortRegularSizes(names) ?? trySortNumberSizes(names);
+  return sorted?.map((rec) => rec[0]) ?? names;
+};
+
+const groupSizeNames = (names: string[]) =>
+  tryGroupNumberSizes(names) ??
+  tryGroupRegularSizes(names) ??
+  names.join(sizeSeparator);
+
+export const formatSizes: (p: Product) => string = fp.pipe([
+  fp.prop("sizes"),
+  fp.map("name"),
+  fp.sortBy(fp.identity),
+  fp.uniq,
+  groupSizeNames,
+]);

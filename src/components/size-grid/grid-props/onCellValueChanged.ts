@@ -1,10 +1,11 @@
-import { GridGroupDataItem } from "../../../data/types";
+import { GridGroupDataItem, TotalInfo } from "../../../data/types";
 import { IRowNode } from "ag-grid-community/dist/lib/interfaces/iRowNode";
 import { GridApi } from "ag-grid-community";
 import { measureStep } from "../../../helpers/perf";
 import { GridContext, SizeGridProps } from "../types";
 import { isCellValueChanged } from "./helpers";
-import { collectSizesTotals } from "../../../data/totals";
+import { collectProductTotals } from "../../../data/totals";
+import { levelTotals } from "./getColumnDefs";
 
 export const onCellValueChanged: SizeGridProps["onCellValueChanged"] = (
   params
@@ -16,6 +17,8 @@ export const onCellValueChanged: SizeGridProps["onCellValueChanged"] = (
   step.finish();
 };
 
+const refreshColIds = levelTotals.map((col) => col.colId);
+
 const refreshTtlCells = (
   node: IRowNode<GridGroupDataItem>,
   api: GridApi<GridGroupDataItem>,
@@ -25,23 +28,23 @@ const refreshTtlCells = (
   if (item.sizes) {
     item = {
       ...item,
-      ...collectSizesTotals(item, item.product),
+      total: collectProductTotals(item, item.product, item.sizeGroup),
     };
   } else {
     const detailApi: GridApi<GridGroupDataItem> = api.getDetailGridInfo(
       `detail_${item.id}`
     ).api;
-    const acc: Pick<GridGroupDataItem, "ttlUnits" | "ttlCost"> = {
-      ttlUnits: 0,
-      ttlCost: 0,
+    const total: TotalInfo = {
+      units: 0,
+      cost: 0,
     };
     detailApi.forEachNode((detailNode) => {
-      acc.ttlUnits += detailNode.data.ttlUnits;
-      acc.ttlCost += detailNode.data.ttlCost;
+      total.units += detailNode.data.total.units;
+      total.cost += detailNode.data.total.cost;
     });
     item = {
       ...item,
-      ...acc,
+      total,
     };
   }
 
@@ -50,7 +53,7 @@ const refreshTtlCells = (
   // the cell content is already updated with setData, but we need to forcefully refresh cells to make them flash on update.
   api.refreshCells({
     rowNodes: [node],
-    columns: ["ttlUnits", "ttlCost"],
+    columns: refreshColIds,
     force: true,
   });
 

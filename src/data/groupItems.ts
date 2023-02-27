@@ -3,19 +3,19 @@ import {
   EntityBucket,
   GridDataItem,
   GridGroupDataItem,
-  GridGroupItem,
   Level,
   LevelData,
   LevelIndices,
   Product,
   Shipment,
   SizeInfo,
+  TotalInfo,
   Warehouse,
 } from "./types";
 import { measureStep } from "../helpers/perf";
 import { allLevels } from "../constants";
 import { getItemEntities, getItemPropKey } from "./resolvers";
-import { collectGroupTotals, collectSizesTotals } from "./totals";
+import { collectGroupTotals, collectProductTotals } from "./totals";
 
 export const groupItems = (
   dataItems: GridDataItem[],
@@ -69,12 +69,12 @@ export const groupItems = (
     const sizeGroup = level === "sizeGroup" ? id : parentSizeGroup;
 
     let sizeInfo: SizeInfo;
-    let ttlInfo: Pick<GridGroupItem, "ttlUnits" | "ttlCost">;
+    let total: TotalInfo;
     if (levelIndex === levels.length - 1) {
       sizeInfo = getSizesBySizeGroup(group[0], sizeGroup);
-      ttlInfo = collectSizesTotals(sizeInfo, product);
+      total = collectProductTotals(sizeInfo, product, sizeGroup);
     } else {
-      ttlInfo = collectGroupTotals(group);
+      total = collectGroupTotals(group, sizeGroup);
     }
 
     const gridItem: GridGroupDataItem = {
@@ -83,7 +83,7 @@ export const groupItems = (
       group,
       parent,
       ...sizeInfo,
-      ...ttlInfo,
+      total,
     };
 
     propLevels.forEach(

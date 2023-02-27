@@ -1,33 +1,43 @@
-import { GridDataItem, GridGroupDataItem, Product, SizeInfo } from "./types";
+import { GridDataItem, Product, SizeInfo, TotalInfo } from "./types";
 
-export const collectGroupTotals = (group: GridDataItem[]) =>
+export const collectGroupTotals = (
+  group: GridDataItem[],
+  sizeGroup: string | undefined
+) =>
   group.reduce(
     (acc, item) => {
-      addSizesTotals(item, item.product, acc);
+      addTotals(item, item.product, sizeGroup, acc);
       return acc;
     },
     {
-      ttlUnits: 0,
-      ttlCost: 0,
-    } as Pick<GridGroupDataItem, "ttlUnits" | "ttlCost">
+      units: 0,
+      cost: 0,
+    } as TotalInfo
   );
 
-export const collectSizesTotals = (item: SizeInfo, product: Product) => {
-  const acc: Pick<GridGroupDataItem, "ttlUnits" | "ttlCost"> = {
-    ttlUnits: 0,
-    ttlCost: 0,
+export const collectProductTotals = (
+  sizeInfo: Partial<SizeInfo>,
+  product: Product,
+  sizeGroup: string | undefined
+) => {
+  const total: TotalInfo = {
+    units: 0,
+    cost: 0,
   };
-  addSizesTotals(item, product, acc);
-  return acc;
+  addTotals(sizeInfo, product, sizeGroup, total);
+  return total;
 };
 
-export const addSizesTotals = (
-  sizeInfo: SizeInfo,
+export const addTotals = (
+  sizeInfo: Partial<SizeInfo>,
   product: Product,
-  acc: Pick<GridGroupDataItem, "ttlUnits" | "ttlCost">
+  sizeGroup: string | undefined,
+  total: TotalInfo
 ) =>
   sizeInfo.sizeIds?.forEach((sizeId) => {
     const size = sizeInfo.sizes[sizeId];
-    acc.ttlUnits += size.quantity;
-    acc.ttlCost += product.wholesale * size.quantity;
+    if (sizeGroup && size.sizeGroup === sizeGroup) {
+      total.units += size.quantity;
+      total.cost += product.wholesale * size.quantity;
+    }
   });
