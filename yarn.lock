@@ -2336,20 +2336,20 @@ adjust-sourcemap-loader@^4.0.0:
     loader-utils "^2.0.0"
     regex-parser "^2.2.11"
 
-ag-grid-community@29.0.0:
-  version "29.0.0"
-  resolved "https://registry.yarnpkg.com/ag-grid-community/-/ag-grid-community-29.0.0.tgz#33c8de7b253af15986c343f6d6fd098f3e6d681b"
-  integrity sha512-onAQIqjhP1L93W5myAsfLBMBUyZPrWDb8FRulJuhjQKo8DEA4GSZ+oJHxwwLymm4biLu54zvZ+9GkTftha8gAg==
+ag-grid-community@^29.0.0:
+  version "29.1.0"
+  resolved "https://registry.yarnpkg.com/ag-grid-community/-/ag-grid-community-29.1.0.tgz#acf74ecb9018d9ee3b2a7e468ffba595e6621606"
+  integrity sha512-QJZi1qP7fpK/sxXbEFZWR3/Jf3HVRK0Xm3Tw55tn0ehNdkuSxRBOmOvjE3lPWqgRlT2rcL1xmjdqM4mpB1fobQ==
 
-ag-grid-enterprise@29.0.0:
-  version "29.0.0"
-  resolved "https://registry.yarnpkg.com/ag-grid-enterprise/-/ag-grid-enterprise-29.0.0.tgz#58275a53ad28497cafb60cbed7270f94e7454d51"
-  integrity sha512-WP0D73s5e44szR9bqjD0h66dlm6j5NO/IBEwCo48zMIUEob9a3WBT4cbBQefrka2TWevrfR14WqU/RKmITuXGw==
+ag-grid-enterprise@^29.0.0:
+  version "29.1.0"
+  resolved "https://registry.yarnpkg.com/ag-grid-enterprise/-/ag-grid-enterprise-29.1.0.tgz#676950b02f0f6a994819f0efcd929467a458cd1f"
+  integrity sha512-0SQqjZ2KOFYKmjNICIii24CItenFOA+Jkkf/v/RpLND9ZttWN2/RqtRcw9V+GCuFhEpaDBZ1Q+nx4q5mHcVMRQ==
 
-ag-grid-react@29.0.0:
-  version "29.0.0"
-  resolved "https://registry.yarnpkg.com/ag-grid-react/-/ag-grid-react-29.0.0.tgz#c26bd13a19993059e66cbbc8e262e9837a9cb4bc"
-  integrity sha512-R8rE6fXXzl1SocGhfQGkfdGWUN0KmYOCVwyn4ZPNu0Ofsxb7/KZd0RwuetvH1J8hSlHmSsoou6qzalPbSC4jLQ==
+ag-grid-react@^29.0.0:
+  version "29.1.0"
+  resolved "https://registry.yarnpkg.com/ag-grid-react/-/ag-grid-react-29.1.0.tgz#06d75de91f753a865650ba3b01e2f6bc016a4590"
+  integrity sha512-csAT+PEodEjJ1GhBrx0kVAgkfm8eafsxA8ugSEM+iiSGwc13mPS2Qrye3yz/Wp0vf7ho1CDJgnZraWfSBER42Q==
   dependencies:
     prop-types "^15.8.1"
 
@@ -3888,9 +3888,9 @@ escodegen@^2.0.0:
     source-map "~0.6.1"
 
 eslint-config-prettier@^8.6.0:
-  version "8.6.0"
-  resolved "https://registry.yarnpkg.com/eslint-config-prettier/-/eslint-config-prettier-8.6.0.tgz#dec1d29ab728f4fa63061774e1672ac4e363d207"
-  integrity sha512-bAF0eLpLVqP5oEVUFKpMA+NnRFICwn9X8B5jrR9FcqnYBuPbqWEjTEspPWMj5ye6czoSLDweCzSo3Ko7gGrZaA==
+  version "8.7.0"
+  resolved "https://registry.yarnpkg.com/eslint-config-prettier/-/eslint-config-prettier-8.7.0.tgz#f1cc58a8afebc50980bd53475451df146c13182d"
+  integrity sha512-HHVXLSlVUhMSmyW4ZzEuvjpwqamgmlfkutD53cYXLikh4pt/modINRcCIApJ84czDxM4GZInwUrromsDdTImTA==
 
 eslint-config-react-app@^7.0.1:
   version "7.0.1"
@@ -7339,9 +7339,9 @@ react-error-overlay@^6.0.11:
   integrity sha512-/6UZ2qgEyH2aqzYZgQPxEnz33NJ2gNsnHA2o5+o4wW9bLM/JYQitNP9xPhsXwC08hMMovfGe/8retsdDsczPRg==
 
 react-ga4@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/react-ga4/-/react-ga4-2.0.0.tgz#d125807cc30b087a6aa24401ec5f1f1c2d176fe9"
-  integrity sha512-WHi98hMunzh4ngRdNil8NN6Qly3ZZUkprhbgSqA+NFzovp8zqpYV3jcbKL9FnMdeBQHGhv8AVNCT2oFEE+EFXA==
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/react-ga4/-/react-ga4-2.1.0.tgz#56601f59d95c08466ebd6edfbf8dede55c4678f9"
+  integrity sha512-ZKS7PGNFqqMd3PJ6+C2Jtz/o1iU9ggiy8Y8nUeksgVuvNISbmrQtJiZNvC/TjDsqD0QlU5Wkgs7i+w9+OjHhhQ==
 
 react-is@^16.13.1:
   version "16.13.1"
@@ -7692,9 +7692,9 @@ sass-loader@^12.3.0:
     neo-async "^2.6.2"
 
 sass@^1.58.0:
-  version "1.58.0"
-  resolved "https://registry.yarnpkg.com/sass/-/sass-1.58.0.tgz#ee8aea3ad5ea5c485c26b3096e2df6087d0bb1cc"
-  integrity sha512-PiMJcP33DdKtZ/1jSjjqVIKihoDc6yWmYr9K/4r3fVVIEDAluD0q7XZiRKrNJcPK3qkLRF/79DND1H5q1LBjgg==
+  version "1.58.3"
+  resolved "https://registry.yarnpkg.com/sass/-/sass-1.58.3.tgz#2348cc052061ba4f00243a208b09c40e031f270d"
+  integrity sha512-Q7RaEtYf6BflYrQ+buPudKR26/lH+10EmO9bBqbmPh/KeLqv8bjpTNqxe71ocONqXq+jYiCbpPUmQMS+JJPk4A==
   dependencies:
     chokidar ">=3.0.0 <4.0.0"
     immutable "^4.0.0"

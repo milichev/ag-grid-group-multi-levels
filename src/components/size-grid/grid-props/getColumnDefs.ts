@@ -2,7 +2,7 @@ import _ from "lodash";
 import fp from "lodash/fp";
 import { ColDef, ColumnApi, GroupCellRendererParams } from "ag-grid-community";
 
-import type { AppContext } from "../../../hooks/useAppContext";
+import type { SizeGridContext } from "../../../hooks/useSizeGridContext";
 import type {
   GridGroupDataItem,
   Level,
@@ -215,7 +215,7 @@ export const getColumnDefs = wrap(
     levelIndex,
     levelIndices,
     product,
-    appContext,
+    sizeGridContext,
     allProducts,
     columnApi,
   }: {
@@ -223,7 +223,7 @@ export const getColumnDefs = wrap(
     levelIndex: number;
     levelIndices: LevelIndices;
     product: Product | null;
-    appContext: AppContext;
+    sizeGridContext: SizeGridContext;
     allProducts: Product[];
     columnApi: ColumnApi | null;
   }): SizeGridColDef[] => {
@@ -317,7 +317,7 @@ export const getColumnDefs = wrap(
      * OR when sizes are flattened to the product level. */
     const sizeCols =
       (isLeafLevel &&
-        ((appContext.isFlattenSizes
+        ((sizeGridContext.isFlattenSizes
           ? [
               ...allProducts
                 .reduce((acc, prd) => {

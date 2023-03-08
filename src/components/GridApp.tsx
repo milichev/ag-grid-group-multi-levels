@@ -1,72 +1,79 @@
-import React, { StrictMode, useMemo, useState } from "react";
+import React, { StrictMode, useMemo, useReducer } from "react";
 import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
-import { type AppContext, AppContextProvider } from "../hooks/useAppContext";
-import { ShipmentsMode } from "../data/types";
+import {
+  type SizeGridContext,
+  SizeGridContextAction,
+  SizeGridContextProvider,
+} from "../hooks/useSizeGridContext";
 import { getFake } from "../data/getFake";
 import { nuPerf, wrap } from "../helpers/perf";
 import { Grid } from "./size-grid";
 import { defaultCounts, defaultLevels, defaultSettings } from "../constants";
 import { fixupLevelItems, resolveDisplayLevels } from "../data/levels";
+import { gaEvents } from "../helpers/ga";
+import { SizeGridSettings } from "./size-grid/types";
 
 const styles = {
   container: { width: "100%", height: "100%" },
   grid: { height: "100%", width: "100%" },
 };
 
+const sizeGridSettingsReducer = (
+  ctx: SizeGridSettings,
+  { prop, payload }: SizeGridContextAction
+) => {
+  if (prop !== "levelItems") {
+    gaEvents.appSettings(prop, payload);
+  }
+  return ctx[prop] === payload
+    ? ctx
+    : {
+        ...ctx,
+        [prop]: payload,
+      };
+};
+
+const initSizeGridReducer = (initial: SizeGridSettings) => ({
+  ...initial,
+  levelItems: fixupLevelItems({
+    ...initial,
+    levelItems: initial.levelItems.slice(),
+  }),
+});
+
 const GridApp: React.FC = () => {
-  const [shipmentsMode, setShipmentsMode] = useState(
-    defaultSettings.shipmentsMode
-  );
-  const [isAllDeliveries, setIsAllDeliveries] = useState(
-    defaultSettings.isAllDeliveries
-  );
-  const [isFlattenSizes, setIsFlattenSizes] = useState(
-    defaultSettings.isFlattenSizes
-  );
-  const [isLimitedSizes, setIsLimitedSizes] = useState(
-    defaultSettings.isLimitedSizes
-  );
-  const [isUseSizeGroups, setIsUseSizeGroups] = useState(
-    defaultSettings.isUseSizeGroups
-  );
-  const [levelItems, setLevelItems] = useState(() =>
-    fixupLevelItems({
-      shipmentsMode,
-      levelItems: [...defaultLevels],
-      isFlattenSizes,
-    })
+  const [contextValues, dispatch] = useReducer(
+    sizeGridSettingsReducer,
+    {
+      ...defaultSettings,
+      levelItems: defaultLevels,
+    },
+    initSizeGridReducer
   );
 
-  const appContext = useMemo<AppContext>(
+  const sizeGridContext = useMemo<SizeGridContext>(
     () => ({
-      levelItems,
-      setLevelItems,
-      shipmentsMode,
-      setShipmentsMode,
-      isAllDeliveries:
-        isAllDeliveries || shipmentsMode === ShipmentsMode.BuildOrder,
-      setIsAllDeliveries,
-      isFlattenSizes,
-      setIsFlattenSizes,
-      isLimitedSizes,
-      setIsLimitedSizes,
-      isUseSizeGroups,
-      setIsUseSizeGroups,
+      ...contextValues,
+      dispatch,
     }),
-    [
-      levelItems,
-      shipmentsMode,
-      isAllDeliveries,
-      isFlattenSizes,
-      isLimitedSizes,
-      isUseSizeGroups,
-    ]
+    [contextValues]
   );
 
-  const levels = useMemo(() => resolveDisplayLevels(appContext), [appContext]);
+  const {
+    isLimitedSizes,
+    isUseSizeGroups,
+    shipmentsMode,
+    isAllDeliveries,
+    isFlattenSizes,
+  } = sizeGridContext;
+
+  const levels = useMemo(
+    () => resolveDisplayLevels(sizeGridContext),
+    [sizeGridContext]
+  );
 
   const buildOrderShipments = useMemo(
     () => getFake.shipments(defaultCounts.buildOrderShipments),
@@ -97,13 +104,13 @@ const GridApp: React.FC = () => {
     <StrictMode>
       <div style={styles.container}>
         <div style={styles.grid} className="ag-theme-alpine">
-          <AppContextProvider value={appContext}>
+          <SizeGridContextProvider value={sizeGridContext}>
             <Grid
               items={gridData}
               levels={levels}
               buildOrderShipments={buildOrderShipments}
             />
-          </AppContextProvider>
+          </SizeGridContextProvider>
         </div>
       </div>
     </StrictMode>

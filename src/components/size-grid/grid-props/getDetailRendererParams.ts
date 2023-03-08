@@ -1,5 +1,5 @@
 import { GridDataItem, Level, LevelIndices } from "../../../data/types";
-import { AppContext } from "../../../hooks/useAppContext";
+import { SizeGridContext } from "../../../hooks/useSizeGridContext";
 import {
   GridContext,
   SizeGridColDef,
@@ -68,7 +68,7 @@ export const getDetailRendererParams = (
   levels: Level[],
   levelIndex: number,
   levelIndices: LevelIndices,
-  appContext: AppContext,
+  sizeGridContext: SizeGridContext,
   masterContext: GridContext
 ) => {
   const level = levels[levelIndex];
@@ -94,7 +94,10 @@ export const getDetailRendererParams = (
         localLevels = levels.slice();
         localLevels.splice(levelIndices.sizeGroup, 1);
         currentLevel = localLevels[levelIndex];
-        if (localLevels.length === levelIndex && !appContext.isFlattenSizes) {
+        if (
+          localLevels.length === levelIndex &&
+          !sizeGridContext.isFlattenSizes
+        ) {
           localLevels.push("sizes");
         }
         localLevelIndices = getLevelIndices(localLevels);
@@ -104,7 +107,7 @@ export const getDetailRendererParams = (
     const context: GridContext = {
       levels: localLevels,
       levelIndex,
-      appContext,
+      sizeGridContext,
       master: {
         id: params.data.id,
         api: params.api,
@@ -118,13 +121,13 @@ export const getDetailRendererParams = (
       localLevels,
       levelIndex + 1,
       localLevelIndices,
-      appContext,
+      sizeGridContext,
       context
     );
 
     const allProducts = measureAction(
       () =>
-        appContext.isFlattenSizes
+        sizeGridContext.isFlattenSizes
           ? [...collectEntities(item.group).products.values()]
           : [],
       "collectEntities"
@@ -135,7 +138,7 @@ export const getDetailRendererParams = (
       levelIndex,
       levelIndices: localLevelIndices,
       product,
-      appContext,
+      sizeGridContext,
       allProducts,
       columnApi: null,
     });

@@ -8,7 +8,7 @@ export const postProcessPopup: SizeGridProps["postProcessPopup"] = (params) => {
   }
 
   const {
-    appContext: { levelItems },
+    sizeGridContext: { levelItems },
   }: GridContext = params.context;
 
   const colId = params.column?.getColId() as Level;

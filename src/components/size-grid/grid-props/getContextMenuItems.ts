@@ -9,7 +9,7 @@ export const getContextMenuItems: SizeGridProps["getContextMenuItems"] = (
   const {
     levels,
     levelIndex,
-    appContext: { shipmentsMode, isAllDeliveries },
+    sizeGridContext: { shipmentsMode, isAllDeliveries },
   }: GridContext = params.context;
   const gridItem = params.node.data;
   const menuItems: (string | MenuItemDef)[] = [];

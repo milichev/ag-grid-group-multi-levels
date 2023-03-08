@@ -1,6 +1,10 @@
-import { Level, LevelItem, SelectableLevel, ShipmentsMode } from "./data/types";
-import type { ContextValues } from "./hooks/useAppContext";
+import {
+  type LevelItem,
+  type SelectableLevel,
+  ShipmentsMode,
+} from "./data/types";
 import { isLevel } from "./data/levels";
+import type { SizeGridSettings } from "./components/size-grid/types";
 
 // reorder levels by default here
 export const allLevels: readonly SelectableLevel[] = Object.freeze([
@@ -30,7 +34,7 @@ export const defaultCounts = {
   buildOrderShipments: 5,
 } as const;
 
-export const defaultSettings: Omit<ContextValues, "levelItems"> = {
+export const defaultSettings: Omit<SizeGridSettings, "levelItems"> = {
   isAllDeliveries: true,
   isUseSizeGroups: true,
   isLimitedSizes: true,
@@ -38,9 +42,10 @@ export const defaultSettings: Omit<ContextValues, "levelItems"> = {
   shipmentsMode: ShipmentsMode.BuildOrder,
 };
 
-export const regularSizeNames = ["S", "M", "L"];
-const xSizeCount = 3;
-for (let i = 1; i <= xSizeCount; i++) {
+export const regularSizeNames = ["M"];
+/** BTW, I saw somewhere clothes of size with more than 3X, like XXXXXL */
+const X_SIZE_COUNT = 3;
+for (let i = 0; i <= X_SIZE_COUNT; i++) {
   regularSizeNames.unshift(`${"X".repeat(i)}S`);
   regularSizeNames.push(`${"X".repeat(i)}L`);
 }

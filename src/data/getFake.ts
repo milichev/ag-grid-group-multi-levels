@@ -8,7 +8,7 @@ import {
   SizeInfo,
   Warehouse,
 } from "./types";
-import { AppContext } from "../hooks/useAppContext";
+import { SizeGridContext } from "../hooks/useSizeGridContext";
 import { wrapObj } from "../helpers/perf";
 import { getDataItemId, sortSizeNames } from "./resolvers";
 import { toISODateString } from "../helpers/formatting";
@@ -64,7 +64,7 @@ const entity = {
     isLimitedSizes,
   }: {
     departments: DepartmentMap;
-  } & Pick<AppContext, "isUseSizeGroups" | "isLimitedSizes">): Product => {
+  } & Pick<SizeGridContext, "isUseSizeGroups" | "isLimitedSizes">): Product => {
     const department = faker.helpers.arrayElement(Object.keys(departments));
 
     const sizeGroups = (isUseSizeGroups &&
@@ -147,7 +147,7 @@ export const getGridData = ({
   };
   buildOrderShipments: Shipment[];
 } & Pick<
-  AppContext,
+  SizeGridContext,
   "shipmentsMode" | "isLimitedSizes" | "isUseSizeGroups"
 >): GridDataItem[] => {
   const departmentNames = faker.helpers.uniqueArray(

@@ -10,7 +10,7 @@ import {
   SideBarDef,
 } from "ag-grid-community";
 
-import { useAppContext } from "../../hooks/useAppContext";
+import { useSizeGridContext } from "../../hooks/useSizeGridContext";
 import {
   GridDataItem,
   GridGroupDataItem,
@@ -73,8 +73,8 @@ export const Grid: React.FC<Props> = React.memo(
   ({ levels, items, buildOrderShipments }: Props) => {
     const gridApi = useRef<GridApi>();
     const columnApi = useRef<ColumnApi>();
-    const appContext = useAppContext();
-    const { shipmentsMode, isAllDeliveries } = appContext;
+    const sizeGridContext = useSizeGridContext();
+    const { shipmentsMode, isAllDeliveries } = sizeGridContext;
 
     const onGridReady = useCallback((params: GridReadyEvent) => {
       gridApi.current = params.api;
@@ -96,7 +96,7 @@ export const Grid: React.FC<Props> = React.memo(
       const result = getGridProps(
         levels,
         itemsToDisplay,
-        appContext,
+        sizeGridContext,
         gridApi.current,
         columnApi.current
       );
@@ -106,7 +106,7 @@ export const Grid: React.FC<Props> = React.memo(
         itemsTop: result.rowData?.length ?? 0,
       });
       return result;
-    }, [levels, itemsToDisplay, appContext, items.length]);
+    }, [levels, itemsToDisplay, sizeGridContext, items.length]);
 
     return (
       <AgGridReact<GridGroupDataItem>

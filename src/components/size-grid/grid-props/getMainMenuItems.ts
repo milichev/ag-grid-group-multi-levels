@@ -22,7 +22,7 @@ function preprocessLevel(
   const {
     levelIndex,
     levels,
-    appContext: { levelItems, setLevelItems },
+    sizeGridContext: { levelItems, dispatch },
   }: GridContext = params.context;
   const levelIndices = getLevelIndices(levels);
 
@@ -31,7 +31,7 @@ function preprocessLevel(
       name: `Group by ${params.column.getColDef().headerName}`,
       icon: '<span class="ag-icon ag-icon-group" role="presentation" />',
       action: () => {
-        toggleLevelItem(level, true, { levelItems, setLevelItems });
+        toggleLevelItem(level, true, { levelItems, dispatch });
       },
     };
     const rowGroupIndex = result.indexOf("rowGroup");
@@ -49,7 +49,7 @@ function preprocessLevel(
       name: `Ungroup by ${params.column.getColDef().headerName}`,
       icon: '<span class="ag-icon ag-icon-group" role="presentation" />',
       action: () => {
-        toggleLevelItem(level, false, { levelItems, setLevelItems });
+        toggleLevelItem(level, false, { levelItems, dispatch });
       },
     });
   }

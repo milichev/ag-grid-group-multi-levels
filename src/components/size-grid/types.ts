@@ -1,11 +1,16 @@
-import { GridGroupDataItem, Level } from "../../data/types";
+import {
+  GridGroupDataItem,
+  Level,
+  LevelItem,
+  ShipmentsMode,
+} from "../../data/types";
 import {
   ColDef,
   ColumnApi,
   GridApi,
   ICellRendererParams,
 } from "ag-grid-community";
-import { AppContext } from "../../hooks/useAppContext";
+import { SizeGridContext } from "../../hooks/useSizeGridContext";
 import { AgGridReactProps } from "ag-grid-react";
 import {
   IAggFunc,
@@ -16,7 +21,7 @@ import { IDetailCellRendererParams } from "ag-grid-community/dist/lib/interfaces
 export interface GridContext {
   levels: Level[];
   levelIndex: number;
-  appContext: AppContext;
+  sizeGridContext: SizeGridContext;
   master: null | {
     id: string;
     api: GridApi<GridGroupDataItem>;
@@ -32,3 +37,12 @@ export type SizeGridValueFormatterFunc = ValueFormatterFunc<GridGroupDataItem>;
 export type SizeGridGetDetailCellRendererParams = (
   params: Omit<ICellRendererParams<GridGroupDataItem>, "value">
 ) => Partial<IDetailCellRendererParams<GridGroupDataItem, GridGroupDataItem>>;
+
+export interface SizeGridSettings {
+  levelItems: LevelItem[];
+  shipmentsMode: ShipmentsMode;
+  isAllDeliveries: boolean;
+  isFlattenSizes: boolean;
+  isLimitedSizes: boolean;
+  isUseSizeGroups: boolean;
+}

@@ -1,6 +1,6 @@
 import { ColumnApi, GridApi } from "ag-grid-community";
 
-import type { AppContext } from "../../../hooks/useAppContext";
+import type { SizeGridContext } from "../../../hooks/useSizeGridContext";
 import { GridDataItem, Level, Product } from "../../../data/types";
 import { getAutoGroupColumnDef, getColumnDefs } from "./getColumnDefs";
 import { groupItems } from "../../../data/groupItems";
@@ -17,7 +17,7 @@ export const getGridProps = wrap(
   (
     levels: Level[],
     gridData: GridDataItem[],
-    appContext: AppContext,
+    sizeGridContext: SizeGridContext,
     gridApi: GridApi | null,
     columnApi: ColumnApi | null
   ): Partial<SizeGridProps> => {
@@ -31,7 +31,7 @@ export const getGridProps = wrap(
     const levelIndices = getLevelIndices(levels);
 
     const allProducts =
-      appContext.isFlattenSizes && level === "product"
+      sizeGridContext.isFlattenSizes && level === "product"
         ? [
             ...collectEntities(gridData, {
               products: new Map<Product["id"], Product>(),
@@ -46,7 +46,7 @@ export const getGridProps = wrap(
       levelIndex: 0,
       levelIndices,
       product: null,
-      appContext,
+      sizeGridContext,
       allProducts,
       columnApi,
     });
@@ -54,7 +54,7 @@ export const getGridProps = wrap(
     const context: GridContext = {
       levels,
       levelIndex: 0,
-      appContext,
+      sizeGridContext,
       master: null,
     };
 
@@ -63,7 +63,7 @@ export const getGridProps = wrap(
       levels,
       1,
       levelIndices,
-      appContext,
+      sizeGridContext,
       context
     );
 

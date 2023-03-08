@@ -1,17 +1,18 @@
-import { SelectableLevel } from "../../../data/types";
-import { toggleLevelItem } from "../../../data/levels";
-import { allLevels } from "../../../constants";
+import { isSelectableLevel, toggleLevelItem } from "../../../data/levels";
 import { GridContext, SizeGridProps } from "../types";
+import { gaEvents } from "../../../helpers/ga";
 
 export const onColumnRowGroupChanged: SizeGridProps["onColumnRowGroupChanged"] =
   (params) => {
-    const { levelIndex, levels, appContext }: GridContext = params.context;
+    const { levelIndex, levels, sizeGridContext }: GridContext = params.context;
     console.log("onColumnRowGroupChanged", { levelIndex, levels, params });
 
-    const groupColLevel = params.column?.getColId() as SelectableLevel;
-    if (allLevels.includes(groupColLevel)) {
-      params.columnApi.removeRowGroupColumn(groupColLevel);
-      toggleLevelItem(groupColLevel, true, appContext);
+    const colId = params.column?.getColId();
+    gaEvents.rowGroup(colId, params.columns.length);
+
+    if (isSelectableLevel(colId)) {
+      params.columnApi.removeRowGroupColumn(colId);
+      toggleLevelItem(colId, true, sizeGridContext);
     } else {
       const levelColumn = params.columnApi.getColumn(levels[levelIndex]);
       if (levelColumn) {

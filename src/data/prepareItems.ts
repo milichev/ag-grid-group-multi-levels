@@ -8,7 +8,7 @@ import {
 } from "./types";
 import { collectEntities, getDataItemId, getSizeKey } from "./resolvers";
 import { measureStep, nuPerf, wrap } from "../helpers/perf";
-import { AppContext } from "../hooks/useAppContext";
+import { SizeGridContext } from "../hooks/useSizeGridContext";
 
 export const getSizeQuantities = (sizes: Size[]): SizeInfo => {
   const sizeIds = [];
@@ -37,7 +37,7 @@ export const prepareItems = wrap(
     shipmentsMode: ShipmentsMode;
     items: GridDataItem[];
     buildOrderShipments: Shipment[];
-  } & Pick<AppContext, "isAllDeliveries">) => {
+  } & Pick<SizeGridContext, "isAllDeliveries">) => {
     nuPerf.clearContext("prepareItems");
     if (isAllDeliveries || shipmentsMode === ShipmentsMode.BuildOrder) {
       const collectStep = measureStep({

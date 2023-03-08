@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from "react";
 import { DebugBox } from "./DebugBox";
-import { useAppContext } from "../hooks/useAppContext";
+import { useSizeGridContext } from "../hooks/useSizeGridContext";
 import {
   fixupLevelItems,
   getLevelItemIndex,
@@ -14,27 +14,22 @@ import { gaEvents } from "../helpers/ga";
 export const LevelsToolPanel: React.FC = React.memo(() => {
   const {
     levelItems,
-    setLevelItems,
     shipmentsMode,
-    setShipmentsMode,
     isAllDeliveries,
-    setIsAllDeliveries,
     isFlattenSizes,
-    setIsFlattenSizes,
     isLimitedSizes,
-    setIsLimitedSizes,
     isUseSizeGroups,
-    setIsUseSizeGroups,
-  } = useAppContext();
+    dispatch,
+  } = useSizeGridContext();
 
   const handleVisibleChange = useCallback(
     (e) => {
       const level = e.target.getAttribute("data-level");
       const visible = e.target.checked;
-      toggleLevelItem(level, visible, { levelItems, setLevelItems });
+      toggleLevelItem(level, visible, { levelItems, dispatch });
       gaEvents.toggleLevel(level, visible);
     },
-    [levelItems, setLevelItems]
+    [dispatch, levelItems]
   );
 
   const handlePosClick = useCallback(
@@ -43,32 +38,38 @@ export const LevelsToolPanel: React.FC = React.memo(() => {
       const isUp = e.target.getAttribute("data-dir") === "up";
       const i = getLevelItemIndex(levelItems, level);
       if (i > 0 && isUp) {
-        setLevelItems([
-          ...levelItems.slice(0, i - 1),
-          levelItems[i],
-          levelItems[i - 1],
-          ...levelItems.slice(i + 1),
-        ]);
+        dispatch({
+          prop: "levelItems",
+          payload: [
+            ...levelItems.slice(0, i - 1),
+            levelItems[i],
+            levelItems[i - 1],
+            ...levelItems.slice(i + 1),
+          ],
+        });
       } else if (i < levelItems.length - 1 && !isUp) {
-        setLevelItems([
-          ...levelItems.slice(0, i),
-          levelItems[i + 1],
-          levelItems[i],
-          ...levelItems.slice(i + 2),
-        ]);
+        dispatch({
+          prop: "levelItems",
+          payload: [
+            ...levelItems.slice(0, i),
+            levelItems[i + 1],
+            levelItems[i],
+            ...levelItems.slice(i + 2),
+          ],
+        });
       }
     },
-    [levelItems, setLevelItems]
+    [dispatch, levelItems]
   );
 
   useEffect(() => {
     fixupLevelItems({
       shipmentsMode: shipmentsMode,
       levelItems,
-      setLevelItems,
       isFlattenSizes,
+      dispatch,
     });
-  }, [shipmentsMode, levelItems, setLevelItems, isFlattenSizes]);
+  }, [shipmentsMode, levelItems, isFlattenSizes, dispatch]);
 
   const levelItemIndices = getLevelItemIndices(levelItems);
 
@@ -128,7 +129,11 @@ export const LevelsToolPanel: React.FC = React.memo(() => {
               type="radio"
               checked={shipmentsMode === ShipmentsMode.BuildOrder}
               onChange={(e) =>
-                e.target.checked && setShipmentsMode(ShipmentsMode.BuildOrder)
+                e.target.checked &&
+                dispatch({
+                  prop: "shipmentsMode",
+                  payload: ShipmentsMode.BuildOrder,
+                })
               }
             />
             Build Order
@@ -148,7 +153,11 @@ export const LevelsToolPanel: React.FC = React.memo(() => {
               type="radio"
               checked={shipmentsMode === ShipmentsMode.LineItems}
               onChange={(e) =>
-                e.target.checked && setShipmentsMode(ShipmentsMode.LineItems)
+                e.target.checked &&
+                dispatch({
+                  prop: "shipmentsMode",
+                  payload: ShipmentsMode.LineItems,
+                })
               }
             />
             Line Items
@@ -161,7 +170,12 @@ export const LevelsToolPanel: React.FC = React.memo(() => {
                   type="checkbox"
                   checked={isAllDeliveries}
                   disabled={shipmentsMode !== ShipmentsMode.LineItems}
-                  onChange={(e) => setIsAllDeliveries(e.target.checked)}
+                  onChange={(e) =>
+                    dispatch({
+                      prop: "isAllDeliveries",
+                      payload: e.target.checked,
+                    })
+                  }
                 />
                 All Deliveries
               </label>
@@ -177,7 +191,12 @@ export const LevelsToolPanel: React.FC = React.memo(() => {
             <input
               type="checkbox"
               checked={isFlattenSizes}
-              onChange={(e) => setIsFlattenSizes(e.target.checked)}
+              onChange={(e) =>
+                dispatch({
+                  prop: "isFlattenSizes",
+                  payload: e.target.checked,
+                })
+              }
             />
             Flatten All Sizes
             <div className="description">
@@ -191,7 +210,12 @@ export const LevelsToolPanel: React.FC = React.memo(() => {
             <input
               type="checkbox"
               checked={isLimitedSizes}
-              onChange={(e) => setIsLimitedSizes(e.target.checked)}
+              onChange={(e) =>
+                dispatch({
+                  prop: "isLimitedSizes",
+                  payload: e.target.checked,
+                })
+              }
             />
             Limited Sizes
             <div className="description">
@@ -204,7 +228,12 @@ export const LevelsToolPanel: React.FC = React.memo(() => {
             <input
               type="checkbox"
               checked={isUseSizeGroups}
-              onChange={(e) => setIsUseSizeGroups(e.target.checked)}
+              onChange={(e) =>
+                dispatch({
+                  prop: "isUseSizeGroups",
+                  payload: e.target.checked,
+                })
+              }
             />
             Use Size Groups
           </label>

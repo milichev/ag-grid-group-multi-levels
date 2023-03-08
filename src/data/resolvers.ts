@@ -10,7 +10,6 @@ import {
   Warehouse,
 } from "./types";
 import { regularSizeNames } from "../constants";
-import * as stream from "stream";
 
 export const getDataItemId = (
   product: Product,
@@ -71,6 +70,7 @@ export const getItemEntities = (item: GridDataItem, entities: EntityBucket) => {
   }
 };
 
+/** Describes a size, where [0] is size name and [1] is its sort order */
 type SizeSortRec = [string, number];
 const numSizeRe = /^\d+(?:\.\d+)?$/;
 const sizeSeparator = ", ";
@@ -106,11 +106,11 @@ const tryGroupNumberSizes = (names: string[]) => {
 };
 
 const formatSortedSizes = (
-  sorted: SizeSortRec[],
+  sortedSizes: SizeSortRec[],
   step: number,
   separator = ", "
 ) =>
-  sorted
+  sortedSizes
     .reduce((ranges, rec) => {
       let tail: SizeSortRec[];
       if (
@@ -127,13 +127,13 @@ const formatSortedSizes = (
       }
       return ranges;
     }, [] as SizeSortRec[][])
-    .map((pair) => {
-      return pair.length === 1
-        ? pair[0][0]
-        : `${pair[0][0]}${pair[1][1] - pair[0][1] === step ? separator : "-"}${
-            pair[1][0]
-          }`;
-    })
+    .map((sizeSortRec) =>
+      sizeSortRec.length === 1
+        ? sizeSortRec[0][0]
+        : `${sizeSortRec[0][0]}${
+            sizeSortRec[1][1] - sizeSortRec[0][1] === step ? separator : "-"
+          }${sizeSortRec[1][0]}`
+    )
     .join(separator);
 
 const regularSizeIndices = regularSizeNames.reduce((acc, size, i) => {

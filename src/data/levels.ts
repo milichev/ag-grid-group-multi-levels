@@ -1,5 +1,12 @@
-import { Level, LevelItem, ShipmentsMode, LevelIndices } from "./types";
-import { AppContext } from "../hooks/useAppContext";
+import {
+  Level,
+  LevelIndices,
+  LevelItem,
+  SelectableLevel,
+  ShipmentsMode,
+} from "./types";
+import { SizeGridContext } from "../hooks/useSizeGridContext";
+import { allLevels } from "../constants";
 
 export const getLevelItemIndex = (levelItems: LevelItem[], level: Level) =>
   levelItems.findIndex((item) => item.level === level);
@@ -19,7 +26,7 @@ export const getLevelItemIndices = (levelItems: LevelItem[]) =>
 export const resolveDisplayLevels = ({
   levelItems,
   isFlattenSizes,
-}: Pick<AppContext, "levelItems" | "isFlattenSizes">) => {
+}: Pick<SizeGridContext, "levelItems" | "isFlattenSizes">) => {
   const result: Level[] = levelItems
     .filter((item, i) => {
       if (!item.visible) {
@@ -66,10 +73,10 @@ const reorderItem = (
 export const fixupLevelItems = ({
   shipmentsMode,
   levelItems,
-  setLevelItems,
   isFlattenSizes,
-}: Pick<AppContext, "shipmentsMode" | "levelItems" | "isFlattenSizes"> &
-  Partial<Pick<AppContext, "setLevelItems">>) => {
+  dispatch,
+}: Pick<SizeGridContext, "shipmentsMode" | "levelItems" | "isFlattenSizes"> &
+  Partial<Pick<SizeGridContext, "dispatch">>) => {
   const resultItems: LevelItem[] = levelItems.slice();
 
   // in flatten-sizes mode, no levels can be beneath products
@@ -80,10 +87,6 @@ export const fixupLevelItems = ({
       "sizeGroup",
     ]);
   }
-  // when no flatten-sizes, a size group has meaning under its product
-  else {
-    // reorderItem(resultItems, "sizeGroup", "below", ["product"]);
-  }
 
   // when `shipmentsMode` is LineItems, the shipment level cannot be higher than product or warehouse.
   if (shipmentsMode === ShipmentsMode.LineItems) {
@@ -91,7 +94,7 @@ export const fixupLevelItems = ({
   }
 
   if (resultItems.some((item, i) => item.level !== levelItems[i].level)) {
-    setLevelItems?.(resultItems);
+    dispatch?.({ prop: "levelItems", payload: resultItems });
     return resultItems;
   }
 
@@ -100,6 +103,9 @@ export const fixupLevelItems = ({
 
 export const isLevel = (level: Level, ...set: Level[]) => set.includes(level);
 
+export const isSelectableLevel = (name: string): name is SelectableLevel =>
+  allLevels.includes(name as SelectableLevel);
+
 export const getLevelMeta = (
   levelItems: LevelItem[],
   level: number | Level,
@@ -107,7 +113,7 @@ export const getLevelMeta = (
   {
     shipmentsMode,
     isFlattenSizes,
-  }: Pick<AppContext, "shipmentsMode" | "isFlattenSizes">
+  }: Pick<SizeGridContext, "shipmentsMode" | "isFlattenSizes">
 ) => {
   const i =
     typeof level === "number" ? level : getLevelItemIndex(levelItems, level);
@@ -166,10 +172,7 @@ export const getLevelMeta = (
 export const toggleLevelItem = (
   level: Level,
   visible: boolean,
-  {
-    levelItems,
-    setLevelItems,
-  }: Pick<AppContext, "levelItems" | "setLevelItems">
+  { levelItems, dispatch }: Pick<SizeGridContext, "levelItems" | "dispatch">
 ) => {
   if (level === "product" && !visible) {
     // console.warn("Cannot ungroup by product");
@@ -178,5 +181,5 @@ export const toggleLevelItem = (
   const items = levelItems.map((item) =>
     item.level === level ? { ...item, visible } : item
   );
-  setLevelItems(items);
+  dispatch({ prop: "levelItems", payload: items });
 };
