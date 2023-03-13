@@ -2,12 +2,12 @@ import { GridGroupDataItem, TotalInfo } from "../../../data/types";
 import { IRowNode } from "ag-grid-community/dist/lib/interfaces/iRowNode";
 import { GridApi } from "ag-grid-community";
 import { measureStep } from "../../../helpers/perf";
-import { GridContext, SizeGridProps } from "../types";
+import { GridContext, SizeGridEventHandler } from "../types";
 import { isCellValueChanged } from "./helpers";
 import { collectProductTotals } from "../../../data/totals";
 import { levelTotals } from "./getColumnDefs";
 
-export const onCellValueChanged: SizeGridProps["onCellValueChanged"] = (
+export const onCellValueChanged: SizeGridEventHandler<"onCellValueChanged"> = (
   params
 ) => {
   const step = measureStep({ name: "onCellValueChanged", async: false });

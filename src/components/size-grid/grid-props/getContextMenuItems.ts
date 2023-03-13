@@ -1,16 +1,16 @@
 import { ShipmentsMode } from "../../../data/types";
 import { allLevels } from "../../../constants";
 import { MenuItemDef } from "ag-grid-community";
-import { GridContext, SizeGridProps } from "../types";
+import { SizeGridEventHandler } from "../types";
 
-export const getContextMenuItems: SizeGridProps["getContextMenuItems"] = (
-  params
-) => {
+export const getContextMenuItems: SizeGridEventHandler<
+  "getContextMenuItems"
+> = (params) => {
   const {
     levels,
     levelIndex,
     sizeGridContext: { shipmentsMode, isAllDeliveries },
-  }: GridContext = params.context;
+  } = params.context;
   const gridItem = params.node.data;
   const menuItems: (string | MenuItemDef)[] = [];
 

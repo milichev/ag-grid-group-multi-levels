@@ -1,15 +1,17 @@
 import { Level } from "../../../data/types";
 import { getLevelItemIndex } from "../../../data/levels";
-import { GridContext, SizeGridProps } from "../types";
+import { SizeGridEventHandler } from "../types";
 
-export const postProcessPopup: SizeGridProps["postProcessPopup"] = (params) => {
+export const postProcessPopup: SizeGridEventHandler<"postProcessPopup"> = (
+  params
+) => {
   if (params.type !== "columnMenu") {
     return;
   }
 
   const {
     sizeGridContext: { levelItems },
-  }: GridContext = params.context;
+  } = params.context;
 
   const colId = params.column?.getColId() as Level;
   const levelItemIndex = getLevelItemIndex(levelItems, colId);

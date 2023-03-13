@@ -6,9 +6,9 @@ import type { SizeGridContext } from "../../../hooks/useSizeGridContext";
 import type {
   GridGroupDataItem,
   Level,
+  LevelIndices,
   Product,
   SelectableLevel,
-  LevelIndices,
 } from "../../../data/types";
 import { allLevels, emptySizeGroupId } from "../../../constants";
 import { getQuantityColumn } from "./getQuantityColumn";
@@ -18,7 +18,7 @@ import {
   SizeGridValueFormatterFunc,
 } from "../types";
 import { formatSizes } from "../../../data/resolvers";
-import { measureAction, wrap } from "../../../helpers/perf";
+import { wrap } from "../../../helpers/perf";
 import { resolveCached } from "../../../helpers/simple-cache";
 
 const MAX_AGG_JOIN_COUNT = 5;
@@ -74,7 +74,7 @@ const groupCols: Record<SelectableLevel, SizeGridColDef> = {
       return aStart !== bStart
         ? aStart - bStart
         : +(nodeA.data?.shipment?.endDate || 0) -
-            +(nodeA.data?.shipment?.endDate || 0);
+            +(nodeB.data?.shipment?.endDate || 0);
     },
     valueFormatter: (params) => params.data?.shipment?.id ?? "",
   },

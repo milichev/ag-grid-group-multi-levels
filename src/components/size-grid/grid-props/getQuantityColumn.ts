@@ -1,15 +1,11 @@
-import {
-  ColDef,
-  ValueFormatterParams,
-  ValueSetterParams,
-} from "ag-grid-community";
+import { ValueFormatterParams, ValueSetterParams } from "ag-grid-community";
 import _ from "lodash";
 import {
   GridGroupDataItem,
+  LevelIndices,
   Product,
   Size,
   SizeQuantity,
-  LevelIndices,
 } from "../../../data/types";
 import { formats, toQuantity } from "../../../helpers/formatting";
 import { getSizeKey } from "../../../data/resolvers";
@@ -33,7 +29,7 @@ type QuantitySetParams = CastProp<
   SizeQuantity
 >;
 
-const valueParser: ColDef["valueParser"] = (params) =>
+const valueParser: SizeGridColDef["valueParser"] = (params) =>
   toQuantity(params.newValue);
 
 const equals = (a: SizeQuantity, b: SizeQuantity) =>
