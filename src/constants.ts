@@ -33,11 +33,11 @@ export const defaultCounts = {
 } as const;
 
 export const defaultSettings: Omit<SizeGridSettings, "levelItems"> = {
-  isAllDeliveries: true,
+  isAllDeliveries: false,
   isUseSizeGroups: false,
   isLimitedSizes: true,
   isFlattenSizes: false,
-  shipmentsMode: ShipmentsMode.BuildOrder,
+  shipmentsMode: ShipmentsMode.LineItems,
 };
 
 export const regularSizeNames = ["M"];
