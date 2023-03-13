@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import { render } from "react-dom";
 import ReactGA from "react-ga4";
 import { GridAppPerf as App } from "./components/GridApp";
 import "./styles.scss";
@@ -22,5 +22,4 @@ console.error = (...args: any[]) => {
   origConsoleError(...args);
 };
 
-const rootElement = document.getElementById("root");
-ReactDOM.render(<App />, rootElement);
+render(<App />, document.getElementById("root"));

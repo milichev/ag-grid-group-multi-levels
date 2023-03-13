@@ -1,6 +1,6 @@
 import { createContext, Dispatch, useContext } from "react";
 import { defaultSettings } from "../constants";
-import { SizeGridSettings } from "../components/size-grid/types";
+import type { SizeGridSettings } from "../components/size-grid/types";
 
 export type PropAction<T, K extends keyof T> = {
   prop: K;

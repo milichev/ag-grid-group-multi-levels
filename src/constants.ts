@@ -3,7 +3,6 @@ import {
   type SelectableLevel,
   ShipmentsMode,
 } from "./data/types";
-import { isLevel } from "./data/levels";
 import type { SizeGridSettings } from "./components/size-grid/types";
 
 // reorder levels by default here
@@ -17,14 +16,13 @@ export const allLevels: readonly SelectableLevel[] = Object.freeze([
 export const defaultLevels: readonly LevelItem[] = Object.freeze(
   allLevels.map((level) => ({
     level,
-    visible: isLevel(
-      level,
+    visible: [
       // uncomment to turn the level on by default
       "product",
       "shipment",
       // "warehouse",
-      "sizeGroup"
-    ),
+      "sizeGroup",
+    ].includes(level),
   }))
 );
 
@@ -36,7 +34,7 @@ export const defaultCounts = {
 
 export const defaultSettings: Omit<SizeGridSettings, "levelItems"> = {
   isAllDeliveries: true,
-  isUseSizeGroups: true,
+  isUseSizeGroups: false,
   isLimitedSizes: true,
   isFlattenSizes: false,
   shipmentsMode: ShipmentsMode.BuildOrder,
