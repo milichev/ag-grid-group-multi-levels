@@ -49,7 +49,6 @@
   "scripts": {
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
-    "test_": "jest --env=jsdom",
     "test": "react-app-rewired test --env=node",
     "lint": "eslint ./src"
   },
