@@ -71,11 +71,11 @@ const reorderItem = (
 };
 
 export const fixupLevelItems = ({
-  shipmentsMode,
   levelItems,
   isFlattenSizes,
+  isUseSizeGroups,
   dispatch,
-}: Pick<SizeGridContext, "shipmentsMode" | "levelItems" | "isFlattenSizes"> &
+}: Pick<SizeGridContext, "levelItems" | "isFlattenSizes" | "isUseSizeGroups"> &
   Partial<Pick<SizeGridContext, "dispatch">>) => {
   const resultItems: LevelItem[] = levelItems.slice();
 
@@ -88,12 +88,22 @@ export const fixupLevelItems = ({
     ]);
   }
 
-  // when `shipmentsMode` is LineItems, the shipment level cannot be higher than product or warehouse.
-  if (shipmentsMode === ShipmentsMode.LineItems) {
-    reorderItem(resultItems, "shipment", "below", ["product", "warehouse"]);
+  // when Size Groups are not used, turn off the sizeGroup level, if it's on
+  const sizeGroupIndex = getLevelItemIndex(resultItems, "sizeGroup");
+  if (!isUseSizeGroups && resultItems[sizeGroupIndex]?.visible) {
+    resultItems[sizeGroupIndex] = {
+      ...resultItems[sizeGroupIndex],
+      visible: false,
+    };
   }
 
-  if (resultItems.some((item, i) => item.level !== levelItems[i].level)) {
+  if (
+    resultItems.some(
+      (item, i) =>
+        item.level !== levelItems[i].level ||
+        item.visible !== levelItems[i].visible
+    )
+  ) {
     dispatch?.({ prop: "levelItems", payload: resultItems });
     return resultItems;
   }
@@ -153,12 +163,6 @@ export const getLevelMeta = (
             nextLevel !== "shipment");
       break;
     case "shipment":
-      upEnabled =
-        upEnabled &&
-        (isFlattenSizes
-          ? true
-          : shipmentsMode === ShipmentsMode.BuildOrder ||
-            !isLevel(prevLevel, "product", "warehouse"));
       downEnabled = downEnabled && (!isFlattenSizes || nextLevel !== "product");
       break;
     case "sizeGroup":

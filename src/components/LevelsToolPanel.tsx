@@ -67,9 +67,10 @@ export const LevelsToolPanel: React.FC = memo(() => {
       shipmentsMode: shipmentsMode,
       levelItems,
       isFlattenSizes,
+      isUseSizeGroups,
       dispatch,
     });
-  }, [shipmentsMode, levelItems, isFlattenSizes, dispatch]);
+  }, [shipmentsMode, levelItems, isFlattenSizes, dispatch, isUseSizeGroups]);
 
   const levelItemIndices = getLevelItemIndices(levelItems);
 
