@@ -123,7 +123,11 @@ export const getLevelMeta = (
   {
     shipmentsMode,
     isFlattenSizes,
-  }: Pick<SizeGridContext, "shipmentsMode" | "isFlattenSizes">
+    isUseSizeGroups,
+  }: Pick<
+    SizeGridContext,
+    "shipmentsMode" | "isFlattenSizes" | "isUseSizeGroups"
+  >
 ) => {
   const i =
     typeof level === "number" ? level : getLevelItemIndex(levelItems, level);
@@ -132,11 +136,9 @@ export const getLevelMeta = (
   }
 
   let checked = level === "product" || levelItems[i].visible;
-  const enabled =
+  let enabled =
     // product lvl is always checked and disabled
     level !== "product";
-  // is flatten-size mode, sizeGroup is disabled
-  // && (!isFlattenSizes || isLevel(level, "product", "shipment", "warehouse"));
 
   const nextLevel = levelItems[i + 1]?.level;
   const prevLevel = levelItems[i - 1]?.level;
@@ -146,11 +148,6 @@ export const getLevelMeta = (
 
   switch (level) {
     case "product":
-      downEnabled =
-        downEnabled &&
-        // nextLevel !== "sizeGroup" &&
-        (shipmentsMode === ShipmentsMode.BuildOrder ||
-          nextLevel !== "shipment");
       // in flatten-sizes mode, no levels can be beneath products
       upEnabled = upEnabled && !isFlattenSizes;
       break;
@@ -166,8 +163,12 @@ export const getLevelMeta = (
       downEnabled = downEnabled && (!isFlattenSizes || nextLevel !== "product");
       break;
     case "sizeGroup":
+      enabled = enabled && isUseSizeGroups;
       // can be checked if flatten-sizes and above products
-      checked = checked && (!isFlattenSizes || i < levelIndices.product);
+      checked =
+        checked &&
+        isUseSizeGroups &&
+        (!isFlattenSizes || i < levelIndices.product);
       // upEnabled = upEnabled && prevLevel === "product" && isFlattenSizes;
       downEnabled = downEnabled && (!isFlattenSizes || nextLevel !== "product");
       break;

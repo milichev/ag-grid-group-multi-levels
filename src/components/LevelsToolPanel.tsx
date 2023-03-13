@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, FC, memo } from "react";
+import React, { memo, useCallback, useEffect } from "react";
 import { DebugBox } from "./DebugBox";
 import { useSizeGridContext } from "../hooks/useSizeGridContext";
 import {
@@ -64,7 +64,6 @@ export const LevelsToolPanel: React.FC = memo(() => {
 
   useEffect(() => {
     fixupLevelItems({
-      shipmentsMode: shipmentsMode,
       levelItems,
       isFlattenSizes,
       isUseSizeGroups,
@@ -83,7 +82,7 @@ export const LevelsToolPanel: React.FC = memo(() => {
             levelItems,
             i,
             levelItemIndices,
-            { shipmentsMode, isFlattenSizes }
+            { shipmentsMode, isFlattenSizes, isUseSizeGroups }
           );
 
           return (
