@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, memo, useMemo, useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
@@ -69,7 +69,7 @@ type Props = {
   buildOrderShipments: Shipment[];
 };
 
-export const Grid: React.FC<Props> = React.memo(
+export const Grid: React.FC<Props> = memo(
   ({ levels, items, buildOrderShipments }: Props) => {
     const gridApi = useRef<GridApi>();
     const columnApi = useRef<ColumnApi>();

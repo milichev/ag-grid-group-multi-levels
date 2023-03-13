@@ -121,14 +121,18 @@ export const getLevelMeta = (
     level = levelItems[level].level;
   }
 
-  let checked = levelItems[i].visible;
+  let checked = level === "product" || levelItems[i].visible;
   const enabled =
-    level !== "product" &&
-    (!isFlattenSizes || isLevel(level, "product", "shipment", "warehouse"));
-  let upEnabled = i > 0;
-  let downEnabled = i < levelItems.length - 1;
+    // product lvl is always checked and disabled
+    level !== "product";
+  // is flatten-size mode, sizeGroup is disabled
+  // && (!isFlattenSizes || isLevel(level, "product", "shipment", "warehouse"));
+
   const nextLevel = levelItems[i + 1]?.level;
   const prevLevel = levelItems[i - 1]?.level;
+
+  let upEnabled = i > 0;
+  let downEnabled = i < levelItems.length - 1;
 
   switch (level) {
     case "product":
@@ -137,9 +141,8 @@ export const getLevelMeta = (
         // nextLevel !== "sizeGroup" &&
         (shipmentsMode === ShipmentsMode.BuildOrder ||
           nextLevel !== "shipment");
-      upEnabled =
-        upEnabled &&
-        (!isFlattenSizes || !isLevel(prevLevel, "warehouse", "shipment"));
+      // in flatten-sizes mode, no levels can be beneath products
+      upEnabled = upEnabled && !isFlattenSizes;
       break;
     case "warehouse":
       downEnabled =

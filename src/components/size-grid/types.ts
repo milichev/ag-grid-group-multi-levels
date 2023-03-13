@@ -10,7 +10,7 @@ import {
   GridApi,
   ICellRendererParams,
 } from "ag-grid-community";
-import { SizeGridContext } from "../../hooks/useSizeGridContext";
+import type { SizeGridContext } from "../../hooks/useSizeGridContext";
 import { AgGridReactProps } from "ag-grid-react";
 import {
   IAggFunc,

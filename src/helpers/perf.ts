@@ -1,6 +1,5 @@
 import _ from "lodash";
 import { afterFrame } from "./afterFrame";
-import { getGridData } from "../data/getFake";
 
 const outPrefix = "[nu.perf]";
 const global: any = window;

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, FC, memo } from "react";
 import { DebugBox } from "./DebugBox";
 import { useSizeGridContext } from "../hooks/useSizeGridContext";
 import {
@@ -11,7 +11,7 @@ import {
 import { ShipmentsMode } from "../data/types";
 import { gaEvents } from "../helpers/ga";
 
-export const LevelsToolPanel: React.FC = React.memo(() => {
+export const LevelsToolPanel: React.FC = memo(() => {
   const {
     levelItems,
     shipmentsMode,
