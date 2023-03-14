@@ -1,67 +1,12 @@
 import { GridDataItem, Level, LevelIndices } from "../../../data/types";
 import { SizeGridContext } from "../../../hooks/useSizeGridContext";
-import {
-  GridContext,
-  SizeGridColDef,
-  SizeGridGetDetailCellRendererParams,
-  SizeGridProps,
-} from "../types";
+import { GridContext, SizeGridGetDetailCellRendererParams } from "../types";
 import { measureAction, wrap } from "../../../helpers/perf";
 import { collectEntities } from "../../../data/resolvers";
 import { getAutoGroupColumnDef, getColumnDefs } from "./getColumnDefs";
 import { groupItems } from "../../../data/groupItems";
-import { columnTypes } from "./columnTypes";
-import { getContextMenuItems } from "./getContextMenuItems";
-import { getMainMenuItems } from "./getMainMenuItems";
-import { onColumnRowGroupChanged } from "./onColumnRowGroupChanged";
-import { postProcessPopup } from "./postProcessPopup";
-import { onRowDataUpdated } from "./onRowDataUpdated";
-import { onCellValueChanged } from "./onCellValueChanged";
 import { getLevelIndices } from "../../../data/levels";
-
-const defaultColDef: SizeGridColDef = {
-  flex: 1,
-  minWidth: 100,
-  enableValue: true,
-  enableRowGroup: false,
-  enablePivot: false,
-  sortable: true,
-  filter: true,
-  resizable: true,
-};
-
-export const commonGridProps: Partial<SizeGridProps> = {
-  defaultColDef,
-  columnTypes,
-  animateRows: true,
-  suppressAutoSize: false,
-  detailRowAutoHeight: true,
-  singleClickEdit: true,
-  stopEditingWhenCellsLoseFocus: true,
-  undoRedoCellEditing: true,
-  enableCellEditingOnBackspace: true,
-  allowContextMenuWithControlKey: true,
-  suppressAggFuncInHeader: true,
-  enableCellChangeFlash: true,
-  suppressReactUi: false,
-  // TODO: ag-grid version v29.0.0 often crashes in addStickyRow method.
-  // groupRowsSticky: true,
-  getRowId: (params) => params.data.id,
-  onRowGroupOpened: (params) => {
-    console.log("onRowGroupOpened", params);
-  },
-  getContextMenuItems,
-  getMainMenuItems,
-  onColumnRowGroupChanged,
-  postProcessPopup,
-  onRowDataUpdated,
-  onCellValueChanged,
-  onCellEditingStarted: (params) => {
-    if (params.colDef.type === "quantityColumn" && params.value === undefined) {
-      params.api.stopEditing(true);
-    }
-  },
-};
+import { commonGridProps } from "./commonGridProps";
 
 export const getDetailRendererParams = (
   gridData: GridDataItem[],

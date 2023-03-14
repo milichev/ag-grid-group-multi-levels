@@ -1,4 +1,5 @@
 import _ from "lodash";
+import pluralize from "pluralize";
 import fp from "lodash/fp";
 import { ColDef, ColumnApi, GroupCellRendererParams } from "ag-grid-community";
 
@@ -13,6 +14,7 @@ import type {
 import { allLevels, emptySizeGroupId } from "../../../constants";
 import { getQuantityColumn } from "./getQuantityColumn";
 import {
+  GridContext,
   SizeGridAggFunc,
   SizeGridColDef,
   SizeGridValueFormatterFunc,
@@ -20,6 +22,18 @@ import {
 import { formatSizes } from "../../../data/resolvers";
 import { wrap } from "../../../helpers/perf";
 import { resolveCached } from "../../../helpers/simple-cache";
+import { IGroupCellRendererParams } from "ag-grid-community/dist/lib/rendering/cellRenderers/groupCellRendererCtrl";
+
+export const defaultColDef: SizeGridColDef = {
+  flex: 1,
+  minWidth: 100,
+  enableValue: true,
+  enableRowGroup: false,
+  enablePivot: false,
+  sortable: true,
+  filter: true,
+  resizable: true,
+};
 
 const MAX_AGG_JOIN_COUNT = 5;
 
@@ -88,7 +102,7 @@ const groupCols: Record<SelectableLevel, SizeGridColDef> = {
 /** Describe columns, which can be grouped, for both grouped and not grouped states */
 const selectableCols: Record<SelectableLevel, SizeGridColDef> = {
   product: {
-    headerName: "Product Name",
+    headerName: "Product",
     filter: "agTextColumnFilter",
     minWidth: 140,
     initialWidth: 160,
@@ -128,7 +142,7 @@ export const levelTotals: SizeGridColDef[] = [
     colId: "totalUnits",
     headerName: "TTL Units",
     type: "ttlQuantityColumn",
-    valueGetter: (params) => params.data.total.units,
+    field: "total.units",
     // pinned: "right",
     // lockPinned: true,
   },
@@ -136,7 +150,7 @@ export const levelTotals: SizeGridColDef[] = [
     colId: "totalCost",
     headerName: "TTL Cost",
     type: "ttlPriceColumn",
-    valueGetter: (params) => params.data.total.cost,
+    field: "total.cost",
     aggFunc: "sum",
     // pinned: "right",
     // lockPinned: true,
@@ -373,9 +387,24 @@ export const getColumnDefs = wrap(
 );
 
 export const getAutoGroupColumnDef = (level: Level): SizeGridColDef => {
-  const baseColDef: SizeGridColDef | undefined = {
+  const baseColDef: SizeGridColDef = {
     ...(groupCols[level] || {}),
     ...(selectableCols[level] || {}),
+  };
+
+  const cellRendererParams: IGroupCellRendererParams<GridGroupDataItem> = {
+    footerValueGetter: (params) => {
+      const { levels, levelIndex }: GridContext = params.context;
+      const level = levels[levelIndex];
+      // const isRootLevel = params.node.level === -1;
+      // if (isRootLevel) {
+      //   return "Grand Total";
+      // }
+      const uniqueByLevel = new Set(
+        params.node.allLeafChildren.map((node) => node.data[level])
+      );
+      return pluralize(baseColDef.headerName, uniqueByLevel.size, true);
+    },
   };
 
   return {
@@ -389,5 +418,6 @@ export const getAutoGroupColumnDef = (level: Level): SizeGridColDef => {
         .map((col) => col.getColDef().headerName)
         .concat(baseColDef.headerName)
         .join("/"),
+    cellRendererParams,
   };
 };

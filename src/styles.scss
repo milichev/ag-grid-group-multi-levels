@@ -24,8 +24,14 @@ body {
 .ag-tool-panel-wrapper .ag-react-container {
   width: 100%;
 }
-.ag-row .ag-details-row {
-  padding: 4px 0 4px 16px;
+.ag-row {
+  &.ag-row-footer {
+    background-color: #a1a1a1;
+    color: #fff;
+  }
+  .ag-details-row {
+    padding: 4px 0 4px 16px;
+  }
 }
 .ag-cell.col-quantity {
   text-align: right;
@@ -35,13 +41,10 @@ body {
     pointer-events: none;
   }
 
-  // TODO: fix the grouping to prevent leaf rows to be group nodes
-  //.ag-row:not(.ag-row-group) {
-  .ag-row > &:hover:not(.ag-cell-inline-editing),
+  .ag-row.ag-row-leaf:not(.ag-row-footer) > &:hover:not(.ag-cell-inline-editing),
   &.ag-cell-focus:not(.ag-cell-inline-editing):not(.cell-disabled) {
     background-color: rgba(33, 150, 243, 0.13);
   }
-  //}
 }
 .ag-header-cell.col-quantity {
   .ag-header-cell-label {

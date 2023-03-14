@@ -7,11 +7,9 @@ import { groupItems } from "../../../data/groupItems";
 import { GridContext, SizeGridProps } from "../types";
 import { collectEntities } from "../../../data/resolvers";
 import { getLevelIndices } from "../../../data/levels";
-import {
-  commonGridProps,
-  getDetailRendererParams,
-} from "./getDetailRendererParams";
+import { getDetailRendererParams } from "./getDetailRendererParams";
 import { wrap } from "../../../helpers/perf";
+import { commonGridProps } from "./commonGridProps";
 
 export const getGridProps = wrap(
   (

@@ -46,7 +46,7 @@ type SizeGridHandler<H extends (params: AnyContextOwner) => any> = H extends (
     : H
   : H;
 
-type AllSizeGridHandlers<T extends object> = {
+export type AllSizeGridHandlers<T extends object> = {
   [K in keyof T]: T[K] extends (params: AnyContextOwner) => any
     ? SizeGridHandler<T[K]>
     : T[K];
