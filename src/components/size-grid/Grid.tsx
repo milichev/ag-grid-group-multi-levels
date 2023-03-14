@@ -30,6 +30,7 @@ import { nuPerf } from "../../helpers/perf";
 import { prepareItems } from "../../data/prepareItems";
 import { collapseMasterNodes } from "./helpers/collapseMasterNodes";
 import { SizeGridApi } from "./types";
+import { useContainerEvents } from "./hooks/useContainerEvents";
 
 const sideBar: SideBarDef = {
   toolPanels: [
@@ -82,7 +83,7 @@ export const Grid: React.FC<Props> = memo(
     const [prevLevels, setPrevLevels] = useState(levels);
     const gridApi = useRef<SizeGridApi>();
     const columnApi = useRef<ColumnApi>();
-    const container = useRef<HTMLDivElement>(null);
+    const container = useContainerEvents();
     const sizeGridContext = useSizeGridContext();
     const { shipmentsMode, isAllDeliveries } = sizeGridContext;
 
@@ -111,13 +112,15 @@ export const Grid: React.FC<Props> = memo(
         gridApi.current,
         columnApi.current
       );
+
       nuPerf.setContext({
         itemsSource: items.length,
         itemsGrid: itemsToDisplay.length,
         itemsTop: result.rowData?.length ?? 0,
       });
+
       return result;
-    }, [levels, itemsToDisplay, sizeGridContext, items.length]);
+    }, [levels, itemsToDisplay, sizeGridContext, container, items.length]);
 
     useEffect(() => {
       if (gridApi.current && prevLevels !== levels) {

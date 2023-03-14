@@ -21,6 +21,12 @@ body {
   overflow: auto;
 }
 
+%ellipsis-label {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .grid-container {
   height: 100%;
 }
@@ -28,15 +34,18 @@ body {
 .ag-tool-panel-wrapper .ag-react-container {
   width: 100%;
 }
+
 .ag-row {
   &.ag-row-footer {
     background-color: #a1a1a1;
     color: #fff;
   }
+
   .ag-details-row {
     padding: 4px 0 4px 16px;
   }
 }
+
 .ag-cell.col-quantity {
   text-align: right;
   cursor: text;
@@ -50,10 +59,12 @@ body {
     background-color: rgba(33, 150, 243, 0.13);
   }
 }
+
 .ag-header-cell.col-quantity {
   .ag-header-cell-label {
     justify-content: right;
   }
+
   .ag-cell-label-container {
     flex-direction: row;
   }
@@ -75,14 +86,42 @@ body {
   // resets the left indent of nested group levels
   padding-left: 0;
 }
+
 .ag-row .ag-body-viewport .ag-row-group-leaf-indent {
   // resets the left indent of the nested leaf level
   margin-left: 0;
 }
+
 .ag-row .ag-layout-auto-height {
   .ag-center-cols-container,
   .ag-center-cols-clipper {
     min-height: unset;
+  }
+}
+
+.ag-group-cell {
+  padding-right: calc(var(--ag-cell-horizontal-padding) / 2);
+
+  .ag-group-value {
+    flex-grow: 1;
+  }
+}
+
+.ag-group-cell-inner {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+
+  .ag-group-cell-label {
+    @extend %ellipsis-label;
+  }
+
+  .ag-icon {
+    cursor: pointer;
+
+    &:hover {
+      color: var(--ag-alpine-active-color);
+    }
   }
 }
 
@@ -93,8 +132,10 @@ body {
     &:first-child {
       margin-top: 0;
     }
+
     margin-bottom: 0.5em;
   }
+
   h4 {
     margin-bottom: 0.5em;
     margin-top: 0.17em;
@@ -178,6 +219,7 @@ body {
       &[data-dir="up"] {
         margin-bottom: -0.175em;
       }
+
       &[data-dir="down"] {
         margin-top: -0.175em;
       }
@@ -221,14 +263,13 @@ body {
     margin: 0;
     padding: 0;
     display: flex;
+
     &:hover {
       background-color: #eeeeee;
     }
 
     .label {
-      flex-grow: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      @extend %ellipsis-label;
 
       &:hover {
         overflow: visible;
@@ -241,14 +282,17 @@ body {
       &.fast .value {
         background-color: #beff8b;
       }
+
       &.so-so .value {
         color: #000;
         background-color: #ffc875;
       }
+
       &.slow .value {
         color: #fff;
         background-color: #ff9684;
       }
+
       &.dead .value {
         color: #fff;
         background-color: #b00f0f;

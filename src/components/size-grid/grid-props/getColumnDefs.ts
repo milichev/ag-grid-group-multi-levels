@@ -16,6 +16,7 @@ import { getQuantityColumn } from "./getQuantityColumn";
 import {
   GridContext,
   SizeGridAggFunc,
+  SizeGridCellRendererOptions,
   SizeGridColDef,
   SizeGridGroupCellRendererParams,
   SizeGridValueFormatterFunc,
@@ -23,6 +24,7 @@ import {
 import { formatSizes } from "../../../data/resolvers";
 import { wrap } from "../../../helpers/perf";
 import { resolveCached } from "../../../helpers/simple-cache";
+import { GroupColumnInnerRenderer } from "../components/GroupColumnInnerRenderer";
 
 export const defaultColDef: SizeGridColDef = {
   flex: 1,
@@ -256,23 +258,22 @@ export const getColumnDefs = wrap(
     let groupCol: SizeGridColDef = groupCols[level as SelectableLevel];
     if (groupCol && (level !== "sizeGroup" || hasSizeGroups)) {
       // TODO: pick only required
-      const cellRendererParams: Partial<SizeGridGroupCellRendererParams> = {
+      const cellRendererParams = {
         fullWidth: false,
-        suppressCount: false,
+        suppressCount: true,
         // suppressDoubleClickExpand: false,
         // suppressEnterExpand: false,
         suppressPadding: true,
         checkbox: isRootLevel,
-        // innerRendererSelector: () => ({
-        //   component: GroupInnerRenderer,
-        //   params: {},
-        // }),
-      };
+        innerRenderer: GroupColumnInnerRenderer,
+        innerRendererParams: {} satisfies SizeGridCellRendererOptions,
+      } satisfies Partial<SizeGridGroupCellRendererParams>;
       groupCol = {
         colId: level,
         ...groupCol,
         ...selectableCols[level],
         cellRenderer: !isLeafLevel ? "agGroupCellRenderer" : undefined,
+        cellClass: !isLeafLevel ? "ag-group-cell" : undefined,
         cellRendererParams,
         pinned: "left",
         lockPinned: true,

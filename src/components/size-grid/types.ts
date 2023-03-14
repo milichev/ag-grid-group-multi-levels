@@ -95,10 +95,24 @@ export type SizeGridValueFormatterFunc = ValueFormatterFunc<GridGroupDataItem>;
 export type SizeGridGroupCellRendererParams = WithSizeGridEntities<
   GroupCellRendererParams<GridGroupDataItem>
 >;
+export type SizeGridCellRendererParams = ICellRendererParams<GridGroupDataItem>;
+export type SizeGridCellRendererOptions = Omit<
+  SizeGridCellRendererParams,
+  | "value"
+  | "valueFormatted"
+  | "data"
+  | "node"
+  | "api"
+  | "columnApi"
+  | "context"
+  | "rowIndex"
+  | "eGridCell"
+  | "eParentOfValue"
+  | "registerRowDragger"
+>;
+
 export type SizeGridGetDetailCellRendererParams = (
-  params: WithSizeGridContext<
-    Omit<ICellRendererParams<GridGroupDataItem>, "value">
-  >
+  params: WithSizeGridContext<Omit<SizeGridCellRendererParams, "value">>
 ) => Partial<IDetailCellRendererParams<GridGroupDataItem, GridGroupDataItem>>;
 
 export interface SizeGridSettings {
