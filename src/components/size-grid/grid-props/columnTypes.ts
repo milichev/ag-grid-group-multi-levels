@@ -35,6 +35,14 @@ const priceColumnAggFunc: SizeGridAggFunc<number> = (params) =>
 const priceColumn: SizeGridColDef = {
   ...numericColumn,
   aggFunc: priceColumnAggFunc,
+  comparator: (a: number | [number, number], b: number | [number, number]) =>
+    Array.isArray(a)
+      ? Array.isArray(b)
+        ? a[0] === b[0]
+          ? a[1] - b[1]
+          : a[0] - b[0]
+        : a[0] - b
+      : a - (Array.isArray(b) ? b[0] : b),
   valueFormatter: getRangeFormatter("money"),
 };
 
