@@ -1,7 +1,7 @@
 import _ from "lodash";
 import pluralize from "pluralize";
 import fp from "lodash/fp";
-import { ColDef, ColumnApi, GroupCellRendererParams } from "ag-grid-community";
+import { ColDef, ColumnApi, IGroupCellRendererParams } from "ag-grid-community";
 
 import type { SizeGridContext } from "../../../hooks/useSizeGridContext";
 import type {
@@ -17,12 +17,12 @@ import {
   GridContext,
   SizeGridAggFunc,
   SizeGridColDef,
+  SizeGridGroupCellRendererParams,
   SizeGridValueFormatterFunc,
 } from "../types";
 import { formatSizes } from "../../../data/resolvers";
 import { wrap } from "../../../helpers/perf";
 import { resolveCached } from "../../../helpers/simple-cache";
-import { IGroupCellRendererParams } from "ag-grid-community/dist/lib/rendering/cellRenderers/groupCellRendererCtrl";
 
 export const defaultColDef: SizeGridColDef = {
   flex: 1,
@@ -256,9 +256,7 @@ export const getColumnDefs = wrap(
     let groupCol: SizeGridColDef = groupCols[level as SelectableLevel];
     if (groupCol && (level !== "sizeGroup" || hasSizeGroups)) {
       // TODO: pick only required
-      const cellRendererParams: Partial<
-        GroupCellRendererParams<GridGroupDataItem>
-      > = {
+      const cellRendererParams: Partial<SizeGridGroupCellRendererParams> = {
         fullWidth: false,
         suppressCount: false,
         // suppressDoubleClickExpand: false,

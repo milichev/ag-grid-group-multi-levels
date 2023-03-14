@@ -1,12 +1,17 @@
 import { GridDataItem, Level, LevelIndices } from "../../../data/types";
 import { SizeGridContext } from "../../../hooks/useSizeGridContext";
-import { GridContext, SizeGridGetDetailCellRendererParams } from "../types";
+import { GridContext, WithSizeGridEntities } from "../types";
 import { measureAction, wrap } from "../../../helpers/perf";
 import { collectEntities } from "../../../data/resolvers";
 import { getAutoGroupColumnDef, getColumnDefs } from "./getColumnDefs";
 import { groupItems } from "../../../data/groupItems";
 import { getLevelIndices } from "../../../data/levels";
 import { commonGridProps } from "./commonGridProps";
+import { getEventHandlers } from "./getEventHandlers";
+import {
+  ICellRendererParams,
+  IDetailCellRendererParams,
+} from "ag-grid-community";
 
 export const getDetailRendererParams = (
   gridData: GridDataItem[],
@@ -20,8 +25,8 @@ export const getDetailRendererParams = (
   const level = levels[levelIndex];
   if (!level) return undefined;
 
-  const detailCellRendererParams: SizeGridGetDetailCellRendererParams = (
-    params
+  const detailCellRendererParams = (
+    params: WithSizeGridEntities<Omit<ICellRendererParams, "value">>
   ) => {
     const item = params.data;
 
@@ -101,6 +106,7 @@ export const getDetailRendererParams = (
     return {
       detailGridOptions: {
         ...commonGridProps,
+        ...getEventHandlers(context),
         autoGroupColumnDef: getAutoGroupColumnDef(currentLevel),
         columnDefs,
         context,
@@ -111,7 +117,7 @@ export const getDetailRendererParams = (
       getDetailRowData: (params) => {
         params.successCallback(items);
       },
-    };
+    } satisfies Partial<IDetailCellRendererParams>;
   };
 
   return wrap(

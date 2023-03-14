@@ -10,11 +10,15 @@ import {
 import { formats, toQuantity } from "../../../helpers/formatting";
 import { getSizeKey } from "../../../data/resolvers";
 import { SizeQuantityEditor } from "../components/SizeQuantityEditor";
-import { SizeGridAggFunc, SizeGridColDef } from "../types";
+import {
+  SizeGridAggFunc,
+  SizeGridColDef,
+  WithSizeGridEntities,
+} from "../types";
 
 const valueFormatter = (
   params: CastProp<
-    ValueFormatterParams<GridGroupDataItem>,
+    WithSizeGridEntities<ValueFormatterParams<GridGroupDataItem>>,
     "value",
     SizeQuantity | undefined
   >
@@ -24,7 +28,7 @@ const valueFormatter = (
     : "";
 
 type QuantitySetParams = CastProp<
-  ValueSetterParams<GridGroupDataItem>,
+  WithSizeGridEntities<ValueSetterParams<GridGroupDataItem>>,
   "newValue" | "oldValue",
   SizeQuantity
 >;

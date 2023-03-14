@@ -12,9 +12,9 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import {
   ColumnApi,
-  GridApi,
   GridReadyEvent,
   SideBarDef,
+  ToolPanelColumnCompParams,
 } from "ag-grid-community";
 
 import { useSizeGridContext } from "../../hooks/useSizeGridContext";
@@ -28,8 +28,8 @@ import { getGridProps } from "./grid-props/getGridProps";
 import { LevelsToolPanel } from "../LevelsToolPanel";
 import { nuPerf } from "../../helpers/perf";
 import { prepareItems } from "../../data/prepareItems";
-import { ToolPanelColumnCompParams } from "ag-grid-community/dist/lib/interfaces/iToolPanel";
 import { refreshExpanded } from "./helpers/refreshExpanded";
+import { SizeGridApi } from "./types";
 
 const sideBar: SideBarDef = {
   toolPanels: [
@@ -80,7 +80,7 @@ type Props = {
 export const Grid: React.FC<Props> = memo(
   ({ levels, items, buildOrderShipments }: Props) => {
     const [prevLevels, setPrevLevels] = useState(levels);
-    const gridApi = useRef<GridApi>();
+    const gridApi = useRef<SizeGridApi>();
     const columnApi = useRef<ColumnApi>();
     const container = useRef<HTMLDivElement>(null);
     const sizeGridContext = useSizeGridContext();

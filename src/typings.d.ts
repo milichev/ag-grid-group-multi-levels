@@ -25,4 +25,30 @@ type CastProp<T extends object, K extends keyof T, C> = {
   [P in keyof T]: P extends K ? C : T[P];
 };
 
+/**
+ * Having `F` a single param function, returns the type of the param;
+ */
+type ParamType<F extends (param: any) => any> = F extends (
+  param: infer P
+) => any
+  ? P
+  : never;
+
+/**
+ * Having `F` a single param function, returns the `F`, which accepts the param with its property `K` of type `C`.
+ */
+type CastParamProp<
+  F extends (param: any) => any,
+  K extends keyof ParamType<F>,
+  C
+> = F extends (param: infer P) => infer R
+  ? P extends object
+    ? K extends keyof P
+      ? C extends P[K]
+        ? (param: CastProp<P, K, C>) => R
+        : F
+      : F
+    : F
+  : F;
+
 type Compare<TValue> = (a: TValue, b: TValue) => number;

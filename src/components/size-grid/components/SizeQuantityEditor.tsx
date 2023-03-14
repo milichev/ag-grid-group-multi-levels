@@ -9,9 +9,9 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { ICellEditorParams } from "ag-grid-community";
+import { ICellEditor, ICellEditorParams } from "ag-grid-community";
 import { GridGroupDataItem, SizeQuantity } from "../../../data/types";
-import { ICellEditor } from "ag-grid-community/dist/lib/interfaces/iCellEditor";
+import { WithSizeGridEntities } from "../types";
 import { afterFrame } from "../../../helpers/afterFrame";
 
 const KEY = {
@@ -42,7 +42,11 @@ const finishedEditingPressed = (key: string) =>
   key === KEY.ENTER || key === KEY.TAB;
 
 export const SizeQuantityEditor = forwardRef(function SizeQuantityEditor(
-  props: CastProp<ICellEditorParams<GridGroupDataItem>, "value", SizeQuantity>,
+  props: CastProp<
+    WithSizeGridEntities<ICellEditorParams<GridGroupDataItem>>,
+    "value",
+    SizeQuantity
+  >,
   ref: Ref<Partial<ICellEditor>>
 ) {
   const [quantity, setQuantity] = useState(

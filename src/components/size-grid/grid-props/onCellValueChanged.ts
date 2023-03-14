@@ -1,13 +1,17 @@
-import { GridGroupDataItem, TotalInfo } from "../../../data/types";
-import { IRowNode } from "ag-grid-community/dist/lib/interfaces/iRowNode";
-import { GridApi } from "ag-grid-community";
+import { RowNode } from "ag-grid-community";
+import { TotalInfo } from "../../../data/types";
 import { measureStep } from "../../../helpers/perf";
-import { GridContext, SizeGridEventHandler } from "../types";
+import {
+  GridContext,
+  SizeGridApi,
+  SizeGridProps,
+  SizeGridRowNode,
+} from "../types";
 import { isCellValueChanged } from "./helpers";
 import { collectProductTotals } from "../../../data/totals";
 import { levelTotals } from "./getColumnDefs";
 
-export const onCellValueChanged: SizeGridEventHandler<"onCellValueChanged"> = (
+export const onCellValueChanged: SizeGridProps["onCellValueChanged"] = (
   params
 ) => {
   const step = measureStep({ name: "onCellValueChanged", async: false });
@@ -20,8 +24,8 @@ export const onCellValueChanged: SizeGridEventHandler<"onCellValueChanged"> = (
 const refreshColIds = levelTotals.map((col) => col.colId);
 
 const refreshTtlCells = (
-  node: IRowNode<GridGroupDataItem>,
-  api: GridApi<GridGroupDataItem>,
+  node: SizeGridRowNode,
+  api: SizeGridApi,
   context: GridContext
 ) => {
   let { data: item } = node;
@@ -31,7 +35,7 @@ const refreshTtlCells = (
       total: collectProductTotals(item, item.product, item.sizeGroup),
     };
   } else {
-    const detailApi: GridApi<GridGroupDataItem> = api.getDetailGridInfo(
+    const detailApi: SizeGridApi = api.getDetailGridInfo(
       `detail_${item.id}`
     ).api;
     const total: TotalInfo = {
@@ -52,7 +56,7 @@ const refreshTtlCells = (
 
   // the cell content is already updated with setData, but we need to forcefully refresh cells to make them flash on update.
   api.refreshCells({
-    rowNodes: [node],
+    rowNodes: [node as RowNode],
     columns: refreshColIds,
     force: true,
   });
