@@ -1,5 +1,3 @@
-import { IAggFuncParams, ValueFormatterFunc } from "ag-grid-community";
-import { GridGroupDataItem } from "../../../data/types";
 import { getRange, range } from "../../../helpers/formatting";
 import {
   SizeGridAggFunc,
