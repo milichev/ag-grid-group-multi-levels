@@ -16,7 +16,7 @@ export const GroupColumnInnerRenderer: FC<GroupColumnInnerRendererProps> = ({
       <span
         className="ag-group-cell-menu-button ag-icon ag-icon-menu"
         role="presentation"
-        data-item-id={data.id}
+        data-item-id={data?.id}
       />
     </div>
   );

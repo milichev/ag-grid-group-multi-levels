@@ -404,6 +404,8 @@ export const getAutoGroupColumnDef = (level: Level): SizeGridColDef => {
       );
       return pluralize(baseColDef.headerName, uniqueByLevel.size, true);
     },
+    innerRenderer: GroupColumnInnerRenderer,
+    innerRendererParams: {} satisfies SizeGridCellRendererOptions,
   };
 
   return {
