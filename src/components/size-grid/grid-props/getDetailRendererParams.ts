@@ -14,6 +14,7 @@ export const getDetailRendererParams = (
   levelIndex: number,
   levelIndices: LevelIndices,
   sizeGridContext: SizeGridContext,
+  popupParent: HTMLElement | null,
   masterContext: GridContext
 ) => {
   const level = levels[levelIndex];
@@ -67,6 +68,7 @@ export const getDetailRendererParams = (
       levelIndex + 1,
       localLevelIndices,
       sizeGridContext,
+      popupParent,
       context
     );
 
@@ -104,6 +106,7 @@ export const getDetailRendererParams = (
         context,
         masterDetail: !!detailCellRendererParams,
         detailCellRendererParams,
+        popupParent,
       },
       getDetailRowData: (params) => {
         params.successCallback(items);

@@ -82,6 +82,7 @@ export const Grid: React.FC<Props> = memo(
     const [prevLevels, setPrevLevels] = useState(levels);
     const gridApi = useRef<GridApi>();
     const columnApi = useRef<ColumnApi>();
+    const container = useRef<HTMLDivElement>(null);
     const sizeGridContext = useSizeGridContext();
     const { shipmentsMode, isAllDeliveries } = sizeGridContext;
 
@@ -106,6 +107,7 @@ export const Grid: React.FC<Props> = memo(
         levels,
         itemsToDisplay,
         sizeGridContext,
+        container.current,
         gridApi.current,
         columnApi.current
       );
@@ -125,11 +127,14 @@ export const Grid: React.FC<Props> = memo(
     }, [levels, prevLevels]);
 
     return (
-      <AgGridReact<GridGroupDataItem>
-        {...gridProps}
-        sideBar={sideBar}
-        onGridReady={onGridReady}
-      />
+      <div ref={container} className="grid-container">
+        <AgGridReact<GridGroupDataItem>
+          {...gridProps}
+          popupParent={container.current}
+          sideBar={sideBar}
+          onGridReady={onGridReady}
+        />
+      </div>
     );
   }
 );

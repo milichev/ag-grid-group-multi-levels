@@ -16,6 +16,7 @@ export const getGridProps = wrap(
     levels: Level[],
     gridData: GridDataItem[],
     sizeGridContext: SizeGridContext,
+    popupParent: HTMLElement | null,
     gridApi: GridApi | null,
     columnApi: ColumnApi | null
   ): Partial<SizeGridProps> => {
@@ -62,6 +63,7 @@ export const getGridProps = wrap(
       1,
       levelIndices,
       sizeGridContext,
+      popupParent,
       context
     );
 
@@ -73,6 +75,7 @@ export const getGridProps = wrap(
       columnDefs,
       masterDetail: !!detailCellRendererParams,
       detailCellRendererParams,
+      popupParent,
       context,
     };
   },
