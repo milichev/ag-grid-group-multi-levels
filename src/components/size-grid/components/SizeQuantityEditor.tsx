@@ -9,37 +9,26 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { ICellEditor, ICellEditorParams } from "ag-grid-community";
+import { ICellEditor, ICellEditorParams, KeyCode } from "ag-grid-community";
 import { GridGroupDataItem, SizeQuantity } from "../../../data/types";
 import { WithSizeGridEntities } from "../types";
 import { afterFrame } from "../../../helpers/afterFrame";
 
-const KEY = {
-  BACKSPACE: "Backspace",
-  DELETE: "Delete",
-  ENTER: "Enter",
-  TAB: "Tab",
-  ARROW_UP: "ArrowUp",
-  ARROW_DOWN: "ArrowDown",
-  ARROW_LEFT: "ArrowLeft",
-  ARROW_RIGHT: "ArrowRight",
-};
-
 const isLeftOrRight = (key: string) =>
-  [KEY.ARROW_LEFT, KEY.ARROW_RIGHT].indexOf(key) > -1;
+  [KeyCode.LEFT, KeyCode.RIGHT].indexOf(key) > -1;
 
 const isUpOrDown = (key: string) =>
-  [KEY.ARROW_UP, KEY.ARROW_DOWN].indexOf(key) > -1;
+  [KeyCode.UP, KeyCode.DOWN].indexOf(key) > -1;
 
 const isCharNumeric = (charStr: string) => !!/\d/.test(charStr);
 
 const isKeyPressedNumeric = (key: string) => isCharNumeric(key);
 
 const deleteOrBackspace = (key: string) =>
-  [KEY.DELETE, KEY.BACKSPACE].indexOf(key) > -1;
+  [KeyCode.DELETE, KeyCode.BACKSPACE].indexOf(key) > -1;
 
 const finishedEditingPressed = (key: string) =>
-  key === KEY.ENTER || key === KEY.TAB;
+  key === KeyCode.ENTER || key === KeyCode.TAB;
 
 export const SizeQuantityEditor = forwardRef(function SizeQuantityEditor(
   props: CastProp<
@@ -97,7 +86,7 @@ export const SizeQuantityEditor = forwardRef(function SizeQuantityEditor(
   }, [props.charPress]);
 
   const cancelBeforeStart =
-    props.charPress && "1234567890".indexOf(props.charPress) < 0;
+    props.charPress && !"1234567890".includes(props.charPress);
 
   useImperativeHandle(ref, () => ({
     getValue() {

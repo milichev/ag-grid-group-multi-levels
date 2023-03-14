@@ -28,7 +28,7 @@ import { getGridProps } from "./grid-props/getGridProps";
 import { LevelsToolPanel } from "../LevelsToolPanel";
 import { nuPerf } from "../../helpers/perf";
 import { prepareItems } from "../../data/prepareItems";
-import { refreshExpanded } from "./helpers/refreshExpanded";
+import { collapseMasterNodes } from "./helpers/collapseMasterNodes";
 import { SizeGridApi } from "./types";
 
 const sideBar: SideBarDef = {
@@ -121,7 +121,7 @@ export const Grid: React.FC<Props> = memo(
 
     useEffect(() => {
       if (gridApi.current && prevLevels !== levels) {
-        refreshExpanded(gridApi.current);
+        collapseMasterNodes(gridApi.current);
         setPrevLevels(levels);
       }
     }, [levels, prevLevels]);
