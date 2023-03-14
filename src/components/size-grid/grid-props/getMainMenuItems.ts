@@ -1,12 +1,10 @@
 import { SelectableLevel } from "../../../data/types";
 import { GetMainMenuItemsParams, MenuItemDef } from "ag-grid-community";
 import { getLevelIndices, toggleLevelItem } from "../../../data/levels";
-import { GridContext, SizeGridEventHandler } from "../types";
+import { GridContext, SizeGridProps } from "../types";
 import { allLevels } from "../../../constants";
 
-export const getMainMenuItems: SizeGridEventHandler<"getMainMenuItems"> = (
-  params
-) => {
+export const getMainMenuItems: SizeGridProps["getMainMenuItems"] = (params) => {
   const result: (string | MenuItemDef)[] = params.defaultItems.slice();
   const level = params.column?.getColId() as SelectableLevel;
   const isSelectableLevel = allLevels.includes(level);

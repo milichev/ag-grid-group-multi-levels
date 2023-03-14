@@ -1,11 +1,11 @@
 import { ShipmentsMode } from "../../../data/types";
 import { allLevels } from "../../../constants";
 import { MenuItemDef } from "ag-grid-community";
-import { SizeGridEventHandler } from "../types";
+import { SizeGridProps } from "../types";
 
-export const getContextMenuItems: SizeGridEventHandler<
-  "getContextMenuItems"
-> = (params) => {
+export const getContextMenuItems: SizeGridProps["getContextMenuItems"] = (
+  params
+) => {
   const {
     levels,
     levelIndex,

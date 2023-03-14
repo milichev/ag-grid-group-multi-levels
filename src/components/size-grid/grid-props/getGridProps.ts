@@ -10,6 +10,7 @@ import { getLevelIndices } from "../../../data/levels";
 import { getDetailRendererParams } from "./getDetailRendererParams";
 import { wrap } from "../../../helpers/perf";
 import { commonGridProps } from "./commonGridProps";
+import { getEventHandlers } from "./getEventHandlers";
 
 export const getGridProps = wrap(
   (
@@ -19,7 +20,7 @@ export const getGridProps = wrap(
     popupParent: HTMLElement | null,
     gridApi: GridApi | null,
     columnApi: ColumnApi | null
-  ): Partial<SizeGridProps> => {
+  ) => {
     const level = levels[0];
     if (!level) {
       return {
@@ -69,6 +70,7 @@ export const getGridProps = wrap(
 
     return {
       ...commonGridProps,
+      ...getEventHandlers(context),
       autoGroupColumnDef: getAutoGroupColumnDef(level),
       rowData: items,
       // quickFilterText: gridData[0].product.department,
@@ -77,7 +79,7 @@ export const getGridProps = wrap(
       detailCellRendererParams,
       popupParent,
       context,
-    };
+    } satisfies Partial<SizeGridProps>;
   },
   "getGridProps",
   false

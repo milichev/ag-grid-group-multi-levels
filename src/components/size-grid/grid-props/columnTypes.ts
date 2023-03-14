@@ -1,8 +1,9 @@
-import { IAggFuncParams } from "ag-grid-community";
-import { GridGroupDataItem } from "../../../data/types";
 import { getRange, range } from "../../../helpers/formatting";
-import { ValueFormatterFunc } from "ag-grid-community/dist/lib/entities/colDef";
-import { SizeGridColDef } from "../types";
+import {
+  SizeGridAggFunc,
+  SizeGridColDef,
+  SizeGridValueFormatterFunc,
+} from "../types";
 
 type CustomColumnTypes =
   | "priceColumn"
@@ -11,7 +12,7 @@ type CustomColumnTypes =
   | "ttlQuantityColumn";
 
 const getRangeFormatter =
-  (type: keyof typeof range): ValueFormatterFunc<GridGroupDataItem> =>
+  (type: keyof typeof range): SizeGridValueFormatterFunc =>
   (params) =>
     range[type](params.value);
 
@@ -26,12 +27,14 @@ const numericColumn: SizeGridColDef = {
   filter: "agNumberColumnFilter",
 };
 
+const priceColumnAggFunc: SizeGridAggFunc<number> = (params) =>
+  !params.rowNode.group || params.values.length === 0
+    ? params.values
+    : getRange(params.values);
+
 const priceColumn: SizeGridColDef = {
   ...numericColumn,
-  aggFunc: (params: IAggFuncParams<GridGroupDataItem, number>) =>
-    !params.rowNode.group || params.values.length === 0
-      ? params.values
-      : getRange(params.values),
+  aggFunc: priceColumnAggFunc,
   valueFormatter: getRangeFormatter("money"),
 };
 

@@ -1,7 +1,4 @@
 import React, { StrictMode, useMemo, useReducer } from "react";
-import "ag-grid-enterprise";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
 
 import {
   type SizeGridContext,

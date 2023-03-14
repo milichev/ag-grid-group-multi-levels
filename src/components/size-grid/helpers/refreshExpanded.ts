@@ -1,7 +1,6 @@
-import { GridApi } from "ag-grid-community";
-import { GridGroupDataItem } from "../../../data/types";
+import type { SizeGridApi } from "../types";
 
-export const refreshExpanded = (api: GridApi<GridGroupDataItem>) => {
+export const refreshExpanded = (api: SizeGridApi) => {
   api.forEachNode((node) => {
     if (node.master && node.expanded) {
       node.setExpanded(false);
