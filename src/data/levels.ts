@@ -1,10 +1,4 @@
-import {
-  Level,
-  LevelIndices,
-  LevelItem,
-  SelectableLevel,
-  ShipmentsMode,
-} from "./types";
+import { Level, LevelIndices, LevelItem, SelectableLevel } from "./types";
 import { SizeGridContext } from "../hooks/useSizeGridContext";
 import { allLevels } from "../constants";
 
@@ -152,12 +146,7 @@ export const getLevelMeta = (
       upEnabled = upEnabled && !isFlattenSizes;
       break;
     case "warehouse":
-      downEnabled =
-        downEnabled &&
-        (isFlattenSizes
-          ? nextLevel !== "product"
-          : shipmentsMode === ShipmentsMode.BuildOrder ||
-            nextLevel !== "shipment");
+      downEnabled = downEnabled && (!isFlattenSizes || nextLevel !== "product");
       break;
     case "shipment":
       downEnabled = downEnabled && (!isFlattenSizes || nextLevel !== "product");

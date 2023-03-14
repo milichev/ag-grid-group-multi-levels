@@ -14,6 +14,7 @@ describe("levels", () => {
           {
             shipmentsMode: ShipmentsMode.BuildOrder,
             isFlattenSizes: true,
+            isUseSizeGroups: false,
           }
         )
       ).toEqual({

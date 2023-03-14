@@ -1,4 +1,11 @@
-import React, { useCallback, memo, useMemo, useRef } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
@@ -22,6 +29,7 @@ import { LevelsToolPanel } from "../LevelsToolPanel";
 import { nuPerf } from "../../helpers/perf";
 import { prepareItems } from "../../data/prepareItems";
 import { ToolPanelColumnCompParams } from "ag-grid-community/dist/lib/interfaces/iToolPanel";
+import { refreshExpanded } from "./helpers/refreshExpanded";
 
 const sideBar: SideBarDef = {
   toolPanels: [
@@ -71,6 +79,7 @@ type Props = {
 
 export const Grid: React.FC<Props> = memo(
   ({ levels, items, buildOrderShipments }: Props) => {
+    const [prevLevels, setPrevLevels] = useState(levels);
     const gridApi = useRef<GridApi>();
     const columnApi = useRef<ColumnApi>();
     const sizeGridContext = useSizeGridContext();
@@ -107,6 +116,13 @@ export const Grid: React.FC<Props> = memo(
       });
       return result;
     }, [levels, itemsToDisplay, sizeGridContext, items.length]);
+
+    useEffect(() => {
+      if (gridApi.current && prevLevels !== levels) {
+        refreshExpanded(gridApi.current);
+        setPrevLevels(levels);
+      }
+    }, [levels, prevLevels]);
 
     return (
       <AgGridReact<GridGroupDataItem>
