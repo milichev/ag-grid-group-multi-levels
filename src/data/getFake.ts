@@ -8,12 +8,12 @@ import {
   SizeInfo,
   Warehouse,
 } from "./types";
-import { SizeGridContext } from "../hooks/useSizeGridContext";
 import { wrapObj } from "../helpers/perf";
 import { getDataItemId, sortSizeNames } from "./resolvers";
 import { toISODateString } from "../helpers/formatting";
 import { getSizeQuantities } from "./prepareItems";
 import { regularSizeNames } from "../constants";
+import { SizeGridContext } from "../components/size-grid/types";
 
 const attempt = <T>(
   get: () => T,

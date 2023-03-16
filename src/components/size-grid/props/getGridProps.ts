@@ -1,16 +1,15 @@
 import { ColumnApi, GridApi } from "ag-grid-community";
 
-import type { SizeGridContext } from "../../../hooks/useSizeGridContext";
 import { GridDataItem, Level, Product } from "../../../data/types";
-import { getAutoGroupColumnDef, getColumnDefs } from "./getColumnDefs";
+import { getAutoGroupColumnDef, getColDefs } from "../columns";
 import { groupItems } from "../../../data/groupItems";
-import { GridContext, SizeGridProps } from "../types";
+import { SizeGridContext, SizeGridLevelContext, SizeGridProps } from "../types";
 import { collectEntities } from "../../../data/resolvers";
 import { getLevelIndices } from "../../../data/levels";
 import { getDetailRendererParams } from "./getDetailRendererParams";
 import { wrap } from "../../../helpers/perf";
 import { commonGridProps } from "./commonGridProps";
-import { getEventHandlers } from "./getEventHandlers";
+import { getEventHandlers } from "../event-handlers";
 
 export const getGridProps = wrap(
   (
@@ -41,7 +40,7 @@ export const getGridProps = wrap(
 
     const { items } = groupItems(gridData, levels, 0, levelIndices, null);
 
-    const columnDefs = getColumnDefs({
+    const columnDefs = getColDefs({
       levels,
       levelIndex: 0,
       levelIndices,
@@ -51,7 +50,7 @@ export const getGridProps = wrap(
       columnApi,
     });
 
-    const context: GridContext = {
+    const context: SizeGridLevelContext = {
       levels,
       levelIndex: 0,
       sizeGridContext,

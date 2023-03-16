@@ -10,67 +10,21 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import {
-  ColumnApi,
-  GridReadyEvent,
-  SideBarDef,
-  ToolPanelColumnCompParams,
-} from "ag-grid-community";
+import { ColumnApi, GridReadyEvent } from "ag-grid-community";
 
-import { useSizeGridContext } from "../../hooks/useSizeGridContext";
-import {
+import { useContainerEvents, useSizeGridContext } from "./hooks";
+import type {
   GridDataItem,
   GridGroupDataItem,
   Level,
   Shipment,
 } from "../../data/types";
-import { getGridProps } from "./grid-props/getGridProps";
-import { LevelsToolPanel } from "../LevelsToolPanel";
-import { nuPerf } from "../../helpers/perf";
+import type { SizeGridApi } from "./types";
+import { getGridProps } from "./props/getGridProps";
 import { prepareItems } from "../../data/prepareItems";
-import { collapseMasterNodes } from "./helpers/collapseMasterNodes";
-import { SizeGridApi } from "./types";
-import { useContainerEvents } from "./hooks/useContainerEvents";
-
-const sideBar: SideBarDef = {
-  toolPanels: [
-    {
-      id: "columns",
-      labelDefault: "Columns",
-      labelKey: "columns",
-      iconKey: "columns",
-      toolPanel: "agColumnsToolPanel",
-      minWidth: 225,
-      maxWidth: 225,
-      width: 225,
-      toolPanelParams: {
-        suppressValues: true,
-        suppressPivots: true,
-      } as ToolPanelColumnCompParams,
-    },
-    {
-      id: "filters",
-      labelDefault: "Filters",
-      labelKey: "filters",
-      iconKey: "filter",
-      toolPanel: "agFiltersToolPanel",
-      minWidth: 180,
-      maxWidth: 400,
-      width: 250,
-    },
-    {
-      id: "nestingLevels",
-      labelDefault: "Nesting Levels",
-      labelKey: "nestingLevels",
-      iconKey: "linked",
-      minWidth: 180,
-      maxWidth: 400,
-      width: 250,
-      toolPanel: LevelsToolPanel,
-    },
-  ],
-  defaultToolPanel: "nestingLevels",
-};
+import { collapseMasterNodes } from "./helpers";
+import { nuPerf } from "../../helpers/perf";
+import { sideBar } from "./props/SideBar";
 
 type Props = {
   levels: Level[];
@@ -78,7 +32,7 @@ type Props = {
   buildOrderShipments: Shipment[];
 };
 
-export const Grid: React.FC<Props> = memo(
+export const SizeGrid: React.FC<Props> = memo(
   ({ levels, items, buildOrderShipments }: Props) => {
     const [prevLevels, setPrevLevels] = useState(levels);
     const gridApi = useRef<SizeGridApi>();

@@ -1,7 +1,7 @@
 import { SelectableLevel } from "../../../data/types";
 import { GetMainMenuItemsParams, MenuItemDef } from "ag-grid-community";
 import { getLevelIndices, toggleLevelItem } from "../../../data/levels";
-import { GridContext, SizeGridProps } from "../types";
+import { SizeGridLevelContext, SizeGridProps } from "../types";
 import { allLevels } from "../../../constants";
 
 export const getMainMenuItems: SizeGridProps["getMainMenuItems"] = (params) => {
@@ -23,7 +23,7 @@ function preprocessLevel(
     levelIndex,
     levels,
     sizeGridContext: { levelItems, dispatch },
-  }: GridContext = params.context;
+  }: SizeGridLevelContext = params.context;
   const levelIndices = getLevelIndices(levels);
 
   if (levelIndex === 0 && levelIndices[level] === undefined) {

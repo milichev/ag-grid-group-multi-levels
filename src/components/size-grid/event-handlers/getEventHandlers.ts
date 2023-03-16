@@ -1,4 +1,4 @@
-import { GridContext, SizeGridProps } from "../types";
+import { SizeGridLevelContext, SizeGridProps } from "../types";
 import { getContextMenuItems } from "./getContextMenuItems";
 import { getMainMenuItems } from "./getMainMenuItems";
 import { postProcessPopup } from "./postProcessPopup";
@@ -7,7 +7,7 @@ import { onCellValueChanged } from "./onCellValueChanged";
 import { isSelectableLevel, toggleLevelItem } from "../../../data/levels";
 import { gaEvents } from "../../../helpers/ga";
 
-export const getEventHandlers = (context: GridContext) => {
+export const getEventHandlers = (context: SizeGridLevelContext) => {
   const onColumnRowGroupChanged: SizeGridProps["onColumnRowGroupChanged"] = (
     params
   ) => {

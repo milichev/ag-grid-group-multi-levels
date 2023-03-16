@@ -1,17 +1,16 @@
 import React, { StrictMode, useMemo, useReducer } from "react";
 
-import {
-  type SizeGridContext,
+import type {
+  SizeGridContext,
   SizeGridContextAction,
-  SizeGridContextProvider,
-} from "../hooks/useSizeGridContext";
+  SizeGridSettings,
+} from "./size-grid/types";
+import { SizeGridContextProvider, SizeGrid } from "./size-grid";
 import { getFake } from "../data/getFake";
 import { nuPerf, wrap } from "../helpers/perf";
-import { Grid } from "./size-grid";
 import { defaultCounts, defaultLevels, defaultSettings } from "../constants";
 import { fixupLevelItems, resolveDisplayLevels } from "../data/levels";
 import { gaEvents } from "../helpers/ga";
-import { SizeGridSettings } from "./size-grid/types";
 
 const styles = {
   container: { width: "100%", height: "100%" },
@@ -102,7 +101,7 @@ const GridApp: React.FC = () => {
       <div style={styles.container}>
         <div style={styles.grid} className="ag-theme-alpine">
           <SizeGridContextProvider value={sizeGridContext}>
-            <Grid
+            <SizeGrid
               items={gridData}
               levels={levels}
               buildOrderShipments={buildOrderShipments}

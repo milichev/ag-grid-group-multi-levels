@@ -1,6 +1,6 @@
+import { WithSizeGridEntities } from "../types";
 import { CellValueChangedEvent } from "ag-grid-community";
 import { GridGroupDataItem } from "../../../data/types";
-import { WithSizeGridEntities } from "../types";
 
 export function isCellValueChanged(
   params: WithSizeGridEntities<CellValueChangedEvent<GridGroupDataItem>>

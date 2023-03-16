@@ -1,6 +1,6 @@
 import { Level, LevelIndices, LevelItem, SelectableLevel } from "./types";
-import { SizeGridContext } from "../hooks/useSizeGridContext";
 import { allLevels } from "../constants";
+import { SizeGridContext } from "../components/size-grid/types";
 
 export const getLevelItemIndex = (levelItems: LevelItem[], level: Level) =>
   levelItems.findIndex((item) => item.level === level);

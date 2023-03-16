@@ -8,7 +8,7 @@ import {
 } from "./types";
 import { collectEntities, getDataItemId, getSizeKey } from "./resolvers";
 import { measureStep, nuPerf, wrap } from "../helpers/perf";
-import { SizeGridContext } from "../hooks/useSizeGridContext";
+import { SizeGridContext } from "../components/size-grid/types";
 
 export const getSizeQuantities = (sizes: Size[]): SizeInfo => {
   const sizeIds = [];

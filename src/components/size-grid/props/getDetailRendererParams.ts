@@ -1,17 +1,20 @@
-import { GridDataItem, Level, LevelIndices } from "../../../data/types";
-import { SizeGridContext } from "../../../hooks/useSizeGridContext";
-import { GridContext, WithSizeGridEntities } from "../types";
-import { measureAction, wrap } from "../../../helpers/perf";
-import { collectEntities } from "../../../data/resolvers";
-import { getAutoGroupColumnDef, getColumnDefs } from "./getColumnDefs";
-import { groupItems } from "../../../data/groupItems";
-import { getLevelIndices } from "../../../data/levels";
-import { commonGridProps } from "./commonGridProps";
-import { getEventHandlers } from "./getEventHandlers";
 import {
   ICellRendererParams,
   IDetailCellRendererParams,
 } from "ag-grid-community";
+import { GridDataItem, Level, LevelIndices } from "../../../data/types";
+import {
+  SizeGridContext,
+  SizeGridLevelContext,
+  WithSizeGridEntities,
+} from "../types";
+import { measureAction, wrap } from "../../../helpers/perf";
+import { collectEntities } from "../../../data/resolvers";
+import { getAutoGroupColumnDef, getColDefs } from "../columns";
+import { groupItems } from "../../../data/groupItems";
+import { getLevelIndices } from "../../../data/levels";
+import { commonGridProps } from "./commonGridProps";
+import { getEventHandlers } from "../event-handlers";
 
 export const getDetailRendererParams = (
   gridData: GridDataItem[],
@@ -20,7 +23,7 @@ export const getDetailRendererParams = (
   levelIndices: LevelIndices,
   sizeGridContext: SizeGridContext,
   popupParent: HTMLElement | null,
-  masterContext: GridContext
+  masterContext: SizeGridLevelContext
 ) => {
   const level = levels[levelIndex];
   if (!level) return undefined;
@@ -55,7 +58,7 @@ export const getDetailRendererParams = (
       }
     }
 
-    const context: GridContext = {
+    const context: SizeGridLevelContext = {
       levels: localLevels,
       levelIndex,
       sizeGridContext,
@@ -85,7 +88,7 @@ export const getDetailRendererParams = (
       "collectEntities"
     );
 
-    const columnDefs = getColumnDefs({
+    const columnDefs = getColDefs({
       levels: localLevels,
       levelIndex,
       levelIndices: localLevelIndices,

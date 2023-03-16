@@ -5,11 +5,9 @@ import {
   GridApi,
   GroupCellRendererParams,
   IAggFunc,
-  // RowNode,
+  ICellRendererParams,
   IRowNode,
   ValueFormatterFunc,
-  ICellRendererParams,
-  IDetailCellRendererParams,
 } from "ag-grid-community";
 import {
   GridGroupDataItem,
@@ -17,9 +15,38 @@ import {
   LevelItem,
   ShipmentsMode,
 } from "../../data/types";
-import type { SizeGridContext } from "../../hooks/useSizeGridContext";
+import { Dispatch } from "react";
 
-export interface GridContext {
+export interface SizeGridSettings {
+  levelItems: LevelItem[];
+  shipmentsMode: ShipmentsMode;
+  isAllDeliveries: boolean;
+  isFlattenSizes: boolean;
+  isLimitedSizes: boolean;
+  isUseSizeGroups: boolean;
+}
+
+type PropAction<T, K extends keyof T> = {
+  prop: K;
+  payload: T[K];
+};
+
+export type SizeGridContextAction = PropAction<
+  SizeGridSettings,
+  keyof SizeGridSettings
+>;
+
+/**
+ * Ambient context available through the component tree
+ */
+export type SizeGridContext = SizeGridSettings & {
+  dispatch: Dispatch<SizeGridContextAction>;
+};
+
+/**
+ * Context which is set to {@link SizeGridProps.context}. Each level grid has its level context.
+ */
+export interface SizeGridLevelContext {
   levels: Level[];
   levelIndex: number;
   sizeGridContext: SizeGridContext;
@@ -27,12 +54,12 @@ export interface GridContext {
     id: string;
     api: SizeGridApi;
     columnApi: ColumnApi;
-    context: GridContext;
+    context: SizeGridLevelContext;
   };
 }
 
 type WithSizeGridContext<T> = T extends { context: any }
-  ? CastProp<T, "context", GridContext>
+  ? CastProp<T, "context", SizeGridLevelContext>
   : T;
 type WithSizeGridData<T> = T extends { data: infer D }
   ? GridGroupDataItem extends D
@@ -83,7 +110,7 @@ export type SizeGridEventHandler<K extends keyof SizeGridProps> =
   SizeGridProps[K];
 
 export type SizeGridProps = AllSizeGridHandlers<
-  CastProp<AgGridReactProps<GridGroupDataItem>, "context", GridContext>
+  CastProp<AgGridReactProps<GridGroupDataItem>, "context", SizeGridLevelContext>
 >;
 export type SizeGridApi = GridApi<GridGroupDataItem>;
 export type SizeGridColDef = AllSizeGridHandlers<ColDef<GridGroupDataItem>>;
@@ -110,16 +137,3 @@ export type SizeGridCellRendererOptions = Omit<
   | "eParentOfValue"
   | "registerRowDragger"
 >;
-
-export type SizeGridGetDetailCellRendererParams = (
-  params: WithSizeGridContext<Omit<SizeGridCellRendererParams, "value">>
-) => Partial<IDetailCellRendererParams<GridGroupDataItem, GridGroupDataItem>>;
-
-export interface SizeGridSettings {
-  levelItems: LevelItem[];
-  shipmentsMode: ShipmentsMode;
-  isAllDeliveries: boolean;
-  isFlattenSizes: boolean;
-  isLimitedSizes: boolean;
-  isUseSizeGroups: boolean;
-}

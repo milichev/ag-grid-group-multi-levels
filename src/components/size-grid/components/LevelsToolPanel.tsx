@@ -1,15 +1,15 @@
 import React, { memo, useCallback, useEffect } from "react";
-import { DebugBox } from "./DebugBox";
-import { useSizeGridContext } from "../hooks/useSizeGridContext";
+import { DebugBox } from "../../DebugBox";
+import { useSizeGridContext } from "../hooks";
 import {
   fixupLevelItems,
   getLevelItemIndex,
   getLevelItemIndices,
   getLevelMeta,
   toggleLevelItem,
-} from "../data/levels";
-import { ShipmentsMode } from "../data/types";
-import { gaEvents } from "../helpers/ga";
+} from "../../../data/levels";
+import { ShipmentsMode } from "../../../data/types";
+import { gaEvents } from "../../../helpers/ga";
 
 export const LevelsToolPanel: React.FC = memo(() => {
   const {

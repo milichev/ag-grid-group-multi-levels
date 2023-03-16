@@ -1,1 +1,2 @@
-export { Grid } from "./Grid";
+export { SizeGrid } from "./SizeGrid";
+export * from "./hooks/useSizeGridContext";

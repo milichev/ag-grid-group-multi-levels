@@ -9,7 +9,7 @@ import {
 } from "../../../data/types";
 import { formats, toQuantity } from "../../../helpers/formatting";
 import { getSizeKey } from "../../../data/resolvers";
-import { SizeQuantityEditor } from "../components/SizeQuantityEditor";
+import { SizeQuantityEditor } from "../components";
 import {
   SizeGridAggFunc,
   SizeGridColDef,

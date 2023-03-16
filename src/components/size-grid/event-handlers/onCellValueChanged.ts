@@ -2,14 +2,14 @@ import { RowNode } from "ag-grid-community";
 import { TotalInfo } from "../../../data/types";
 import { measureStep } from "../../../helpers/perf";
 import {
-  GridContext,
+  SizeGridLevelContext,
   SizeGridApi,
   SizeGridProps,
   SizeGridRowNode,
 } from "../types";
-import { isCellValueChanged } from "./helpers";
 import { collectProductTotals } from "../../../data/totals";
-import { levelTotals } from "./getColumnDefs";
+import { isCellValueChanged } from "../helpers";
+import { levelTotals } from "../columns/col-defs";
 
 export const onCellValueChanged: SizeGridProps["onCellValueChanged"] = (
   params
@@ -26,7 +26,7 @@ const refreshColIds = levelTotals.map((col) => col.colId);
 const refreshTtlCells = (
   node: SizeGridRowNode,
   api: SizeGridApi,
-  context: GridContext
+  context: SizeGridLevelContext
 ) => {
   let { data: item } = node;
   if (item.sizes) {
@@ -62,7 +62,7 @@ const refreshTtlCells = (
   });
 
   // traverse to the master grid, if any
-  const { master }: GridContext = context;
+  const { master }: SizeGridLevelContext = context;
   if (master) {
     const masterNode = master.api.getRowNode(master.id);
     refreshTtlCells(masterNode, master.api, master.context);

@@ -1,6 +1,5 @@
-import { SizeGridProps } from "../types";
-import { defaultColDef } from "./getColumnDefs";
-import { columnTypes } from "./columnTypes";
+import type { SizeGridProps } from "../types";
+import { columnTypes, defaultColDef } from "../columns";
 
 export const commonGridProps = {
   defaultColDef,
