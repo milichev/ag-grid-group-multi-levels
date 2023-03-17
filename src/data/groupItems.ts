@@ -39,16 +39,19 @@ export const groupItems = (
     visibleLevels.product < levelIndex ? dataItems[0].product : undefined;
   product && entities.products.set(product.id, product);
 
-  const byIds: Map<string, GridDataItem[]> = measureAction(() => {
-    switch (level) {
-      case "sizeGroup":
-        return product
-          ? groupBySizeGroupWithinProduct(product, dataItems)
-          : groupBySizeGroupOverProducts(dataItems, entities);
-      default:
-        return groupByEntity(level, levelIndex, visibleLevels, dataItems);
-    }
-  }, "groupItems:byIds");
+  const byIds: Map<string, GridDataItem[]> = measureAction(
+    () => {
+      switch (level) {
+        case "sizeGroup":
+          return product
+            ? groupBySizeGroupWithinProduct(product, dataItems)
+            : groupBySizeGroupOverProducts(dataItems, entities);
+        default:
+          return groupByEntity(level, levelIndex, visibleLevels, dataItems);
+      }
+    },
+    { name: "groupItems:byIds", suppressResultOutput: true }
+  );
 
   // GridGroupDataItem properties to be applied to items at this level
   const propLevels = allLevels.reduce((acc, l) => {
@@ -68,41 +71,44 @@ export const groupItems = (
   const isLeafLevel = levelIndex === levels.length - 1;
   let items: GridGroupDataItem[] = [];
 
-  measureAction(() => {
-    byIds.forEach((group, id) => {
-      const sizeGroup = level === "sizeGroup" ? id : parentSizeGroup;
+  measureAction(
+    () => {
+      byIds.forEach((group, id) => {
+        const sizeGroup = level === "sizeGroup" ? id : parentSizeGroup;
 
-      let sizeInfo: SizeInfo;
-      let total: TotalInfo;
-      if (isLeafLevel) {
-        sizeInfo = getSizesBySizeGroup(group[0], sizeGroup);
-        total = collectProductTotals(sizeInfo, group[0].product, sizeGroup);
-      } else {
-        total = collectGroupTotals(group, sizeGroup);
-      }
+        let sizeInfo: SizeInfo;
+        let total: TotalInfo;
+        if (isLeafLevel) {
+          sizeInfo = getSizesBySizeGroup(group[0], sizeGroup);
+          total = collectProductTotals(sizeInfo, group[0].product, sizeGroup);
+        } else {
+          total = collectGroupTotals(group, sizeGroup);
+        }
 
-      const gridItem: GridGroupDataItem = {
-        id: level === "sizeGroup" && sizeGroup === "" ? emptySizeGroupId : id,
-        level,
-        group,
-        parent,
-        ...sizeInfo,
-        total,
-      };
+        const gridItem: GridGroupDataItem = {
+          id: level === "sizeGroup" && sizeGroup === "" ? emptySizeGroupId : id,
+          level,
+          group,
+          parent,
+          ...sizeInfo,
+          total,
+        };
 
-      propLevels.forEach(
-        (l) =>
-          (gridItem[l] = l === "sizeGroup" ? sizeGroup : (group[0][l] as any))
-      );
+        propLevels.forEach(
+          (l) =>
+            (gridItem[l] = l === "sizeGroup" ? sizeGroup : (group[0][l] as any))
+        );
 
-      items.push(gridItem);
-    });
-  }, "groupItems:map");
-
-  items = measureAction(
-    () => sortItems(items, level, propLevels),
-    "groupItems:sort"
+        items.push(gridItem);
+      });
+    },
+    { name: "groupItems:map", suppressResultOutput: true }
   );
+
+  items = measureAction(() => sortItems(items, level, propLevels), {
+    name: "groupItems:sort",
+    suppressResultOutput: true,
+  });
 
   step.finish();
 

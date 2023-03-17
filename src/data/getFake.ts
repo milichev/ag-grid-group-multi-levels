@@ -5,6 +5,7 @@ import {
   Shipment,
   ShipmentsMode,
   Size,
+  SizeGridData,
   SizeInfo,
   Warehouse,
 } from "./types";
@@ -136,7 +137,6 @@ type DepartmentMap = Record<string, DepartmentData>;
 
 export const getGridData = ({
   counts,
-  buildOrderShipments,
   shipmentsMode,
   isLimitedSizes,
   isUseSizeGroups,
@@ -144,12 +144,13 @@ export const getGridData = ({
   counts: {
     products: number;
     warehouses: number;
+    buildOrderShipments: number;
   };
-  buildOrderShipments: Shipment[];
 } & Pick<
   SizeGridContext,
   "shipmentsMode" | "isLimitedSizes" | "isUseSizeGroups"
->): GridDataItem[] => {
+>): SizeGridData => {
+  const buildOrderShipments = getShipments(counts.buildOrderShipments);
   const departmentNames = faker.helpers.uniqueArray(
     faker.commerce.department,
     counts.products / 5
@@ -231,7 +232,11 @@ export const getGridData = ({
     });
   });
 
-  return items;
+  return {
+    items,
+    warehouses,
+    buildOrderShipments,
+  };
 };
 
 const getRandQuantities = ({ sizeIds, sizes }: SizeInfo): SizeInfo => ({

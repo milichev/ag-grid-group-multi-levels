@@ -191,14 +191,20 @@ export const measureStep = ({
 
 export const measureAction = <F extends AnyFunction>(
   action: F,
-  name = action.name
+  {
+    name = action.name,
+    suppressResultOutput,
+  }: {
+    name?: string;
+    suppressResultOutput?: boolean;
+  }
 ): ReturnType<F> => {
   const step = measureStep({ name, async: false });
   let result: ReturnType<F>;
   try {
     result = action();
   } finally {
-    step.finish(result);
+    step.finish(suppressResultOutput ? undefined : result);
   }
   return result;
 };

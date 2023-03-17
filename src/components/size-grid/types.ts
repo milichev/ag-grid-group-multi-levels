@@ -6,6 +6,7 @@ import {
   GroupCellRendererParams,
   IAggFunc,
   ICellRendererParams,
+  IRichCellEditorParams,
   IRowNode,
   ValueFormatterFunc,
 } from "ag-grid-community";
@@ -14,6 +15,7 @@ import {
   Level,
   LevelItem,
   ShipmentsMode,
+  SizeGridData,
 } from "../../data/types";
 import { Dispatch } from "react";
 
@@ -39,16 +41,19 @@ export type SizeGridContextAction = PropAction<
 /**
  * Ambient context available through the component tree
  */
-export type SizeGridContext = SizeGridSettings & {
+export interface SizeGridContext extends SizeGridSettings {
+  getPopupParent(): HTMLElement;
+  setPopupParent(element: HTMLElement);
   dispatch: Dispatch<SizeGridContextAction>;
-};
+}
 
 /**
- * Context which is set to {@link SizeGridProps.context}. Each level grid has its level context.
+ * Context which is set to `SizeGridProps.context`. Each level grid has its level context.
  */
 export interface SizeGridLevelContext {
   levels: Level[];
   levelIndex: number;
+  getData: () => SizeGridData;
   sizeGridContext: SizeGridContext;
   master: null | {
     id: string;
@@ -123,7 +128,7 @@ export type SizeGridGroupCellRendererParams = WithSizeGridEntities<
   GroupCellRendererParams<GridGroupDataItem>
 >;
 export type SizeGridCellRendererParams = ICellRendererParams<GridGroupDataItem>;
-export type SizeGridCellRendererOptions = Omit<
+type OmitCellRendererParamsForOptions = keyof Pick<
   SizeGridCellRendererParams,
   | "value"
   | "valueFormatted"
@@ -136,4 +141,28 @@ export type SizeGridCellRendererOptions = Omit<
   | "eGridCell"
   | "eParentOfValue"
   | "registerRowDragger"
+>;
+export type SizeGridCellRendererOptions = Omit<
+  SizeGridCellRendererParams,
+  OmitCellRendererParamsForOptions
+>;
+
+export type SizeGridRichCellEditorParams = IRichCellEditorParams;
+export type OmitCellEditorParamsForOptions = keyof Pick<
+  IRichCellEditorParams,
+  | "api"
+  | "columnApi"
+  | "context"
+  | "rowIndex"
+  | "eGridCell"
+  | "value"
+  | "eventKey"
+  | "charPress"
+  | "column"
+  | "colDef"
+  | "node"
+  | "data"
+  | "cellStartedEdit"
+  | "onKeyDown"
+  | "stopEditing"
 >;

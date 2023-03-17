@@ -2,7 +2,7 @@ import {
   ICellRendererParams,
   IDetailCellRendererParams,
 } from "ag-grid-community";
-import { GridDataItem, Level, LevelIndices } from "../../../data/types";
+import { Level, LevelIndices, SizeGridData } from "../../../data/types";
 import {
   SizeGridContext,
   SizeGridLevelContext,
@@ -17,12 +17,11 @@ import { commonGridProps } from "./commonGridProps";
 import { getEventHandlers } from "../event-handlers";
 
 export const getDetailRendererParams = (
-  gridData: GridDataItem[],
+  data: SizeGridData,
   levels: Level[],
   levelIndex: number,
   levelIndices: LevelIndices,
   sizeGridContext: SizeGridContext,
-  popupParent: HTMLElement | null,
   masterContext: SizeGridLevelContext
 ) => {
   const level = levels[levelIndex];
@@ -61,6 +60,7 @@ export const getDetailRendererParams = (
     const context: SizeGridLevelContext = {
       levels: localLevels,
       levelIndex,
+      getData: () => data,
       sizeGridContext,
       master: {
         id: params.data.id,
@@ -71,12 +71,11 @@ export const getDetailRendererParams = (
     };
 
     const detailCellRendererParams = getDetailRendererParams(
-      gridData,
+      data,
       localLevels,
       levelIndex + 1,
       localLevelIndices,
       sizeGridContext,
-      popupParent,
       context
     );
 
@@ -85,13 +84,14 @@ export const getDetailRendererParams = (
         sizeGridContext.isFlattenSizes
           ? [...collectEntities(item.group).products.values()]
           : [],
-      "collectEntities"
+      { name: "collectEntities", suppressResultOutput: true }
     );
 
     const columnDefs = getColDefs({
       levels: localLevels,
       levelIndex,
       levelIndices: localLevelIndices,
+      data,
       product,
       sizeGridContext,
       allProducts,
@@ -115,7 +115,7 @@ export const getDetailRendererParams = (
         context,
         masterDetail: !!detailCellRendererParams,
         detailCellRendererParams,
-        popupParent,
+        popupParent: sizeGridContext.getPopupParent(),
       },
       getDetailRowData: (params) => {
         params.successCallback(items);

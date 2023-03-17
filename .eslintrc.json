@@ -40,6 +40,7 @@
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "arrow-body-style": ["warn", "as-needed"],
     "react/display-name": "off",
+    "react/prop-types": "off",
     "import/no-cycle": [
       "error",
       {

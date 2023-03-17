@@ -1,10 +1,8 @@
-import { useEffect, useRef } from "react";
+import { RefObject, useEffect } from "react";
 
-export const useContainerEvents = () => {
-  const container = useRef<HTMLDivElement>(null);
-
+export const useContainerEvents = (container: RefObject<HTMLDivElement>) => {
   useEffect(() => {
-    const owner = container.current;
+    const owner = container?.current;
 
     const handleClick = (e: MouseEvent) => {
       const menuButton = e.target as HTMLSpanElement;
@@ -49,7 +47,5 @@ export const useContainerEvents = () => {
         capture: true,
       });
     };
-  });
-
-  return container;
+  }, [container]);
 };

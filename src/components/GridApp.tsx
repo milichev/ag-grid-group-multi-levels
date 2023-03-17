@@ -1,16 +1,18 @@
-import React, { StrictMode, useMemo, useReducer } from "react";
+import React, { StrictMode, useMemo, useReducer, useState } from "react";
+import mem from "memoize-one";
 
 import type {
   SizeGridContext,
   SizeGridContextAction,
   SizeGridSettings,
 } from "./size-grid/types";
-import { SizeGridContextProvider, SizeGrid } from "./size-grid";
+import { SizeGrid, SizeGridContextProvider } from "./size-grid";
 import { getFake } from "../data/getFake";
 import { nuPerf, wrap } from "../helpers/perf";
 import { defaultCounts, defaultLevels, defaultSettings } from "../constants";
-import { fixupLevelItems, resolveDisplayLevels } from "../data/levels";
+import { fixupLevelItems } from "../data/levels";
 import { gaEvents } from "../helpers/ga";
+import { ShipmentsMode } from "../data/types";
 
 const styles = {
   container: { width: "100%", height: "100%" },
@@ -24,12 +26,17 @@ const sizeGridSettingsReducer = (
   if (prop !== "levelItems") {
     gaEvents.appSettings(prop, payload);
   }
-  return ctx[prop] === payload
-    ? ctx
-    : {
-        ...ctx,
-        [prop]: payload,
-      };
+  const result =
+    ctx[prop] === payload
+      ? ctx
+      : {
+          ...ctx,
+          [prop]: payload,
+        };
+  if (process.env.NODE_ENV === "development") {
+    console.log("sizeGridSettings", prop, payload, result);
+  }
+  return result;
 };
 
 const initSizeGridReducer = (initial: SizeGridSettings) => ({
@@ -40,7 +47,19 @@ const initSizeGridReducer = (initial: SizeGridSettings) => ({
   }),
 });
 
-const GridApp: React.FC = () => {
+const createGridData = (
+  isLimitedSizes: boolean,
+  isUseSizeGroups: boolean,
+  shipmentsMode: ShipmentsMode
+) =>
+  getFake.gridData({
+    counts: defaultCounts,
+    isLimitedSizes,
+    isUseSizeGroups,
+    shipmentsMode,
+  });
+
+export const GridApp: React.FC = () => {
   const [contextValues, dispatch] = useReducer(
     sizeGridSettingsReducer,
     {
@@ -49,14 +68,17 @@ const GridApp: React.FC = () => {
     },
     initSizeGridReducer
   );
+  const [createGridDataMemo] = useState(() => mem(createGridData));
 
-  const sizeGridContext = useMemo<SizeGridContext>(
-    () => ({
+  const sizeGridContext = useMemo((): SizeGridContext => {
+    let popupParent: HTMLElement;
+    return {
       ...contextValues,
+      getPopupParent: () => popupParent,
+      setPopupParent: (element) => (popupParent = element),
       dispatch,
-    }),
-    [contextValues]
-  );
+    };
+  }, [contextValues]);
 
   const {
     isLimitedSizes,
@@ -66,32 +88,16 @@ const GridApp: React.FC = () => {
     isFlattenSizes,
   } = sizeGridContext;
 
-  const levels = useMemo(
-    () => resolveDisplayLevels(sizeGridContext),
-    [sizeGridContext]
-  );
-
-  const buildOrderShipments = useMemo(
-    () => getFake.shipments(defaultCounts.buildOrderShipments),
-    []
-  );
-
   // get fake grid order data
-  const gridData = useMemo(
-    () =>
-      getFake.gridData({
-        counts: defaultCounts,
-        buildOrderShipments,
-        shipmentsMode,
-        isLimitedSizes,
-        isUseSizeGroups,
-      }),
-    [buildOrderShipments, isLimitedSizes, isUseSizeGroups, shipmentsMode]
+  const gridData = createGridDataMemo(
+    isLimitedSizes,
+    isUseSizeGroups,
+    shipmentsMode
   );
 
   nuPerf.setContext({
     ...defaultCounts,
-    gridMode: shipmentsMode,
+    shipmentsMode,
     isAllDeliveries,
     isFlattenSizes,
   });
@@ -101,11 +107,7 @@ const GridApp: React.FC = () => {
       <div style={styles.container}>
         <div style={styles.grid} className="ag-theme-alpine">
           <SizeGridContextProvider value={sizeGridContext}>
-            <SizeGrid
-              items={gridData}
-              levels={levels}
-              buildOrderShipments={buildOrderShipments}
-            />
+            <SizeGrid data={gridData} />
           </SizeGridContextProvider>
         </div>
       </div>

@@ -7,6 +7,7 @@ import type {
   LevelIndices,
   Product,
   SelectableLevel,
+  SizeGridData,
 } from "../../../data/types";
 import { allLevels } from "../../../constants";
 import { getQuantityColumn } from "./getQuantityColumn";
@@ -26,6 +27,7 @@ import {
   levelTotals,
   selectableCols,
 } from "./col-defs";
+import { decorateColDef } from "./decorateColDef";
 
 const aggUnique = fp.pipe([
   fp.filter(fp.negate(fp.isNil)),
@@ -46,6 +48,7 @@ export const getColDefs = wrap(
     sizeGridContext,
     allProducts,
     columnApi,
+    data,
   }: {
     levels: Level[];
     levelIndex: number;
@@ -54,6 +57,7 @@ export const getColDefs = wrap(
     sizeGridContext: SizeGridContext;
     allProducts: Product[];
     columnApi: ColumnApi | null;
+    data: SizeGridData;
   }): SizeGridColDef[] => {
     const level = levels[levelIndex];
     const isRootLevel = levelIndex === 0;
@@ -136,6 +140,17 @@ export const getColDefs = wrap(
                 valueFormatter: genericValueFormatter(result.valueFormatter),
               };
             })
+            .map((colDef) =>
+              decorateColDef({
+                col: colDef,
+                colRole: "nonGroup",
+                levels,
+                levelIndex,
+                levelIndices,
+                data,
+                sizeGridContext,
+              })
+            )
         : [];
 
     /** Quantity columns are visible only at the innermost level when a product is available,
