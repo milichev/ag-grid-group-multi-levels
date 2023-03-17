@@ -52,6 +52,7 @@ export const groupCols: Record<SelectableLevel, SizeGridColDef> = {
       params.value === "" ? emptySizeGroupId : params.value,
   },
 };
+
 /** Describe columns, which can be grouped, for both grouped and not grouped states */
 export const selectableCols: Record<SelectableLevel, SizeGridColDef> = {
   product: {
@@ -89,6 +90,7 @@ export const selectableCols: Record<SelectableLevel, SizeGridColDef> = {
         : "Size Group",
   },
 };
+
 export const levelTotals: SizeGridColDef[] = [
   {
     colId: "totalUnits",
@@ -108,6 +110,7 @@ export const levelTotals: SizeGridColDef[] = [
     // lockPinned: true,
   },
 ];
+
 export const levelAuxCols: Partial<Record<SelectableLevel, SizeGridColDef[]>> =
   {
     product: [

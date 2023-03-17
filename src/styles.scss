@@ -63,10 +63,12 @@ body {
 }
 
 .ag-cell.ag-cell-not-inline-editing.ag-cell-editable {
-  &:hover {
-    cursor: pointer;
-    background-color: $editable-background-color;
-    text-decoration: underline;
+  .ag-row.ag-row-leaf:not(.ag-row-footer) > & {
+    &:hover {
+      cursor: pointer;
+      background-color: $editable-background-color;
+      text-decoration: underline;
+    }
   }
 }
 

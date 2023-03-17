@@ -37,6 +37,7 @@ export const getAutoGroupColumnDef = (level: Level): SizeGridColDef => {
     cellRenderer: "agGroupCellRenderer",
     field: baseColDef.field,
     valueGetter: baseColDef.valueGetter,
+    valueFormatter: baseColDef.valueFormatter,
     headerValueGetter: (params) =>
       params.columnApi
         .getRowGroupColumns()
