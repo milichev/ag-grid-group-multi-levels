@@ -1,3 +1,5 @@
+$editable-background-color: rgba(33, 150, 243, 0.13);
+
 html,
 body,
 #root {
@@ -56,7 +58,15 @@ body {
 
   .ag-row.ag-row-leaf:not(.ag-row-footer) > &:hover:not(.ag-cell-inline-editing),
   &.ag-cell-focus:not(.ag-cell-inline-editing):not(.cell-disabled) {
-    background-color: rgba(33, 150, 243, 0.13);
+    background-color: $editable-background-color;
+  }
+}
+
+.ag-cell.ag-cell-not-inline-editing.ag-cell-editable {
+  &:hover {
+    cursor: pointer;
+    background-color: $editable-background-color;
+    text-decoration: underline;
   }
 }
 
@@ -78,7 +88,7 @@ body {
   }
 
   .ag-row.ag-row-hover > & {
-    background-color: rgba(33, 150, 243, 0.13);
+    background-color: $editable-background-color;
   }
 }
 
@@ -123,6 +133,15 @@ body {
       color: var(--ag-alpine-active-color);
     }
   }
+}
+
+.ag-select-editor-item {
+  padding: 1rem;
+  
+  //&:hover {
+  //  color: var(--ag-alpine-active-color);
+  //  background-color: $editable-background-color;
+  //}
 }
 
 .nest-mode-tool-panel {

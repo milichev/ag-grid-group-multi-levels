@@ -1,8 +1,8 @@
 import {
   GridDataItem,
-  Shipment,
   ShipmentsMode,
   Size,
+  SizeGridData,
   SizeInfo,
   SizeQuantity,
 } from "./types";
@@ -29,16 +29,15 @@ export const getSizeQuantities = (sizes: Size[]): SizeInfo => {
 
 export const prepareItems = wrap(
   ({
+    data: { items, warehouses, buildOrderShipments },
     shipmentsMode,
     isAllDeliveries,
-    items,
-    buildOrderShipments,
   }: {
+    data: SizeGridData;
     shipmentsMode: ShipmentsMode;
-    items: GridDataItem[];
-    buildOrderShipments: Shipment[];
-  } & Pick<SizeGridContext, "isAllDeliveries">) => {
+  } & Pick<SizeGridContext, "isAllDeliveries">): SizeGridData => {
     nuPerf.clearContext("prepareItems");
+
     if (isAllDeliveries || shipmentsMode === ShipmentsMode.BuildOrder) {
       const collectStep = measureStep({
         name: "prepareItemsCollect",
@@ -91,7 +90,7 @@ export const prepareItems = wrap(
       populateStep.finish();
     }
 
-    return items;
+    return { items, warehouses, buildOrderShipments };
   },
   "prepareItems",
   false

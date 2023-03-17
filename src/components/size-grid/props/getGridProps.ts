@@ -1,6 +1,6 @@
 import { ColumnApi, GridApi } from "ag-grid-community";
 
-import { GridDataItem, Level, Product } from "../../../data/types";
+import { Level, Product, SizeGridData } from "../../../data/types";
 import { getAutoGroupColumnDef, getColDefs } from "../columns";
 import { groupItems } from "../../../data/groupItems";
 import { SizeGridContext, SizeGridLevelContext, SizeGridProps } from "../types";
@@ -14,9 +14,8 @@ import { getEventHandlers } from "../event-handlers";
 export const getGridProps = wrap(
   (
     levels: Level[],
-    gridData: GridDataItem[],
+    data: SizeGridData,
     sizeGridContext: SizeGridContext,
-    popupParent: HTMLElement | null,
     gridApi: GridApi | null,
     columnApi: ColumnApi | null
   ) => {
@@ -32,18 +31,19 @@ export const getGridProps = wrap(
     const allProducts =
       sizeGridContext.isFlattenSizes && level === "product"
         ? [
-            ...collectEntities(gridData, {
+            ...collectEntities(data.items, {
               products: new Map<Product["id"], Product>(),
             }).products.values(),
           ]
         : [];
 
-    const { items } = groupItems(gridData, levels, 0, levelIndices, null);
+    const { items } = groupItems(data.items, levels, 0, levelIndices, null);
 
     const columnDefs = getColDefs({
       levels,
       levelIndex: 0,
       levelIndices,
+      data,
       product: null,
       sizeGridContext,
       allProducts,
@@ -53,17 +53,17 @@ export const getGridProps = wrap(
     const context: SizeGridLevelContext = {
       levels,
       levelIndex: 0,
+      getData: () => data,
       sizeGridContext,
       master: null,
     };
 
     const detailCellRendererParams = getDetailRendererParams(
-      gridData,
+      data,
       levels,
       1,
       levelIndices,
       sizeGridContext,
-      popupParent,
       context
     );
 
@@ -72,11 +72,11 @@ export const getGridProps = wrap(
       ...getEventHandlers(context),
       autoGroupColumnDef: getAutoGroupColumnDef(level),
       rowData: items,
-      // quickFilterText: gridData[0].product.department,
+      // quickFilterText: data[0].product.department,
       columnDefs,
       masterDetail: !!detailCellRendererParams,
       detailCellRendererParams,
-      popupParent,
+      popupParent: sizeGridContext.getPopupParent(),
       context,
     } satisfies Partial<SizeGridProps>;
   },

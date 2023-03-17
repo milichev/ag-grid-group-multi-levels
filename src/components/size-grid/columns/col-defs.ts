@@ -1,4 +1,10 @@
-import type { GridGroupDataItem, SelectableLevel } from "../../../data/types";
+import { ValueFormatterParams } from "ag-grid-community/dist/lib/entities/colDef";
+import type {
+  GridGroupDataItem,
+  Product,
+  SelectableLevel,
+  Warehouse,
+} from "../../../data/types";
 import type { SizeGridColDef } from "../types";
 import { emptySizeGroupId } from "../../../constants";
 import { resolveCached } from "../../../helpers/simple-cache";
@@ -7,16 +13,23 @@ import { formatSizes } from "../../../data/resolvers";
 /** Describe columns, which can be grouped, as not grouped ColDefs */
 export const groupCols: Record<SelectableLevel, SizeGridColDef> = {
   product: {
-    // field: 'product.name',
-    valueGetter: (params) =>
+    // field: "product",
+    valueGetter: (params) => params.data?.product,
+    valueFormatter: (
+      params: CastProp<ValueFormatterParams, "value", Product>
+    ) =>
       params.node.group
         ? ""
-        : `${params.data?.product?.name}${
-            params.data?.product?.sizes?.some((s) => !!s.sizeGroup) ? " *" : ""
+        : `${params.value?.name}${
+            params.value?.sizes?.some((s) => !!s.sizeGroup) ? " *" : ""
           }`,
   },
   warehouse: {
-    field: "warehouse.name",
+    field: "warehouse",
+    valueGetter: (params) => params.data?.warehouse,
+    valueFormatter: (
+      params: CastProp<ValueFormatterParams, "value", Warehouse>
+    ) => params.value?.name,
   },
   shipment: {
     field: "shipment.startDate",

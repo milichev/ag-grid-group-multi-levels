@@ -110,3 +110,9 @@ export interface LevelData {
   items: GridGroupDataItem[];
   entities: EntityBucket;
 }
+
+export interface SizeGridData {
+  items: GridDataItem[];
+  warehouses: Warehouse[];
+  buildOrderShipments: Shipment[];
+}

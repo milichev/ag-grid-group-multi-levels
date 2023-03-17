@@ -1,3 +1,4 @@
+import classname from "classname";
 import { getRange, range } from "../../../helpers/formatting";
 import {
   SizeGridAggFunc,
@@ -59,9 +60,9 @@ const baseQuantityColumn: SizeGridColDef = {
 const quantityColumn: SizeGridColDef = {
   ...baseQuantityColumn,
   cellClass: (params) =>
-    `${baseQuantityColumn.cellClass} col-quantity ${
-      params.value ? "" : "cell-disabled"
-    }`,
+    classname(baseQuantityColumn.cellClass, "col-quantity", {
+      "cell-disabled": !params.value,
+    }),
   headerClass: baseQuantityColumn.headerClass + " col-quantity",
   editable: true,
 };
