@@ -4,6 +4,4 @@ import { Warehouse } from "../../../data/types";
 
 type Params = CastProp<SizeGridCellRendererParams, "value", Warehouse>;
 
-export const RichSelectCellRenderer: FC<Params> = ({ value }) => {
-  return <div className="ag-select-editor-item">{value.name}</div>;
-};
+export const RichSelectCellRenderer: FC<Params> = ({ value }) => <div className="ag-select-editor-item">{value.name}</div>;

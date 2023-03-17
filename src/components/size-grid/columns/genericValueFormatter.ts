@@ -26,7 +26,5 @@ export const genericValueFormatter = (
       )
       .join("; ")}${params.value.length > MAX_AGG_JOIN_COUNT ? ";…" : ""}`;
 
-  return (params) => {
-    return _.isArray(params.value) ? formatJoin(params) : fmt(params);
-  };
+  return (params) => _.isArray(params.value) ? formatJoin(params) : fmt(params);
 };
