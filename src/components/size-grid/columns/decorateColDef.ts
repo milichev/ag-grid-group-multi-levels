@@ -1,4 +1,4 @@
-import classname from "classname";
+import { IRichCellEditorParams } from "ag-grid-community";
 import {
   OmitCellEditorParamsForOptions,
   SizeGridColDef,
@@ -10,8 +10,11 @@ import {
   SizeGridData,
   Warehouse,
 } from "../../../data/types";
-import { IRichCellEditorParams } from "ag-grid-community";
-import { RichSelectCellRenderer } from "../components";
+import {
+  DropDownCellRenderer,
+  RichSelectEditorCellRenderer,
+} from "../components";
+import { getCellClass } from "../helpers";
 
 export const decorateColDef = ({
   col,
@@ -30,14 +33,19 @@ export const decorateColDef = ({
     col = {
       ...col,
       editable: true,
-      cellClass: classname(col.cellClass, "ag-cell-editable"),
+      cellClass: getCellClass(
+        col.cellClass,
+        "ag-cell-editable",
+        "ag-cell-editable-dropdown"
+      ),
+      cellRenderer: DropDownCellRenderer,
       cellEditor: "agRichSelectCellEditor",
       cellEditorPopup: true,
       cellEditorParams: {
         values: data.warehouses,
         cellHeight: 20,
         formatValue: (warehouse: Warehouse) => warehouse.name,
-        cellRenderer: RichSelectCellRenderer,
+        cellRenderer: RichSelectEditorCellRenderer,
         searchDebounceDelay: 500,
       } satisfies Partial<
         Omit<IRichCellEditorParams, OmitCellEditorParamsForOptions>

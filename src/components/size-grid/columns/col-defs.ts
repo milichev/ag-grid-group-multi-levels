@@ -66,7 +66,8 @@ export const selectableCols: Record<SelectableLevel, SizeGridColDef> = {
     headerName: "Warehouse",
     filter: "agTextColumnFilter",
     sortable: true,
-    minWidth: 150,
+    minWidth: 110,
+    initialWidth: 150,
     headerValueGetter: (params) =>
       params.columnApi.getRowGroupColumns().length ? "Warehouses" : "Warehouse",
   },

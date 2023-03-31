@@ -17,7 +17,7 @@ const getRangeFormatter =
   (params) =>
     range[type](params.value);
 
-const numericColumn: SizeGridColDef = {
+const numericColumn = {
   type: "numericColumn",
   cellClass: "ag-right-aligned-cell",
   headerClass: "ag-right-aligned-cell",
@@ -26,14 +26,14 @@ const numericColumn: SizeGridColDef = {
   sortable: true,
   initialWidth: 150,
   filter: "agNumberColumnFilter",
-};
+} satisfies SizeGridColDef;
 
 const priceColumnAggFunc: SizeGridAggFunc<number> = (params) =>
   !params.rowNode.group || params.values.length === 0
     ? params.values
     : getRange(params.values);
 
-const priceColumn: SizeGridColDef = {
+const priceColumn = {
   ...numericColumn,
   aggFunc: priceColumnAggFunc,
   comparator: (a: number | [number, number], b: number | [number, number]) =>
@@ -45,19 +45,19 @@ const priceColumn: SizeGridColDef = {
         : a[0] - b
       : a - (Array.isArray(b) ? b[0] : b),
   valueFormatter: getRangeFormatter("money"),
-};
+} satisfies SizeGridColDef;
 
-const ttlPriceColumn: SizeGridColDef = {
+const ttlPriceColumn = {
   ...priceColumn,
-  cellClass: priceColumn.cellClass + " ttl-cell",
-};
+  cellClass: [priceColumn.cellClass, "ttl-cell"],
+} satisfies SizeGridColDef;
 
-const baseQuantityColumn: SizeGridColDef = {
+const baseQuantityColumn = {
   ...numericColumn,
   valueFormatter: getRangeFormatter("units"),
-};
+} satisfies SizeGridColDef;
 
-const quantityColumn: SizeGridColDef = {
+const quantityColumn = {
   ...baseQuantityColumn,
   cellClass: (params) =>
     classname(baseQuantityColumn.cellClass, "col-quantity", {
@@ -65,13 +65,13 @@ const quantityColumn: SizeGridColDef = {
     }),
   headerClass: baseQuantityColumn.headerClass + " col-quantity",
   editable: true,
-};
+} satisfies SizeGridColDef;
 
-const ttlQuantityColumn: SizeGridColDef = {
+const ttlQuantityColumn = {
   ...baseQuantityColumn,
-  cellClass: baseQuantityColumn.cellClass + " ttl-cell",
+  cellClass: [baseQuantityColumn.cellClass, " ttl-cell"],
   aggFunc: "sum",
-};
+} satisfies SizeGridColDef;
 
 /** Describe reusable column props */
 export const columnTypes: Record<CustomColumnTypes, SizeGridColDef> = {
