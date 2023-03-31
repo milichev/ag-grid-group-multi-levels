@@ -13,6 +13,7 @@ import { defaultCounts, defaultLevels, defaultSettings } from "../constants";
 import { fixupLevelItems } from "../data/levels";
 import { gaEvents } from "../helpers/ga";
 import { ShipmentsMode } from "../data/types";
+import { SmallViewportWarning } from "./SmallViewportWarning";
 
 const styles = {
   container: { width: "100%", height: "100%" },
@@ -108,6 +109,7 @@ export const GridApp: React.FC = () => {
         <div style={styles.grid} className="ag-theme-alpine">
           <SizeGridContextProvider value={sizeGridContext}>
             <SizeGrid data={gridData} />
+            <SmallViewportWarning />
           </SizeGridContextProvider>
         </div>
       </div>
