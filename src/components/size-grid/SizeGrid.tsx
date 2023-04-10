@@ -17,11 +17,10 @@ import { useContainerEvents, useSizeGridContext } from "./hooks";
 import type { GridGroupDataItem, SizeGridData } from "../../data/types";
 import { ShipmentsMode } from "../../data/types";
 import type { SizeGridApi } from "./types";
-import { getGridProps } from "./props/getGridProps";
+import { getGridProps, sideBar } from "./props";
 import { prepareItems } from "../../data/prepareItems";
 import { collapseMasterNodes } from "./helpers";
 import { nuPerf } from "../../helpers/perf";
-import { sideBar } from "./props/SideBar";
 import { resolveDisplayLevels } from "../../data/levels";
 
 type Props = {
